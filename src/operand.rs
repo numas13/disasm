@@ -5,11 +5,14 @@ use core::fmt;
 use crate::Disasm;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Reg(pub(crate) u16);
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Operand {
     /// reg
-    Reg(u16),
+    Reg(Reg),
     /// reg + offset
-    Offset(u16, i64),
+    Offset(Reg, i64),
     /// sign-extended immediate
     Imm(i64),
     /// zero-extended immediate
@@ -17,7 +20,7 @@ pub enum Operand {
     /// address
     Address(u64),
     /// address in reg
-    AddressReg(u16),
+    AddressReg(Reg),
 }
 
 impl Operand {

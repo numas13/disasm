@@ -1,26 +1,29 @@
 mod gen;
 
-use crate::{Insn, Operand, Options};
+use crate::{Insn, Options, Reg};
 
-use self::gen::{RiscvDecode, Args};
+use self::gen::{Args, RiscvDecode};
+
+pub use self::gen::opcode;
 
 const INSN_AQ: u32 = 1 << 16;
 const INSN_RL: u32 = 1 << 17;
 
-pub struct RiscvDecoder {
+pub(crate) struct RiscvDecoder {
     opts: Options,
 }
 
 impl RiscvDecoder {
-    pub fn new(opts: Options) -> Self {
+    pub(crate) fn new(opts: Options) -> Self {
         Self { opts }
     }
 }
 
 impl super::Decoder for RiscvDecoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Insn) -> Result<usize, usize> {
-        let len = bytes.first()
-            .map(|i| if i & 3 == 3 { 4} else { 2 })
+        let len = bytes
+            .first()
+            .map(|i| if i & 3 == 3 { 4 } else { 2 })
             .ok_or(2_usize)?;
 
         if bytes.len() < len {
@@ -40,7 +43,7 @@ impl super::Decoder for RiscvDecoder {
     }
 
     #[cfg(feature = "print")]
-    fn register_name(&self, reg: u16) -> Option<&'static str> {
+    fn register_name(&self, reg: Reg) -> Option<&'static str> {
         #[rustfmt::skip]
         const X_ABI_NAME: [&str; 32] = [
             "zero", "ra",   "sp",   "gp",   "tp",   "t0",   "t1",   "t2",
@@ -48,7 +51,7 @@ impl super::Decoder for RiscvDecoder {
             "a6",   "a7",   "s2",   "s3",   "s4",   "s5",   "s6",   "s7",
             "s8",   "s9",   "s10",  "s11",  "t3",   "t4",   "t5",   "t6",
         ];
-        X_ABI_NAME.get(reg as usize).copied()
+        X_ABI_NAME.get(reg.0 as usize).copied()
     }
 
     #[cfg(feature = "mnemonic")]
@@ -115,55 +118,55 @@ impl RiscvDecode for RiscvDecoder {
 
 impl Args for &gen::args_b {
     fn set(&self, address: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
-        insn.push_operand(Operand::Reg(self.rs2 as u16));
-        insn.push_operand(Operand::Address(rel_addr(address, self.imm)));
+        insn.push_reg(Reg(self.rs1 as u16));
+        insn.push_reg(Reg(self.rs2 as u16));
+        insn.push_addr(rel_addr(address, self.imm));
     }
 }
 
 impl Args for &gen::args_b2 {
     fn set(&self, address: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
-        insn.push_operand(Operand::Address(rel_addr(address, self.imm)));
+        insn.push_reg(Reg(self.rs1 as u16));
+        insn.push_addr(rel_addr(address, self.imm));
     }
 }
 
 impl Args for &gen::args_i {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
-        insn.push_operand(Operand::Imm(self.imm as i64));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_reg(Reg(self.rs1 as u16));
+        insn.push_imm(self.imm as i64);
     }
 }
 
 impl Args for &gen::args_i_2 {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Imm(self.imm as i64));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_imm(self.imm as i64);
     }
 }
 
 impl Args for &gen::args_j {
     fn set(&self, address: u64, insn: &mut Insn) {
         if self.rd != 1 {
-            insn.push_operand(Operand::Reg(self.rd as u16));
+            insn.push_reg(Reg(self.rd as u16));
         }
-        insn.push_operand(Operand::Address(rel_addr(address, self.imm)));
+        insn.push_addr(rel_addr(address, self.imm));
     }
 }
 
 impl Args for &gen::args_j2 {
     fn set(&self, address: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Address(rel_addr(address, self.imm)));
+        insn.push_addr(rel_addr(address, self.imm));
     }
 }
 
 impl Args for &gen::args_jr {
     fn set(&self, _: u64, insn: &mut Insn) {
         if self.imm != 0 {
-            insn.push_operand(Operand::Offset(self.rs1 as u16, self.imm as i64));
+            insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
         } else {
-            insn.push_operand(Operand::Reg(self.rs1 as u16));
+            insn.push_reg(Reg(self.rs1 as u16));
         }
     }
 }
@@ -171,71 +174,71 @@ impl Args for &gen::args_jr {
 impl Args for &gen::args_jalr {
     fn set(&self, _: u64, insn: &mut Insn) {
         if self.rd != 1 {
-            insn.push_operand(Operand::Reg(self.rd as u16));
+            insn.push_reg(Reg(self.rd as u16));
         }
         if self.imm != 0 {
-            insn.push_operand(Operand::Offset(self.rs1 as u16, self.imm as i64));
+            insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
         } else {
-            insn.push_operand(Operand::Reg(self.rs1 as u16));
+            insn.push_reg(Reg(self.rs1 as u16));
         }
     }
 }
 
 impl Args for &gen::args_r {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
-        insn.push_operand(Operand::Reg(self.rs2 as u16));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_reg(Reg(self.rs1 as u16));
+        insn.push_reg(Reg(self.rs2 as u16));
     }
 }
 
 impl Args for &gen::args_r2 {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_reg(Reg(self.rs1 as u16));
     }
 }
 
 impl Args for &gen::args_r2_s {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
-        insn.push_operand(Operand::Reg(self.rs2 as u16));
+        insn.push_reg(Reg(self.rs1 as u16));
+        insn.push_reg(Reg(self.rs2 as u16));
     }
 }
 
 impl Args for &gen::args_r3 {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Reg(self.rs2 as u16));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_reg(Reg(self.rs2 as u16));
     }
 }
 
 impl Args for &gen::args_l {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Offset(self.rs1 as u16, self.imm as i64));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_s {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rs2 as u16));
-        insn.push_operand(Operand::Offset(self.rs1 as u16, self.imm as i64));
+        insn.push_reg(Reg(self.rs2 as u16));
+        insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_u {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Uimm((self.imm as u64 >> 12) & 0xfffff));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_uimm((self.imm as u64 >> 12) & 0xfffff);
     }
 }
 
 impl Args for &gen::args_shift {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Reg(self.rs1 as u16));
-        insn.push_operand(Operand::Uimm(self.shamt as u64));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_reg(Reg(self.rs1 as u16));
+        insn.push_uimm(self.shamt as u64);
     }
 }
 
@@ -243,8 +246,8 @@ impl Args for &gen::args_atomic_ld {
     fn set(&self, _: u64, insn: &mut Insn) {
         insn.insert_flags(self.aq != 0, INSN_AQ);
         insn.insert_flags(self.rl != 0, INSN_RL);
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::AddressReg(self.rs1 as u16));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_addr_reg(Reg(self.rs1 as u16));
     }
 }
 
@@ -252,9 +255,9 @@ impl Args for &gen::args_atomic_st {
     fn set(&self, _: u64, insn: &mut Insn) {
         insn.insert_flags(self.aq != 0, INSN_AQ);
         insn.insert_flags(self.rl != 0, INSN_RL);
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Reg(self.rs2 as u16));
-        insn.push_operand(Operand::AddressReg(self.rs1 as u16));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_reg(Reg(self.rs2 as u16));
+        insn.push_addr_reg(Reg(self.rs1 as u16));
     }
 }
 
@@ -290,12 +293,11 @@ impl Args for &gen::args_k_aes {
 
 impl Args for &gen::args_ci {
     fn set(&self, _: u64, insn: &mut Insn) {
-        insn.push_operand(Operand::Reg(self.rd as u16));
-        insn.push_operand(Operand::Imm(self.imm as i64));
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_imm(self.imm as i64);
     }
 }
 
 fn rel_addr(address: u64, offset: isize) -> u64 {
     (address as i64).wrapping_add(offset as i64) as u64
 }
-

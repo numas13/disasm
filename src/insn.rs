@@ -3,9 +3,9 @@ use core::fmt;
 
 use alloc::vec::Vec;
 
-use crate::Operand;
 #[cfg(feature = "print")]
 use crate::PrinterInfo;
+use crate::{Operand, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
 
@@ -63,6 +63,30 @@ impl Insn {
 
     pub(crate) fn push_operand(&mut self, operand: Operand) {
         self.operands.push(operand);
+    }
+
+    pub(crate) fn push_reg(&mut self, reg: Reg) {
+        self.push_operand(Operand::Reg(reg));
+    }
+
+    pub(crate) fn push_offset(&mut self, reg: Reg, offset: i64) {
+        self.push_operand(Operand::Offset(reg, offset));
+    }
+
+    pub(crate) fn push_imm(&mut self, value: i64) {
+        self.push_operand(Operand::Imm(value));
+    }
+
+    pub(crate) fn push_uimm(&mut self, value: u64) {
+        self.push_operand(Operand::Uimm(value));
+    }
+
+    pub(crate) fn push_addr(&mut self, addr: u64) {
+        self.push_operand(Operand::Address(addr));
+    }
+
+    pub(crate) fn push_addr_reg(&mut self, reg: Reg) {
+        self.push_operand(Operand::AddressReg(reg));
     }
 
     #[cfg(feature = "print")]

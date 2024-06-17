@@ -14,7 +14,7 @@ use alloc::boxed::Box;
 use crate::arch::Decoder;
 
 pub use crate::insn::{Insn, Opcode};
-pub use crate::operand::Operand;
+pub use crate::operand::{Operand, Reg};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
