@@ -29,7 +29,6 @@
 %rm       12:3
 %nf       29:3                     !function=ex_plus_1
 
-%crd      7:5
 %crs1_3   7:3                !function=ex_rvc_register
 %crs2_3   2:3                !function=ex_rvc_register
 %crs2_5   2:5
@@ -116,8 +115,8 @@
 
 # Formats 16:
 #@cr        ....  ..... .....  .. &r      rs2=%rs2_5       rs1=%rd     %rd
-@ci        ... . ..... .....  .. &ci      imm=%imm_ci      rs1=%crd    rd=%crd
-@ci2       ... . ..... .....  .. &i       imm=%imm_ci      rs1=%crd    rd=%crd
+@ci_c      ... . ..... .....  .. &ci      imm=%imm_ci      rs1=%rd    rd=%rd
+@ci        ... . ..... .....  .. &i       imm=%imm_ci      rs1=%rd    rd=%rd
 #@cl_q      ... . .....  ..... .. &i      imm=%uimm_cl_q   rs1=%rs1_3  rd=%rs2_3
 #@cl_d      ... ... ... .. ... .. &i      imm=%uimm_cl_d   rs1=%rs1_3  rd=%rs2_3
 #@cl_w      ... ... ... .. ... .. &i      imm=%uimm_cl_w   rs1=%rs1_3  rd=%rs2_3
@@ -134,7 +133,7 @@
 #@c_sqsp    ... . .....  ..... .. &s      imm=%uimm_6bit_sq rs1=2 rs2=%rs2_5
 #@c_sdsp    ... . .....  ..... .. &s      imm=%uimm_6bit_sd rs1=2 rs2=%rs2_5
 #@c_swsp    ... . .....  ..... .. &s      imm=%uimm_6bit_sw rs1=2 rs2=%rs2_5
-#@c_li      ... . .....  ..... .. &i      imm=%imm_ci rs1=0 %rd
+@c_li      ... . .....  ..... .. &i_2    imm=%imm_ci %rd
 #@c_lui     ... . .....  ..... .. &u      imm=%imm_lui %rd
 #@c_jalr    ... . .....  ..... .. &i      imm=0 rs1=%rd
 #@c_mv      ... . ..... .....  .. &i      imm=0 rs1=%rs2_5 %rd
@@ -251,10 +250,13 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 #
 ## *** RV32/64C Standard Extension (Quadrant 1) ***
 {
-  addi              ---------------- 000 .  .....  ..... 01 @ci2  alias=1
-  c_addi            ---------------- 000 .  .....  ..... 01 @ci
+  addi              ---------------- 000 .  .....  ..... 01 @ci alias=1
+  c_addi            ---------------- 000 .  .....  ..... 01 @ci_c
 }
-#addi              010 .  .....  ..... 01 @c_li
+{
+  li                ---------------- 010 .  .....  ..... 01 @c_li alias=1
+  c_li              ---------------- 010 .  .....  ..... 01 @c_li
+}
 #{
 #  illegal         011 0  -----  00000 01 # c.addi16sp and c.lui, RES nzimm=0
 #  addi            011 .  00010  ..... 01 @c_addi16sp
@@ -272,11 +274,13 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 #bne               111  ... ...  ..... 01 @cb_z
 #
 ## *** RV64C and RV32C specific Standard Extension (Quadrant 1) ***
-#{
+{
 #  c64_illegal     001 -  00000  ----- 01 # c.addiw, RES rd=0
-#  addiw           001 .  .....  ..... 01 @ci
+  sext_w          ---------------- 001 0  .....  00000 01 @r2 rs1=%rd alias=1
+  addiw           ---------------- 001 .  .....  ..... 01 @ci alias=1
+  c_addiw         ---------------- 001 .  .....  ..... 01 @ci_c
 #  jal             001     ........... 01 @cj    rd=1  # C.JAL
-#}
+}
 #subw              100 1 11 ... 00 ... 01 @cs_2
 #addw              100 1 11 ... 01 ... 01 @cs_2
 #
@@ -356,13 +360,13 @@ auipc    ....................       ..... 0010111 @u
   jalr     ............     ..... 000 ..... 1100111 @jalr
 }
 {
-  beqz     ....... 00000    ..... 000 ..... 1100011 @b2   alias=1
-# TODO: beqz     ....... .....    00000 000 ..... 1100011 @b2 rs1=%rs2
+  beqz     ....... 00000    ..... 000 ..... 1100011 @b2 alias=1
+  beqz     ....... .....    00000 000 ..... 1100011 @b2 alias=1 rs1=%rs2
   beq      ....... .....    ..... 000 ..... 1100011 @b
 }
 {
-  bnez     ....... 00000    ..... 001 ..... 1100011 @b2   alias=1
-# TODO: bnez     ....... .....    00000 001 ..... 1100011 @b2 rs1=%rs2
+  bnez     ....... 00000    ..... 001 ..... 1100011 @b2 alias=1
+  bnez     ....... .....    00000 001 ..... 1100011 @b2 alias=1 rs1=%rs2
   bne      ....... .....    ..... 001 ..... 1100011 @b
 }
 blt      ....... .....    ..... 100 ..... 1100011 @b
