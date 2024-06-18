@@ -1,11 +1,72 @@
-#[cfg(feature = "print")]
 use core::fmt;
 
 #[cfg(feature = "print")]
 use crate::Disasm;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Reg(pub(crate) u16);
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct RegClass(pub(crate) u16);
+
+impl RegClass {
+    pub const INT: Self = Self::new(0);
+    pub const FLOAT: Self = Self::new(1);
+    pub const VECTOR: Self = Self::new(2);
+
+    pub const fn is_arch_specific(&self) -> bool {
+        self.0 & (1 << 15) != 0
+    }
+
+    pub(crate) const fn new(class: u16) -> Self {
+        Self(class)
+    }
+
+    pub(crate) const fn arch(class: u16) -> Self {
+        Self(class | (1 << 15))
+    }
+
+    const fn to_arch_index(&self) -> u16 {
+        self.0 & ((1 << 15) - 1)
+    }
+}
+
+impl fmt::Display for RegClass {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            &Self::INT => fmt.write_str("int"),
+            &Self::FLOAT => fmt.write_str("float"),
+            &Self::VECTOR => fmt.write_str("vector"),
+            _ if self.is_arch_specific() => write!(fmt, "arch({})", self.to_arch_index()),
+            _ => write!(fmt, "invalid({})", self.0),
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct Reg {
+    raw: u64,
+}
+
+impl Reg {
+    pub(crate) const fn new(class: RegClass, index: u64) -> Self {
+        assert!(index < (1 << 48));
+        Self {
+            raw: ((class.0 as u64) << 48) | index,
+        }
+    }
+
+    pub const fn class(&self) -> RegClass {
+        RegClass((self.raw >> 48) as u16)
+    }
+
+    pub const fn index(&self) -> u64 {
+        self.raw & ((1 << 48) - 1)
+    }
+}
+
+impl fmt::Debug for Reg {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "<{}:{}>", self.class(), self.index())
+    }
+}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Operand {
@@ -39,14 +100,12 @@ impl fmt::Display for Printer<'_> {
         let Self(disasm, operand) = self;
         match operand {
             Operand::Reg(reg) => {
-                write!(fmt, "{}", disasm.decoder.register_name(*reg).unwrap())?;
+                let reg = disasm.decoder.register_name(*reg);
+                fmt.write_str(&reg)?;
             }
             Operand::Offset(reg, imm) => {
-                write!(
-                    fmt,
-                    "{imm}({})",
-                    disasm.decoder.register_name(*reg).unwrap()
-                )?;
+                let reg = disasm.decoder.register_name(*reg);
+                write!(fmt, "{imm}({reg})")?;
             }
             Operand::Imm(imm) => {
                 write!(fmt, "{imm}")?;
@@ -58,7 +117,8 @@ impl fmt::Display for Printer<'_> {
                 write!(fmt, "{addr:x}")?;
             }
             Operand::AddressReg(reg) => {
-                write!(fmt, "({})", disasm.decoder.register_name(*reg).unwrap())?;
+                let reg = disasm.decoder.register_name(*reg);
+                write!(fmt, "({reg})")?;
             }
         }
         Ok(())

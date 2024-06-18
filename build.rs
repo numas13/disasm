@@ -12,11 +12,19 @@ use decodetree::{
 };
 
 #[derive(Default)]
-struct Helper {}
+struct Helper {
+    args: HashSet<String>,
+}
+
+impl Helper {
+    fn pass_arg(name: &str) -> bool {
+        name != "alias"
+    }
+}
 
 impl<T> Gen<T> for Helper {
     fn pass_arg(&self, name: &str) -> bool {
-        name != "alias"
+        Self::pass_arg(name)
     }
 
     fn additional_args(&self) -> &[(&str, &str)] {
@@ -36,6 +44,13 @@ impl<T> Gen<T> for Helper {
         for set in pattern.sets.iter().filter(|i| !i.is_extern) {
             writeln!(out, "{p}self.set_args(address, out, {});", set.name)?;
         }
+        for arg in pattern.args.iter().filter(|i| Self::pass_arg(&i.name)) {
+            let name = &arg.name;
+            if !self.args.contains(name) {
+                self.args.insert(name.clone());
+            }
+            writeln!(out, "{p}self.set_{name}(address, out, {name} as i64);")?;
+        }
         writeln!(out, "{p}true")?;
         writeln!(out, "{pad}}}")?;
         Ok(true)
@@ -48,6 +63,17 @@ impl<T> Gen<T> for Helper {
             "{pad}fn set_args<A: Args>(&mut self, address: u64, out: &mut Insn, args: A);"
         )?;
         writeln!(out, "{pad}fn opts(&self) -> &Options;")?;
+
+        if !self.args.is_empty() {
+            writeln!(out)?;
+            for i in &self.args {
+                writeln!(
+                    out,
+                    "{pad}fn set_{i}(&mut self, address: u64, out: &mut Insn, {i}: i64);"
+                )?;
+            }
+        }
+
         Ok(())
     }
 

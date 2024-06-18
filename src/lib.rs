@@ -14,7 +14,7 @@ use alloc::boxed::Box;
 use crate::arch::Decoder;
 
 pub use crate::insn::{Bundle, Insn, Opcode};
-pub use crate::operand::{Operand, Reg};
+pub use crate::operand::{Operand, Reg, RegClass};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -40,11 +40,15 @@ pub enum Arch {
 #[derive(Copy, Clone)]
 pub struct Options {
     pub alias: bool,
+    pub abi_regs: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Self { alias: true }
+        Self {
+            alias: true,
+            abi_regs: true,
+        }
     }
 }
 
@@ -70,6 +74,7 @@ impl Disasm {
         })
     }
 
+    /// Current decoding address.
     pub fn address(&self) -> u64 {
         self.address
     }
@@ -86,6 +91,11 @@ impl Disasm {
                 Err(len)
             }
         }
+    }
+
+    /// Do not decode `size` bytes.
+    pub fn skip(&mut self, size: usize) {
+        self.address += size as u64;
     }
 }
 
