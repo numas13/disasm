@@ -1,10 +1,10 @@
 #[cfg(feature = "riscv")]
 pub mod riscv;
 
-use crate::{Insn, Reg};
+use crate::{Insn, Reg, Bundle};
 
 pub(crate) trait Decoder {
-    fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Insn) -> Result<usize, usize>;
+    fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize>;
 
     #[cfg(feature = "print")]
     fn register_name(&self, reg: Reg) -> Option<&'static str>;

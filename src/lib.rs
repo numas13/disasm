@@ -13,7 +13,7 @@ use alloc::boxed::Box;
 
 use crate::arch::Decoder;
 
-pub use crate::insn::{Insn, Opcode};
+pub use crate::insn::{Insn, Bundle, Opcode};
 pub use crate::operand::{Operand, Reg};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -74,7 +74,8 @@ impl Disasm {
         self.address
     }
 
-    pub fn decode(&mut self, bytes: &[u8], out: &mut Insn) -> Result<usize, usize> {
+    pub fn decode(&mut self, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize> {
+        out.clear();
         match self.decoder.decode(self.address, bytes, out) {
             Ok(len) => {
                 self.address += len as u64;

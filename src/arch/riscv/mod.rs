@@ -1,6 +1,6 @@
 mod gen;
 
-use crate::{Insn, Options, Reg};
+use crate::{Insn, Bundle, Options, Reg};
 
 use self::gen::{Args, RiscvDecode};
 
@@ -20,7 +20,7 @@ impl RiscvDecoder {
 }
 
 impl super::Decoder for RiscvDecoder {
-    fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Insn) -> Result<usize, usize> {
+    fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize> {
         let len = bytes
             .first()
             .map(|i| if i & 3 == 3 { 4 } else { 2 })
@@ -33,8 +33,9 @@ impl super::Decoder for RiscvDecoder {
         out.clear();
         let mut raw = [0; 4];
         raw[..len].copy_from_slice(&bytes[..len]);
-        if RiscvDecode::decode(self, u32::from_le_bytes(raw), address, out) {
+        if RiscvDecode::decode(self, u32::from_le_bytes(raw), address, out.peek()) {
             // decoded len bytes
+            out.next();
             Ok(len)
         } else {
             // failed to decode len bytes
@@ -294,6 +295,7 @@ impl Args for &gen::args_k_aes {
 impl Args for &gen::args_ci {
     fn set(&self, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
+        // TODO: insn.push_reg(Reg(self.rs1 as u16));
         insn.push_imm(self.imm as i64);
     }
 }

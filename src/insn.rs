@@ -1,3 +1,4 @@
+use core::ops::Deref;
 #[cfg(feature = "print")]
 use core::fmt;
 
@@ -17,6 +18,7 @@ pub struct Insn {
     opcode: Opcode,
     flags: u32,
     operands: Vec<Operand>,
+    slot: u16,
 }
 
 impl Insn {
@@ -24,6 +26,7 @@ impl Insn {
         self.opcode = Opcode(0);
         self.flags = 0;
         self.operands.clear();
+        self.slot = 0;
     }
 
     pub(crate) fn flags(&self) -> u32 {
@@ -133,5 +136,61 @@ where
             }
         }
         Ok(())
+    }
+}
+
+pub struct Bundle {
+    len: usize,
+    insn: Box<[Insn]>,
+}
+
+impl Bundle {
+    pub fn empty() -> Self {
+        Self {
+            len: 0,
+            insn: Box::new([]),
+        }
+    }
+
+    pub fn as_slice(&self) -> &[Insn] {
+        &self.insn[..self.len]
+    }
+
+    pub(crate) fn clear(&mut self) {
+        self.len = 0;
+    }
+
+    /// Take instruction to decode
+    pub(crate) fn peek(&mut self) -> &mut Insn {
+        if self.insn.len() <= self.len {
+            let mut vec = core::mem::take(&mut self.insn).into_vec();
+            vec.resize(self.len + 1, Insn::default());
+            self.insn = vec.into_boxed_slice();
+        }
+        let insn = &mut self.insn[self.len];
+        insn.clear();
+        insn
+    }
+
+    /// Previous peek was succesfull, advance to next instruction
+    pub(crate) fn next(&mut self) {
+        self.len += 1;
+    }
+}
+
+impl Deref for Bundle {
+    type Target = [Insn];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
+impl<'a> IntoIterator for &'a Bundle {
+    type Item = &'a Insn;
+    type IntoIter = core::slice::Iter<'a, Insn>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
