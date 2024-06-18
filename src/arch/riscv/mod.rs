@@ -1,9 +1,13 @@
 mod gen;
 
+#[cfg(feature = "print")]
+use core::fmt;
 use core::ops::Range;
 
 use alloc::borrow::Cow;
 
+#[cfg(feature = "print")]
+use crate::Operand;
 use crate::{Bundle, Insn, Options, Reg, RegClass};
 
 use self::gen::{Args, RiscvDecode};
@@ -19,6 +23,16 @@ const REG_CSR: Range<isize> = REG_V.end..REG_V.end + 4096;
 
 const INSN_AQ: u32 = 1 << 16;
 const INSN_RL: u32 = 1 << 17;
+
+pub const RM_RNE: u8 = 0;
+pub const RM_RTZ: u8 = 1;
+pub const RM_RDN: u8 = 2;
+pub const RM_RUP: u8 = 3;
+pub const RM_RMM: u8 = 4;
+pub const RM_DYN: u8 = 7;
+
+const OPERAND_FENCE: u64 = 0;
+const OPERAND_RM: u64 = 1;
 
 #[rustfmt::skip]
 const X_NAME: [&str; 32] = [
@@ -122,12 +136,63 @@ impl super::Decoder for RiscvDecoder {
         let m = self::gen::mnemonic(insn.opcode())?;
         let flags = insn.flags();
         let s = match (flags & INSN_AQ != 0, flags & INSN_RL != 0) {
-            (true, true) => "sc",
+            (true, true) => "aqrl",
             (true, false) => "aq",
             (false, true) => "rl",
             (false, false) => "",
         };
         Some((m, s))
+    }
+
+    #[cfg(feature = "print")]
+    #[allow(unused_variables)]
+    fn print_operand_check(&self, operand: &Operand) -> bool {
+        if let Operand::ArchSpec(ty, value) = operand {
+            match *ty {
+                OPERAND_RM if *value == 7 => return false,
+                _ => true,
+            }
+        } else {
+            true
+        }
+    }
+
+    #[cfg(feature = "print")]
+    fn print_operand(
+        &self,
+        fmt: &mut fmt::Formatter,
+        operand: &Operand,
+    ) -> Result<bool, fmt::Error> {
+        if let &Operand::ArchSpec(ty, value) = operand {
+            match ty {
+                OPERAND_FENCE => {
+                    assert!(value < 4); // TODO:
+                    if value & 2 != 0 {
+                        write!(fmt, "r")?;
+                    }
+                    if value & 1 != 0 {
+                        write!(fmt, "w")?;
+                    }
+                    Ok(true)
+                }
+                OPERAND_RM => {
+                    let s = match value as u8 {
+                        RM_RNE => "rne",
+                        RM_RTZ => "rtz",
+                        RM_RDN => "rdn",
+                        RM_RUP => "rup",
+                        RM_RMM => "rmm",
+                        RM_DYN => "dyn",
+                        _ => todo!(),
+                    };
+                    fmt.write_str(s)?;
+                    Ok(true)
+                }
+                _ => todo!(),
+            }
+        } else {
+            Ok(false)
+        }
     }
 }
 
@@ -232,15 +297,11 @@ impl RiscvDecode for RiscvDecoder {
         out.push_reg(reg(value as isize));
     }
 
-    fn set_rm(&mut self, _: u64, _: &mut Insn, _: i64) {
-        // TODO:
+    fn set_rm(&mut self, _: u64, out: &mut Insn, value: i64) {
+        out.push_arch_spec(OPERAND_RM, value as u64);
     }
 
     fn set_vm(&mut self, _: u64, _: &mut Insn, _: i64) {
-        // TODO:
-    }
-
-    fn set_pred(&mut self, _: u64, _: &mut Insn, _: i64) {
         // TODO:
     }
 
@@ -248,8 +309,12 @@ impl RiscvDecode for RiscvDecoder {
         // TODO:
     }
 
-    fn set_succ(&mut self, _: u64, _: &mut Insn, _: i64) {
-        // TODO:
+    fn set_pred(&mut self, _: u64, out: &mut Insn, value: i64) {
+        out.push_arch_spec(OPERAND_FENCE, value as u64);
+    }
+
+    fn set_succ(&mut self, _: u64, out: &mut Insn, value: i64) {
+        out.push_arch_spec(OPERAND_FENCE, value as u64);
     }
 
     fn set_addr_reg(&mut self, _: u64, out: &mut Insn, value: i64) {

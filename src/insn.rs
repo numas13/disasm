@@ -92,6 +92,10 @@ impl Insn {
         self.push_operand(Operand::AddressReg(reg));
     }
 
+    pub(crate) fn push_arch_spec(&mut self, val0: u64, val1: u64) {
+        self.push_operand(Operand::ArchSpec(val0, val1));
+    }
+
     #[cfg(feature = "print")]
     pub fn printer<'a, I>(&'a self, disasm: &'a crate::Disasm, info: I) -> Printer<'a, I>
     where
@@ -118,11 +122,16 @@ where
         }
         if !insn.operands().is_empty() {
             write!(fmt, "\t")?;
-            for (i, operand) in insn.operands().iter().enumerate() {
+            for (i, operand) in insn
+                .operands()
+                .iter()
+                .filter(|i| disasm.decoder.print_operand_check(i))
+                .enumerate()
+            {
                 if i != 0 {
                     write!(fmt, ",")?;
                 }
-                write!(fmt, "{}", operand.printer(disasm))?;
+                operand.printer(disasm).fmt(fmt)?;
                 if let Operand::Address(addr) = operand {
                     if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
                         write!(fmt, " <{sym_name}")?;
