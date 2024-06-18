@@ -1,6 +1,6 @@
-use core::ops::Deref;
 #[cfg(feature = "print")]
 use core::fmt;
+use core::ops::Deref;
 
 use alloc::vec::Vec;
 

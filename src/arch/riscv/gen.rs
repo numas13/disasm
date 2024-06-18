@@ -6,8 +6,10 @@ use crate::{
     Insn, Opcode, Options,
 };
 
+use super::RiscvDecoder;
+
 pub trait Args {
-    fn set(&self, address: u64, insn: &mut Insn);
+    fn set(&self, dec: &RiscvDecoder, address: u64, insn: &mut Insn);
 }
 
 include!(concat!(env!("OUT_DIR"), "/arch/riscv/decode.rs"));

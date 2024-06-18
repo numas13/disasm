@@ -1,6 +1,6 @@
 mod gen;
 
-use crate::{Insn, Bundle, Options, Reg};
+use crate::{Bundle, Insn, Options, Reg};
 
 use self::gen::{Args, RiscvDecode};
 
@@ -94,31 +94,37 @@ impl RiscvDecode for RiscvDecoder {
         value + 1
     }
 
-    fn ex_sreg_register(&mut self, _value: isize) -> isize {
-        todo!()
+    fn ex_sreg_register(&mut self, value: isize) -> isize {
+        if value < 2 {
+            value + 8
+        } else {
+            value + 16
+        }
     }
 
-    fn ex_rvc_register(&mut self, _value: isize) -> isize {
-        todo!()
+    fn ex_rvc_register(&mut self, value: isize) -> isize {
+        value + 8
     }
 
-    fn ex_rvc_shiftli(&mut self, _value: isize) -> isize {
-        todo!()
+    fn ex_rvc_shiftli(&mut self, value: isize) -> isize {
+        // TODO: rv128c
+        value
     }
 
-    fn ex_rvc_shiftri(&mut self, _value: isize) -> isize {
-        todo!()
+    fn ex_rvc_shiftri(&mut self, value: isize) -> isize {
+        // TODO: rv128c
+        value
     }
 
     fn set_args<A: Args>(&mut self, address: u64, out: &mut Insn, args: A) {
-        args.set(address, out);
+        args.set(self, address, out);
     }
 }
 
 // TODO: generate Args impls???
 
 impl Args for &gen::args_b {
-    fn set(&self, address: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, address: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rs1 as u16));
         insn.push_reg(Reg(self.rs2 as u16));
         insn.push_addr(rel_addr(address, self.imm));
@@ -126,30 +132,30 @@ impl Args for &gen::args_b {
 }
 
 impl Args for &gen::args_b2 {
-    fn set(&self, address: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, address: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rs1 as u16));
         insn.push_addr(rel_addr(address, self.imm));
     }
 }
 
 impl Args for &gen::args_i {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_reg(Reg(self.rs1 as u16));
         insn.push_imm(self.imm as i64);
     }
 }
 
-impl Args for &gen::args_i_2 {
-    fn set(&self, _: u64, insn: &mut Insn) {
+impl Args for &gen::args_i2 {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_imm(self.imm as i64);
     }
 }
 
 impl Args for &gen::args_j {
-    fn set(&self, address: u64, insn: &mut Insn) {
-        if self.rd != 1 {
+    fn set(&self, dec: &RiscvDecoder, address: u64, insn: &mut Insn) {
+        if !dec.opts.alias || self.rd != 1 {
             insn.push_reg(Reg(self.rd as u16));
         }
         insn.push_addr(rel_addr(address, self.imm));
@@ -157,13 +163,13 @@ impl Args for &gen::args_j {
 }
 
 impl Args for &gen::args_j2 {
-    fn set(&self, address: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, address: u64, insn: &mut Insn) {
         insn.push_addr(rel_addr(address, self.imm));
     }
 }
 
 impl Args for &gen::args_jr {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         if self.imm != 0 {
             insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
         } else {
@@ -173,8 +179,8 @@ impl Args for &gen::args_jr {
 }
 
 impl Args for &gen::args_jalr {
-    fn set(&self, _: u64, insn: &mut Insn) {
-        if self.rd != 1 {
+    fn set(&self, dec: &RiscvDecoder, _: u64, insn: &mut Insn) {
+        if !dec.opts.alias || self.rd != 1 {
             insn.push_reg(Reg(self.rd as u16));
         }
         if self.imm != 0 {
@@ -186,7 +192,7 @@ impl Args for &gen::args_jalr {
 }
 
 impl Args for &gen::args_r {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_reg(Reg(self.rs1 as u16));
         insn.push_reg(Reg(self.rs2 as u16));
@@ -194,57 +200,64 @@ impl Args for &gen::args_r {
 }
 
 impl Args for &gen::args_r2 {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_reg(Reg(self.rs1 as u16));
     }
 }
 
 impl Args for &gen::args_r2_s {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rs1 as u16));
         insn.push_reg(Reg(self.rs2 as u16));
     }
 }
 
 impl Args for &gen::args_r3 {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_reg(Reg(self.rs2 as u16));
     }
 }
 
 impl Args for &gen::args_l {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_s {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rs2 as u16));
         insn.push_offset(Reg(self.rs1 as u16), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_u {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_uimm((self.imm as u64 >> 12) & 0xfffff);
     }
 }
 
 impl Args for &gen::args_shift {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         insn.push_reg(Reg(self.rs1 as u16));
         insn.push_uimm(self.shamt as u64);
     }
 }
 
+impl Args for &gen::args_shift_c {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_uimm(self.shamt as u64);
+    }
+}
+
 impl Args for &gen::args_atomic_ld {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.insert_flags(self.aq != 0, INSN_AQ);
         insn.insert_flags(self.rl != 0, INSN_RL);
         insn.push_reg(Reg(self.rd as u16));
@@ -253,7 +266,7 @@ impl Args for &gen::args_atomic_ld {
 }
 
 impl Args for &gen::args_atomic_st {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.insert_flags(self.aq != 0, INSN_AQ);
         insn.insert_flags(self.rl != 0, INSN_RL);
         insn.push_reg(Reg(self.rd as u16));
@@ -262,41 +275,69 @@ impl Args for &gen::args_atomic_st {
     }
 }
 
+impl Args for &gen::args_csr {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_uimm(self.csr as u64); // TODO: csr reg
+        insn.push_reg(Reg(self.rs1 as u16));
+    }
+}
+
+impl Args for &gen::args_csri {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+        insn.push_reg(Reg(self.rd as u16));
+        insn.push_uimm(self.csr as u64); // TODO: csr reg
+        insn.push_uimm(self.imm as u64);
+    }
+}
+
 impl Args for &gen::args_rmrr {
-    fn set(&self, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_rmr {
-    fn set(&self, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_r2nfvm {
-    fn set(&self, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_rnfvm {
-    fn set(&self, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_k_aes {
-    fn set(&self, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_ci {
-    fn set(&self, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(Reg(self.rd as u16));
         // TODO: insn.push_reg(Reg(self.rs1 as u16));
         insn.push_imm(self.imm as i64);
+    }
+}
+
+impl Args for &gen::args_cmpp {
+    fn set(&self, _: &RiscvDecoder, _: u64, _insn: &mut Insn) {
+        // TODO:
+    }
+}
+
+impl Args for &gen::args_cmjt {
+    fn set(&self, _: &RiscvDecoder, _: u64, _insn: &mut Insn) {
+        // TODO:
     }
 }
 

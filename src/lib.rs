@@ -13,7 +13,7 @@ use alloc::boxed::Box;
 
 use crate::arch::Decoder;
 
-pub use crate::insn::{Insn, Bundle, Opcode};
+pub use crate::insn::{Bundle, Insn, Opcode};
 pub use crate::operand::{Operand, Reg};
 
 #[derive(Clone, Debug, PartialEq, Eq)]

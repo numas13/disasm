@@ -1,7 +1,7 @@
 #[cfg(feature = "riscv")]
 pub mod riscv;
 
-use crate::{Insn, Reg, Bundle};
+use crate::{Bundle, Insn, Reg};
 
 pub(crate) trait Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize>;
