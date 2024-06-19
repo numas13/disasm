@@ -344,6 +344,10 @@ impl RiscvDecode for RiscvDecoder {
     fn set_uimm(&mut self, _: u64, out: &mut Insn, value: i64) {
         out.push_uimm(value as u64);
     }
+
+    fn set_imm_u(&mut self, _: u64, out: &mut Insn, value: i64) {
+        out.push_uimm((value as u64 >> 12) & 0xfffff);
+    }
 }
 
 // TODO: generate Args impls???
@@ -359,32 +363,11 @@ fn reg(value: isize) -> Reg {
     Reg::new(class, value as u64 - offset as u64)
 }
 
-impl Args for &gen::args_i {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_reg(reg(self.rs1));
-        insn.push_imm(self.imm as i64);
-    }
-}
-
-impl Args for &gen::args_i2 {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_imm(self.imm as i64);
-    }
-}
-
 impl Args for &gen::args_j {
     fn set(&self, dec: &RiscvDecoder, address: u64, insn: &mut Insn) {
         if !dec.opts.alias || self.rd != 1 {
             insn.push_reg(reg(self.rd));
         }
-        insn.push_addr(rel_addr(address, self.imm));
-    }
-}
-
-impl Args for &gen::args_j2 {
-    fn set(&self, _: &RiscvDecoder, address: u64, insn: &mut Insn) {
         insn.push_addr(rel_addr(address, self.imm));
     }
 }
@@ -413,27 +396,6 @@ impl Args for &gen::args_jalr {
     }
 }
 
-impl Args for &gen::args_r2 {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_reg(reg(self.rs1));
-    }
-}
-
-impl Args for &gen::args_r2_s {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rs1));
-        insn.push_reg(reg(self.rs2));
-    }
-}
-
-impl Args for &gen::args_r3 {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_reg(reg(self.rs2));
-    }
-}
-
 impl Args for &gen::args_l {
     fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
         insn.push_reg(reg(self.rd));
@@ -448,25 +410,17 @@ impl Args for &gen::args_s {
     }
 }
 
-impl Args for &gen::args_u {
+impl Args for &gen::args_fl {
     fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_uimm((self.imm as u64 >> 12) & 0xfffff);
+        insn.push_reg(reg(self.fd));
+        insn.push_offset(reg(self.rs1), self.imm as i64);
     }
 }
 
-impl Args for &gen::args_shift {
+impl Args for &gen::args_fs {
     fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_reg(reg(self.rs1));
-        insn.push_uimm(self.shamt as u64);
-    }
-}
-
-impl Args for &gen::args_shift_c {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_uimm(self.shamt as u64);
+        insn.push_reg(reg(self.fs2));
+        insn.push_offset(reg(self.rs1), self.imm as i64);
     }
 }
 
