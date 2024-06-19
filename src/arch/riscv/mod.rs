@@ -388,7 +388,7 @@ impl Args for &gen::args_jalr {
         if !dec.opts.alias || self.rd != 1 {
             insn.push_reg(reg(self.rd));
         }
-        if self.imm != 0 {
+        if !dec.opts.alias || self.imm != 0 {
             insn.push_offset(reg(self.rs1), self.imm as i64);
         } else {
             insn.push_reg(reg(self.rs1));
