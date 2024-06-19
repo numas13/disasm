@@ -14,9 +14,12 @@ fn riscv_print() {
             },
         )
         .unwrap();
-        disasm.decode(&raw.to_le_bytes(), &mut bundle).unwrap();
-        let output = format!("{}", bundle[0].printer(&disasm, ()));
-        assert_eq!(output, expect);
+        if disasm.decode(&raw.to_le_bytes(), &mut bundle).is_ok() {
+            let output = format!("{}", bundle[0].printer(&disasm, ()));
+            assert_eq!(output, expect);
+        } else {
+            panic!("failed to decode {raw:#08x}, expected \"{expect}\"");
+        }
     }
 
     // RV32I

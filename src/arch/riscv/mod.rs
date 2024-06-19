@@ -8,7 +8,7 @@ use alloc::borrow::Cow;
 
 #[cfg(feature = "print")]
 use crate::Operand;
-use crate::{Bundle, Insn, Options, Reg, RegClass};
+use crate::{Bundle, Insn, Reg, RegClass};
 
 use self::gen::{Args, RiscvDecode};
 
@@ -66,25 +66,71 @@ const F_ABI_NAME: [&str; 32] = [
     "fs8",  "fs9", "fs10", "fs11",  "ft8",  "ft9", "ft10", "ft11",
 ];
 
-pub(crate) struct RiscvDecoder {
-    opts: Options,
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Xlen {
+    X32,
+    X64,
+    X128,
 }
 
-impl RiscvDecoder {
-    pub(crate) fn new(opts: Options) -> Self {
-        Self { opts }
+impl Default for Xlen {
+    fn default() -> Self {
+        Self::X64
     }
 }
 
-impl super::Decoder for RiscvDecoder {
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Extensions {
+    pub a: bool,
+    pub c: bool,
+    pub d: bool,
+    pub f: bool,
+    pub m: bool,
+    pub zcb: bool,
+    pub zfh: bool,
+    pub zicsr: bool,
+}
+
+impl Extensions {
+    pub fn all() -> Self {
+        Self {
+            a: true,
+            c: true,
+            d: true,
+            f: true,
+            m: true,
+            zcb: true,
+            zfh: true,
+            zicsr: true,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+pub struct Options {
+    pub xlen: Xlen,
+    pub ext: Extensions,
+}
+
+pub(crate) struct Decoder {
+    opts: crate::Options,
+    rv_opts: Options,
+}
+
+impl Decoder {
+    pub(crate) fn new(opts: crate::Options, rv_opts: Options) -> Self {
+        Self { opts, rv_opts }
+    }
+}
+
+impl super::Decoder for Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize> {
         let len = bytes
             .first()
             .map(|i| if i & 3 == 3 { 4 } else { 2 })
             .ok_or(2_usize)?;
 
-        if bytes.len() < len {
-            // need len bytes
+        if bytes.len() < len || (len == 2 && !self.rv_opts.ext.c) {
             return Err(len);
         }
         out.clear();
@@ -148,10 +194,7 @@ impl super::Decoder for RiscvDecoder {
     #[allow(unused_variables)]
     fn print_operand_check(&self, operand: &Operand) -> bool {
         if let Operand::ArchSpec(ty, value) = operand {
-            match *ty {
-                OPERAND_RM if *value == 7 => return false,
-                _ => true,
-            }
+            !matches!(*ty, OPERAND_RM if *value == 7)
         } else {
             true
         }
@@ -204,9 +247,35 @@ macro_rules! impl_ex_shift {
     };
 }
 
-impl RiscvDecode for RiscvDecoder {
-    fn opts(&self) -> &Options {
-        &self.opts
+macro_rules! impl_has_ext {
+    ($($func:ident = $name:ident),+$(,)?) => {
+        $(fn $func(&self) -> bool {
+            self.rv_opts.ext.$name
+        })+
+    }
+}
+
+impl RiscvDecode for Decoder {
+    fn alias(&self) -> bool {
+        self.opts.alias
+    }
+
+    fn has_rv64i(&self) -> bool {
+        self.rv_opts.xlen == Xlen::X64
+    }
+
+    fn has_rv128i(&self) -> bool {
+        self.rv_opts.xlen == Xlen::X128
+    }
+
+    impl_has_ext! {
+        has_a = a,
+        has_d = d,
+        has_f = f,
+        has_m = m,
+        has_zcb = zcb,
+        has_zfh = zfh,
+        has_zicsr = zicsr,
     }
 
     impl_ex_shift! {
@@ -338,7 +407,7 @@ impl RiscvDecode for RiscvDecoder {
     }
 
     fn set_imm(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_imm(value as i64);
+        out.push_imm(value);
     }
 
     fn set_uimm(&mut self, _: u64, out: &mut Insn, value: i64) {
@@ -364,7 +433,7 @@ fn reg(value: isize) -> Reg {
 }
 
 impl Args for &gen::args_j {
-    fn set(&self, dec: &RiscvDecoder, address: u64, insn: &mut Insn) {
+    fn set(&self, dec: &Decoder, address: u64, insn: &mut Insn) {
         if !dec.opts.alias || self.rd != 1 {
             insn.push_reg(reg(self.rd));
         }
@@ -373,7 +442,7 @@ impl Args for &gen::args_j {
 }
 
 impl Args for &gen::args_jr {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
         let rs1 = reg(self.rs1);
         if self.imm != 0 {
             insn.push_offset(rs1, self.imm as i64);
@@ -384,7 +453,7 @@ impl Args for &gen::args_jr {
 }
 
 impl Args for &gen::args_jalr {
-    fn set(&self, dec: &RiscvDecoder, _: u64, insn: &mut Insn) {
+    fn set(&self, dec: &Decoder, _: u64, insn: &mut Insn) {
         if !dec.opts.alias || self.rd != 1 {
             insn.push_reg(reg(self.rd));
         }
@@ -397,71 +466,71 @@ impl Args for &gen::args_jalr {
 }
 
 impl Args for &gen::args_l {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
         insn.push_reg(reg(self.rd));
         insn.push_offset(reg(self.rs1), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_s {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
         insn.push_reg(reg(self.rs2));
         insn.push_offset(reg(self.rs1), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_fl {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
         insn.push_reg(reg(self.fd));
         insn.push_offset(reg(self.rs1), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_fs {
-    fn set(&self, _: &RiscvDecoder, _: u64, insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
         insn.push_reg(reg(self.fs2));
         insn.push_offset(reg(self.rs1), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_rmrr {
-    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_rmr {
-    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_r2nfvm {
-    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_rnfvm {
-    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_k_aes {
-    fn set(&self, _: &RiscvDecoder, _address: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _address: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_cmpp {
-    fn set(&self, _: &RiscvDecoder, _: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, _insn: &mut Insn) {
         // TODO:
     }
 }
 
 impl Args for &gen::args_cmjt {
-    fn set(&self, _: &RiscvDecoder, _: u64, _insn: &mut Insn) {
+    fn set(&self, _: &Decoder, _: u64, _insn: &mut Insn) {
         // TODO:
     }
 }

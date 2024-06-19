@@ -14,17 +14,18 @@ use decodetree::{
 #[derive(Default)]
 struct Helper {
     args: HashSet<String>,
+    cond: HashSet<String>,
 }
 
 impl Helper {
-    fn pass_arg(name: &str) -> bool {
-        name != "alias"
+    fn is_cond(s: &str) -> bool {
+        s == "alias" || s.starts_with("has_")
     }
 }
 
 impl<T> Gen<T> for Helper {
     fn pass_arg(&self, name: &str) -> bool {
-        Self::pass_arg(name)
+        !Self::is_cond(name)
     }
 
     fn additional_args(&self) -> &[(&str, &str)] {
@@ -44,12 +45,18 @@ impl<T> Gen<T> for Helper {
         for set in pattern.sets.iter().filter(|i| !i.is_extern) {
             writeln!(out, "{p}self.set_args(address, out, {});", set.name)?;
         }
-        for arg in pattern.args.iter().filter(|i| Self::pass_arg(&i.name)) {
-            let name = &arg.name;
-            if !self.args.contains(name) {
-                self.args.insert(name.clone());
+        for i in pattern.args.iter() {
+            let name = &i.name;
+            if Self::is_cond(name) {
+                if !self.cond.contains(name) {
+                    self.cond.insert(name.clone());
+                }
+            } else {
+                if !self.args.contains(name) {
+                    self.args.insert(name.clone());
+                }
+                writeln!(out, "{p}self.set_{name}(address, out, {name} as i64);")?;
             }
-            writeln!(out, "{p}self.set_{name}(address, out, {name} as i64);")?;
         }
         writeln!(out, "{p}true")?;
         writeln!(out, "{pad}}}")?;
@@ -62,7 +69,6 @@ impl<T> Gen<T> for Helper {
             out,
             "{pad}fn set_args<A: Args>(&mut self, address: u64, out: &mut Insn, args: A);"
         )?;
-        writeln!(out, "{pad}fn opts(&self) -> &Options;")?;
 
         if !self.args.is_empty() {
             writeln!(out)?;
@@ -74,17 +80,33 @@ impl<T> Gen<T> for Helper {
             }
         }
 
+        if !self.cond.is_empty() {
+            writeln!(out)?;
+            for i in &self.cond {
+                writeln!(out, "{pad}fn {i}(&self) -> bool;")?;
+            }
+        }
+
         Ok(())
     }
 
     fn additional_cond(&self, pattern: &Pattern<T>) -> Option<Cow<'static, str>> {
-        // decode aliases only if enabled
-        if let Some(arg) = pattern.args.iter().find(|i| i.name == "alias") {
-            if let ValueKind::Const(val) = arg.kind {
-                if val != 0 {
-                    return Some(Cow::Borrowed("self.opts().alias"));
+        if pattern.args.iter().any(|i| Self::is_cond(&i.name)) {
+            let mut out = String::new();
+            for i in pattern.args.iter().filter(|i| Self::is_cond(&i.name)) {
+                if let ValueKind::Const(val) = i.kind {
+                    if !out.is_empty() {
+                        out.push_str(" && ");
+                    }
+                    if val == 0 {
+                        out.push('!');
+                    }
+                    out.push_str("self.");
+                    out.push_str(&i.name);
+                    out.push_str("()");
                 }
             }
+            return Some(Cow::Owned(out));
         }
         None
     }

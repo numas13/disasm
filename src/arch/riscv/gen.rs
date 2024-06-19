@@ -3,13 +3,13 @@
 
 use crate::{
     utils::{sextract, zextract},
-    Insn, Opcode, Options,
+    Insn, Opcode,
 };
 
-use super::RiscvDecoder;
+use super::Decoder;
 
 pub trait Args {
-    fn set(&self, dec: &RiscvDecoder, address: u64, insn: &mut Insn);
+    fn set(&self, dec: &Decoder, address: u64, insn: &mut Insn);
 }
 
 include!(concat!(env!("OUT_DIR"), "/arch/riscv/decode.rs"));

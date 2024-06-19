@@ -32,9 +32,10 @@ impl fmt::Display for Error {
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone)]
 pub enum Arch {
-    Riscv,
+    #[cfg(feature = "riscv")]
+    Riscv(crate::arch::riscv::Options),
 }
 
 #[derive(Copy, Clone)]
@@ -58,20 +59,18 @@ pub struct Disasm {
 }
 
 impl Disasm {
-    fn new_decoder(arch: Arch, opts: Options) -> Result<Box<dyn Decoder>, Error> {
-        #[cfg(feature = "riscv")]
-        if arch == Arch::Riscv {
-            return Ok(Box::new(crate::arch::riscv::RiscvDecoder::new(opts)));
+    fn new_decoder(arch: Arch, opts: Options) -> Box<dyn Decoder> {
+        match arch {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(rv_opts) => Box::new(crate::arch::riscv::Decoder::new(opts, rv_opts)),
         }
-
-        Err(Error::Unsupported)
     }
 
-    pub fn new(arch: Arch, address: u64, opts: Options) -> Result<Self, Error> {
-        Ok(Self {
-            decoder: Self::new_decoder(arch, opts)?,
+    pub fn new(arch: Arch, address: u64, opts: Options) -> Self {
+        Self {
+            decoder: Self::new_decoder(arch, opts),
             address,
-        })
+        }
     }
 
     /// Current decoding address.
