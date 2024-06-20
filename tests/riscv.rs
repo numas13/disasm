@@ -1,4 +1,4 @@
-use disasm::{Arch, Bundle, Disasm, Options};
+use disasm::{arch::riscv, Arch, Bundle, Disasm, Options};
 
 #[cfg(feature = "print")]
 #[test]
@@ -6,14 +6,16 @@ fn riscv_print() {
     fn test(address: u64, raw: u32, expect: &str) {
         let mut bundle = Bundle::empty();
         let mut disasm = Disasm::new(
-            Arch::Riscv,
+            Arch::Riscv(riscv::Options {
+                xlen: riscv::Xlen::X64,
+                ext: riscv::Extensions::all(),
+            }),
             address,
             Options {
                 alias: false,
                 ..Options::default()
             },
-        )
-        .unwrap();
+        );
         if disasm.decode(&raw.to_le_bytes(), &mut bundle).is_ok() {
             let output = format!("{}", bundle[0].printer(&disasm, ()));
             assert_eq!(output, expect);
