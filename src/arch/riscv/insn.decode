@@ -88,13 +88,10 @@
 %index      2:8
 
 # Argument sets:
+&offset   imm rs1
 &j        rd  imm
 &jr       rs1 imm
 &jalr     rd  rs1 imm
-&l        rd  rs1 imm
-&s        rs2 rs1 imm
-&fl       fd  rs1 imm
-&fs       fs2 rs1 imm
 &fence    pred succ
 &rmrr     vm rd rs1 rs2
 &rmr      vm rd rs2
@@ -111,36 +108,36 @@
 @ci        ---------------- ... . ..... .....  ..         %rd   rs1=%rd    imm=%imm_ci
 @cs_2      ---------------- ... ... ... .. ... ..         rd=%rs1_3 rs2=%rs2_3
 
-@cl_q      ---------------- ... . .....  ..... .. &l      imm=%uimm_cl_q   rs1=%rs1_3  rd=%rs2_3
-@cl_d      ---------------- ... ... ... .. ... .. &l      imm=%uimm_cl_d   rs1=%rs1_3  rd=%rs2_3
-@cl_w      ---------------- ... ... ... .. ... .. &l      imm=%uimm_cl_w   rs1=%rs1_3  rd=%rs2_3
-@cs_q      ---------------- ... ... ... .. ... .. &s      imm=%uimm_cl_q   rs1=%rs1_3  rs2=%rs2_3
-@cs_d      ---------------- ... ... ... .. ... .. &s      imm=%uimm_cl_d   rs1=%rs1_3  rs2=%rs2_3
-@cs_w      ---------------- ... ... ... .. ... .. &s      imm=%uimm_cl_w   rs1=%rs1_3  rs2=%rs2_3
+@cl_q      ---------------- ... . .....  ..... .. rd=%rs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
+@cl_d      ---------------- ... ... ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
+@cl_w      ---------------- ... ... ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
+@cs_q      ---------------- ... ... ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
+@cs_d      ---------------- ... ... ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
+@cs_w      ---------------- ... ... ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
 
-@cfl_q     ---------------- ... . .....  ..... .. &fl     fd=%fs2_3   rs1=%rs1_3 imm=%uimm_cl_q
-@cfl_d     ---------------- ... ... ... .. ... .. &fl     fd=%fs2_3   rs1=%rs1_3 imm=%uimm_cl_d
-@cfl_w     ---------------- ... ... ... .. ... .. &fl     fd=%fs2_3   rs1=%rs1_3 imm=%uimm_cl_w
-@cfs_q     ---------------- ... ... ... .. ... .. &fs     fs2=%fs2_3  rs1=%rs1_3 imm=%uimm_cl_q
-@cfs_d     ---------------- ... ... ... .. ... .. &fs     fs2=%fs2_3  rs1=%rs1_3 imm=%uimm_cl_d
-@cfs_w     ---------------- ... ... ... .. ... .. &fs     fs2=%fs2_3  rs1=%rs1_3 imm=%uimm_cl_w
+@cfl_q     ---------------- ... . .....  ..... .. fd=%fs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
+@cfl_d     ---------------- ... ... ... .. ... .. fd=%fs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
+@cfl_w     ---------------- ... ... ... .. ... .. fd=%fs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
+@cfs_q     ---------------- ... ... ... .. ... .. fs2=%fs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
+@cfs_d     ---------------- ... ... ... .. ... .. fs2=%fs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
+@cfs_w     ---------------- ... ... ... .. ... .. fs2=%fs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
 
 @cj        ---------------- ...    ........... ..         rel=%imm_cj
 @cb_z      ---------------- ... ... ... .. ... ..         rs1=%rs1_3 rel=%imm_cb
 
-@c_lqsp    ---------------- ... . .....  ..... .. &l      imm=%uimm_6bit_lq rs1=2 %rd
-@c_ldsp    ---------------- ... . .....  ..... .. &l      imm=%uimm_6bit_ld rs1=2 %rd
-@c_lwsp    ---------------- ... . .....  ..... .. &l      imm=%uimm_6bit_lw rs1=2 %rd
-@c_sqsp    ---------------- ... . .....  ..... .. &s      imm=%uimm_6bit_sq rs1=2 rs2=%rs2_5
-@c_sdsp    ---------------- ... . .....  ..... .. &s      imm=%uimm_6bit_sd rs1=2 rs2=%rs2_5
-@c_swsp    ---------------- ... . .....  ..... .. &s      imm=%uimm_6bit_sw rs1=2 rs2=%rs2_5
+@c_lqsp    ---------------- ... . .....  ..... .. %rd &offset imm=%uimm_6bit_lq rs1=2
+@c_ldsp    ---------------- ... . .....  ..... .. %rd &offset imm=%uimm_6bit_ld rs1=2
+@c_lwsp    ---------------- ... . .....  ..... .. %rd &offset imm=%uimm_6bit_lw rs1=2
+@c_sqsp    ---------------- ... . .....  ..... .. rs2=%rs2_5 &offset imm=%uimm_6bit_sq rs1=2
+@c_sdsp    ---------------- ... . .....  ..... .. rs2=%rs2_5 &offset imm=%uimm_6bit_sd rs1=2
+@c_swsp    ---------------- ... . .....  ..... .. rs2=%rs2_5 &offset imm=%uimm_6bit_sw rs1=2
 
-@c_flqsp   ---------------- ... . .....  ..... .. &fl     %fd         rs1=2 imm=%uimm_6bit_lq
-@c_fldsp   ---------------- ... . .....  ..... .. &fl     %fd         rs1=2 imm=%uimm_6bit_ld
-@c_flwsp   ---------------- ... . .....  ..... .. &fl     %fd         rs1=2 imm=%uimm_6bit_lw
-@c_fsqsp   ---------------- ... . .....  ..... .. &fs     fs2=%fs2_5  rs1=2 imm=%uimm_6bit_sq
-@c_fsdsp   ---------------- ... . .....  ..... .. &fs     fs2=%fs2_5  rs1=2 imm=%uimm_6bit_sd
-@c_fswsp   ---------------- ... . .....  ..... .. &fs     fs2=%fs2_5  rs1=2 imm=%uimm_6bit_sw
+@c_flqsp   ---------------- ... . .....  ..... .. %fd &offset imm=%uimm_6bit_lq rs1=2
+@c_fldsp   ---------------- ... . .....  ..... .. %fd &offset imm=%uimm_6bit_ld rs1=2
+@c_flwsp   ---------------- ... . .....  ..... .. %fd &offset imm=%uimm_6bit_lw rs1=2
+@c_fsqsp   ---------------- ... . .....  ..... .. fs2=%fs2_5 &offset imm=%uimm_6bit_sq rs1=2
+@c_fsdsp   ---------------- ... . .....  ..... .. fs2=%fs2_5 &offset imm=%uimm_6bit_sd rs1=2
+@c_fswsp   ---------------- ... . .....  ..... .. fs2=%fs2_5 &offset imm=%uimm_6bit_sw rs1=2
 
 @c_li      ---------------- ... . .....  ..... ..         %rd imm=%imm_ci
 @c_lui     ---------------- ... . .....  ..... ..         %rd imm_u=%imm_lui
@@ -156,11 +153,11 @@
 
 @c_andi         ---------------- ... . .. ... ..... .. rds=%rs1_3 imm=%imm_ci
 
-@cu           ---------------- ... ...  ... .. ... ..                      rd=%rs1_3 rs1=%rs1_3
-@cl_b         ---------------- ... . .. ... .. ... ..  &l  rd=%rs2_3  rs1=%rs1_3 imm=%uimm_cl_b
-@cl_h         ---------------- ... . .. ... .. ... ..  &l  rd=%rs2_3  rs1=%rs1_3 imm=%uimm_cl_h
-@cs_b         ---------------- ... . .. ... .. ... ..  &s  rs2=%rs2_3 rs1=%rs1_3 imm=%uimm_cl_b
-@cs_h         ---------------- ... . .. ... .. ... ..  &s  rs2=%rs2_3 rs1=%rs1_3 imm=%uimm_cl_h
+@cu           ---------------- ... ...  ... .. ... .. rd=%rs1_3 rs1=%rs1_3
+@cl_b         ---------------- ... . .. ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_b rs1=%rs1_3
+@cl_h         ---------------- ... . .. ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_h rs1=%rs1_3
+@cs_b         ---------------- ... . .. ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_b rs1=%rs1_3
+@cs_h         ---------------- ... . .. ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_h rs1=%rs1_3
 @cm_pp        ---------------- ... ...  ........   ..  &cmpp  %urlist      %spimm
 @cm_mv        ---------------- ... ...  ... .. ... ..         rs2=%r2s     rs1=%r1s
 @cm_jt        ---------------- ... ...  ........   ..  &cmjt  %index
@@ -171,11 +168,11 @@
 @r3      .......   ..... ..... ... ..... .......        %rd    %rs1  %rs2
 @i2      ............    ..... ... ..... .......         %rd          imm=%imm_i
 @i       ............    ..... ... ..... .......         %rd    %rs1  imm=%imm_i
-@l       ............    ..... ... ..... ....... &l      %rd    %rs1  imm=%imm_i
 @b1      .......   ..... ..... ... ..... .......         %rs1         rel=%imm_b
 @b1a     .......   ..... ..... ... ..... .......         %rs2         rel=%imm_b
 @b2      .......   ..... ..... ... ..... .......         %rs1   %rs2  rel=%imm_b
-@s       .......   ..... ..... ... ..... ....... &s      %rs1   %rs2  imm=%imm_s
+@l       ............    ..... ... ..... ....... %rd &offset imm=%imm_i %rs1
+@s       .......   ..... ..... ... ..... ....... %rs2 &offset imm=%imm_s %rs1
 @u       ....................      ..... .......         %rd          %imm_u
 @j       ....................      ..... ....... &j      %rd          imm=%imm_j
 @j2      ....................      ..... .......                      rel=%imm_j
@@ -189,8 +186,8 @@
 @atom_ld ..... aq:1 rl:1 ..... ........ ..... ....... %rd addr_reg=%rs1
 @atom_st ..... aq:1 rl:1 ..... ........ ..... ....... %rd %rs2 addr_reg=%rs1
 
-@fl      ............    ..... ... ..... ....... &fl  %fd %rs1 imm=%imm_i
-@fs      .......   ..... ..... ... ..... ....... &fs  %fs2 %rs1 imm=%imm_s
+@fl      ............    ..... ... ..... ....... %fd &offset imm=%imm_i %rs1
+@fs      .......   ..... ..... ... ..... ....... %fs2 &offset imm=%imm_s %rs1
 @f2      .......   ..... ..... ... ..... .......      %fd %fs1
 @f2_rm   .......   ..... ..... ... ..... .......      %fd %fs1 %rm
 @f3      .......   ..... ..... ... ..... .......      %fd %fs1 %fs2

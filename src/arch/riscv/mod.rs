@@ -382,6 +382,10 @@ impl RiscvDecode for Decoder {
         out.push_uimm((value as u64 >> 12) & 0xfffff);
     }
 
+    fn set_args_offset(&mut self, _: u64, insn: &mut Insn, args: &gen::args_offset) {
+        insn.push_offset(x(args.rs1 as i64), args.imm as i64);
+    }
+
     fn set_args_j(&mut self, address: u64, insn: &mut Insn, args: &gen::args_j) {
         if !self.alias() || args.rd != 1 {
             insn.push_reg(x(args.rd as i64));
@@ -407,26 +411,6 @@ impl RiscvDecode for Decoder {
         } else {
             insn.push_reg(x(args.rs1 as i64));
         }
-    }
-
-    fn set_args_l(&mut self, _: u64, insn: &mut Insn, args: &gen::args_l) {
-        insn.push_reg(x(args.rd as i64));
-        insn.push_offset(x(args.rs1 as i64), args.imm as i64);
-    }
-
-    fn set_args_s(&mut self, _: u64, insn: &mut Insn, args: &gen::args_s) {
-        insn.push_reg(x(args.rs2 as i64));
-        insn.push_offset(x(args.rs1 as i64), args.imm as i64);
-    }
-
-    fn set_args_fl(&mut self, _: u64, insn: &mut Insn, args: &gen::args_fl) {
-        insn.push_reg(f(args.fd as i64));
-        insn.push_offset(x(args.rs1 as i64), args.imm as i64);
-    }
-
-    fn set_args_fs(&mut self, _: u64, insn: &mut Insn, args: &gen::args_fs) {
-        insn.push_reg(f(args.fs2 as i64));
-        insn.push_offset(x(args.rs1 as i64), args.imm as i64);
     }
 
     fn set_args_fence(&mut self, _: u64, insn: &mut Insn, args: &gen::args_fence) {
