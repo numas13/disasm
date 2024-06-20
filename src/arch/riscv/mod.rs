@@ -2,7 +2,6 @@ mod gen;
 
 #[cfg(feature = "print")]
 use core::fmt;
-use core::ops::Range;
 
 use alloc::borrow::Cow;
 
@@ -15,11 +14,6 @@ use self::gen::{Args, RiscvDecode};
 pub use self::gen::opcode;
 
 pub const REG_CLASS_CSR: RegClass = RegClass::arch(0);
-
-const REG_X: Range<isize> = 0..32;
-const REG_F: Range<isize> = REG_X.end..REG_X.end + 32;
-const REG_V: Range<isize> = REG_F.end..REG_F.end + 32;
-const REG_CSR: Range<isize> = REG_V.end..REG_V.end + 4096;
 
 const INSN_AQ: u32 = 1 << 16;
 const INSN_RL: u32 = 1 << 17;
@@ -290,18 +284,6 @@ impl RiscvDecode for Decoder {
         value + 1
     }
 
-    fn ex_freg(&mut self, value: isize) -> isize {
-        value + REG_F.start
-    }
-
-    // fn ex_vreg(&mut self, value: isize) -> isize {
-    //     value + REG_V.start
-    // }
-
-    fn ex_csr(&mut self, value: isize) -> isize {
-        value + REG_CSR.start
-    }
-
     fn ex_sreg_register(&mut self, value: isize) -> isize {
         if value < 2 {
             value + 8
@@ -312,11 +294,6 @@ impl RiscvDecode for Decoder {
 
     fn ex_rvc_register(&mut self, value: isize) -> isize {
         value + 8
-    }
-
-    fn ex_rvc_freg(&mut self, value: isize) -> isize {
-        let value = self.ex_rvc_register(value);
-        self.ex_freg(value)
     }
 
     fn ex_rvc_shiftli(&mut self, value: isize) -> isize {
@@ -334,36 +311,36 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_rd(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(x(value));
     }
 
     /// C-ext, rd = op(rd, ...)
     fn set_rds(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(x(value));
     }
 
     fn set_rs1(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(x(value));
     }
 
     fn set_rs2(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(x(value));
     }
 
     fn set_fd(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(f(value));
     }
 
     fn set_fs1(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(f(value));
     }
 
     fn set_fs2(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(f(value));
     }
 
     fn set_fs3(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_reg(reg(value as isize));
+        out.push_reg(f(value));
     }
 
     fn set_rm(&mut self, _: u64, out: &mut Insn, value: i64) {
@@ -387,7 +364,7 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_addr_reg(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_addr_reg(reg(value as isize));
+        out.push_addr_reg(x(value));
     }
 
     fn set_rel(&mut self, address: u64, out: &mut Insn, rel: i64) {
@@ -402,8 +379,8 @@ impl RiscvDecode for Decoder {
         out.insert_flags(rl != 0, INSN_RL);
     }
 
-    fn set_csr(&mut self, _: u64, out: &mut Insn, csr: i64) {
-        out.push_reg(reg(csr as isize));
+    fn set_csr(&mut self, _: u64, out: &mut Insn, value: i64) {
+        out.push_reg(csr(value));
     }
 
     fn set_imm(&mut self, _: u64, out: &mut Insn, value: i64) {
@@ -419,23 +396,22 @@ impl RiscvDecode for Decoder {
     }
 }
 
-// TODO: generate Args impls???
+fn x(index: i64) -> Reg {
+    Reg::new(RegClass::INT, index as u64)
+}
 
-fn reg(value: isize) -> Reg {
-    let (class, offset) = match value {
-        _ if REG_X.contains(&value) => (RegClass::INT, REG_X.start),
-        _ if REG_F.contains(&value) => (RegClass::FLOAT, REG_F.start),
-        _ if REG_V.contains(&value) => (RegClass::VECTOR, REG_V.start),
-        _ if REG_CSR.contains(&value) => (REG_CLASS_CSR, REG_CSR.start),
-        _ => todo!(),
-    };
-    Reg::new(class, value as u64 - offset as u64)
+fn f(index: i64) -> Reg {
+    Reg::new(RegClass::FLOAT, index as u64)
+}
+
+fn csr(index: i64) -> Reg {
+    Reg::new(REG_CLASS_CSR, index as u64)
 }
 
 impl Args for &gen::args_j {
     fn set(&self, dec: &Decoder, address: u64, insn: &mut Insn) {
-        if !dec.opts.alias || self.rd != 1 {
-            insn.push_reg(reg(self.rd));
+        if !dec.alias() || self.rd != 1 {
+            insn.push_reg(x(self.rd as i64));
         }
         insn.push_addr(rel_addr(address, self.imm));
     }
@@ -443,7 +419,7 @@ impl Args for &gen::args_j {
 
 impl Args for &gen::args_jr {
     fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
-        let rs1 = reg(self.rs1);
+        let rs1 = x(self.rs1 as i64);
         if self.imm != 0 {
             insn.push_offset(rs1, self.imm as i64);
         } else {
@@ -454,42 +430,42 @@ impl Args for &gen::args_jr {
 
 impl Args for &gen::args_jalr {
     fn set(&self, dec: &Decoder, _: u64, insn: &mut Insn) {
-        if !dec.opts.alias || self.rd != 1 {
-            insn.push_reg(reg(self.rd));
+        if !dec.alias() || self.rd != 1 {
+            insn.push_reg(x(self.rd as i64));
         }
-        if !dec.opts.alias || self.imm != 0 {
-            insn.push_offset(reg(self.rs1), self.imm as i64);
+        if !dec.alias() || self.imm != 0 {
+            insn.push_offset(x(self.rs1 as i64), self.imm as i64);
         } else {
-            insn.push_reg(reg(self.rs1));
+            insn.push_reg(x(self.rs1 as i64));
         }
     }
 }
 
 impl Args for &gen::args_l {
     fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rd));
-        insn.push_offset(reg(self.rs1), self.imm as i64);
+        insn.push_reg(x(self.rd as i64));
+        insn.push_offset(x(self.rs1 as i64), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_s {
     fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.rs2));
-        insn.push_offset(reg(self.rs1), self.imm as i64);
+        insn.push_reg(x(self.rs2 as i64));
+        insn.push_offset(x(self.rs1 as i64), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_fl {
     fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.fd));
-        insn.push_offset(reg(self.rs1), self.imm as i64);
+        insn.push_reg(f(self.fd as i64));
+        insn.push_offset(x(self.rs1 as i64), self.imm as i64);
     }
 }
 
 impl Args for &gen::args_fs {
     fn set(&self, _: &Decoder, _: u64, insn: &mut Insn) {
-        insn.push_reg(reg(self.fs2));
-        insn.push_offset(reg(self.rs1), self.imm as i64);
+        insn.push_reg(f(self.fs2 as i64));
+        insn.push_offset(x(self.rs1 as i64), self.imm as i64);
     }
 }
 

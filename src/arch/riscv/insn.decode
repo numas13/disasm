@@ -24,13 +24,13 @@
 %sh5      20:5
 %sh6      20:6
 
-%fs3      27:5              !function=ex_freg
-%fs2      20:5              !function=ex_freg
-%fs1      15:5              !function=ex_freg
-%fd       7:5               !function=ex_freg
+%fs3      27:5
+%fs2      20:5
+%fs1      15:5
+%fd       7:5
 
 %sh7      20:7
-%csr      20:12             !function=ex_csr
+%csr      20:12
 %rm       12:3
 %nf       29:3              !function=ex_plus_1
 
@@ -43,9 +43,9 @@
 %r1s      7:3               !function=ex_sreg_register
 %r2s      2:3               !function=ex_sreg_register
 
-%fs1_3    7:3               !function=ex_rvc_freg
-%fs2_3    2:3               !function=ex_rvc_freg
-%fs2_5    2:5               !function=ex_freg
+%fs1_3    7:3               !function=ex_rvc_register
+%fs2_3    2:3               !function=ex_rvc_register
+%fs2_5    2:5
 
 # immediates:
 %imm_i    20:s12
