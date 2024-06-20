@@ -43,19 +43,17 @@ impl<T> Gen<T> for Helper {
         writeln!(out, " {{")?;
         let name = pattern.name.to_uppercase();
         writeln!(out, "{p}out.set_opcode(opcode::{name});")?;
-        for set in pattern.sets.iter().filter(|i| !i.is_extern) {
-            let name = &set.name;
-            if !self.sets.contains(name) {
-                self.sets.insert(name.clone());
-            }
-            writeln!(out, "{p}self.set_args_{name}(address, out, {name});")?;
-        }
         for i in pattern.args.iter() {
             let name = &i.name;
             if Self::is_cond(name) {
                 if !self.cond.contains(name) {
                     self.cond.insert(name.clone());
                 }
+            } else if i.is_set() {
+                if !self.sets.contains(name) {
+                    self.sets.insert(name.clone());
+                }
+                writeln!(out, "{p}self.set_args_{name}(address, out, {name});")?;
             } else {
                 if !self.args.contains(name) {
                     self.args.insert(name.clone());

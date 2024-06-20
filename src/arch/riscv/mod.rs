@@ -350,10 +350,6 @@ impl RiscvDecode for Decoder {
         // TODO:
     }
 
-    fn set_zimm(&mut self, _: u64, _: &mut Insn, _: i64) {
-        // TODO:
-    }
-
     fn set_addr_reg(&mut self, _: u64, out: &mut Insn, value: i64) {
         out.push_addr_reg(x(value));
     }
