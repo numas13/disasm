@@ -68,6 +68,8 @@ impl fmt::Debug for Reg {
     }
 }
 
+// TODO: add implicit flag
+// TODO: add print flag
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Operand {
     /// reg

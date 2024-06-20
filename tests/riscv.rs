@@ -1,27 +1,31 @@
 use disasm::{arch::riscv, Arch, Bundle, Disasm, Options};
 
+fn disasm_test(alias: bool, address: u64, raw: u32, expect: &str) {
+    let mut bundle = Bundle::empty();
+    let mut disasm = Disasm::new(
+        Arch::Riscv(riscv::Options {
+            xlen: riscv::Xlen::X64,
+            ext: riscv::Extensions::all(),
+        }),
+        address,
+        Options {
+            alias,
+            ..Options::default()
+        },
+    );
+    if disasm.decode(&raw.to_le_bytes(), &mut bundle).is_ok() {
+        let output = format!("{}", bundle[0].printer(&disasm, ()));
+        assert_eq!(output, expect);
+    } else {
+        panic!("failed to decode {raw:#08x}, expected \"{expect}\"");
+    }
+}
+
 #[cfg(feature = "print")]
 #[test]
 fn riscv_print() {
     fn test(address: u64, raw: u32, expect: &str) {
-        let mut bundle = Bundle::empty();
-        let mut disasm = Disasm::new(
-            Arch::Riscv(riscv::Options {
-                xlen: riscv::Xlen::X64,
-                ext: riscv::Extensions::all(),
-            }),
-            address,
-            Options {
-                alias: false,
-                ..Options::default()
-            },
-        );
-        if disasm.decode(&raw.to_le_bytes(), &mut bundle).is_ok() {
-            let output = format!("{}", bundle[0].printer(&disasm, ()));
-            assert_eq!(output, expect);
-        } else {
-            panic!("failed to decode {raw:#08x}, expected \"{expect}\"");
-        }
+        disasm_test(false, address, raw, expect);
     }
 
     // RV32I
@@ -109,4 +113,16 @@ fn riscv_print() {
     test(0, 0x0295553b, "divuw\ta0,a0,s1");
     test(0, 0x0295653b, "remw\ta0,a0,s1");
     test(0, 0x0295753b, "remuw\ta0,a0,s1");
+}
+
+#[cfg(feature = "print")]
+#[test]
+fn riscv_print_alias() {
+    fn test(alias: u8, address: u64, raw: u32, expect: &str) {
+        disasm_test(alias != 0, address, raw, expect);
+    }
+
+    // RV32I
+    test(0, 0, 0x0ff0000f, "fence\tiorw,iorw");
+    test(1, 0, 0x0ff0000f, "fence");
 }

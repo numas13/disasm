@@ -203,12 +203,11 @@ impl super::Decoder for Decoder {
         if let &Operand::ArchSpec(ty, value) = operand {
             match ty {
                 OPERAND_FENCE => {
-                    assert!(value < 4); // TODO:
-                    if value & 2 != 0 {
-                        write!(fmt, "r")?;
-                    }
-                    if value & 1 != 0 {
-                        write!(fmt, "w")?;
+                    let fence = ['w', 'r', 'o', 'i'];
+                    for i in (0..4).rev() {
+                        if value & (1 << i) != 0 {
+                            write!(fmt, "{}", fence[i])?;
+                        }
                     }
                     Ok(true)
                 }
@@ -355,14 +354,6 @@ impl RiscvDecode for Decoder {
         // TODO:
     }
 
-    fn set_pred(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_arch_spec(OPERAND_FENCE, value as u64);
-    }
-
-    fn set_succ(&mut self, _: u64, out: &mut Insn, value: i64) {
-        out.push_arch_spec(OPERAND_FENCE, value as u64);
-    }
-
     fn set_addr_reg(&mut self, _: u64, out: &mut Insn, value: i64) {
         out.push_addr_reg(x(value));
     }
@@ -440,6 +431,13 @@ impl RiscvDecode for Decoder {
     fn set_args_fs(&mut self, _: u64, insn: &mut Insn, args: &gen::args_fs) {
         insn.push_reg(f(args.fs2 as i64));
         insn.push_offset(x(args.rs1 as i64), args.imm as i64);
+    }
+
+    fn set_args_fence(&mut self, _: u64, insn: &mut Insn, args: &gen::args_fence) {
+        if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
+            insn.push_arch_spec(OPERAND_FENCE, args.pred as u64);
+            insn.push_arch_spec(OPERAND_FENCE, args.succ as u64);
+        }
     }
 
     fn set_args_rmrr(&mut self, _: u64, _: &mut Insn, _: &gen::args_rmrr) {
