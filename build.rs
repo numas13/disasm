@@ -14,6 +14,7 @@ use decodetree::{
 #[derive(Default)]
 struct Helper {
     args: HashSet<String>,
+    sets: HashSet<String>,
     cond: HashSet<String>,
 }
 
@@ -43,7 +44,11 @@ impl<T> Gen<T> for Helper {
         let name = pattern.name.to_uppercase();
         writeln!(out, "{p}out.set_opcode(opcode::{name});")?;
         for set in pattern.sets.iter().filter(|i| !i.is_extern) {
-            writeln!(out, "{p}self.set_args(address, out, {});", set.name)?;
+            let name = &set.name;
+            if !self.sets.contains(name) {
+                self.sets.insert(name.clone());
+            }
+            writeln!(out, "{p}self.set_args_{name}(address, out, {name});")?;
         }
         for i in pattern.args.iter() {
             let name = &i.name;
@@ -64,18 +69,22 @@ impl<T> Gen<T> for Helper {
     }
 
     fn gen_trait_body<W: Write>(&mut self, out: &mut W, pad: Pad) -> io::Result<()> {
-        writeln!(out)?;
-        writeln!(
-            out,
-            "{pad}fn set_args<A: Args>(&mut self, address: u64, out: &mut Insn, args: A);"
-        )?;
-
         if !self.args.is_empty() {
             writeln!(out)?;
             for i in &self.args {
                 writeln!(
                     out,
                     "{pad}fn set_{i}(&mut self, address: u64, out: &mut Insn, {i}: i64);"
+                )?;
+            }
+        }
+
+        if !self.sets.is_empty() {
+            writeln!(out)?;
+            for i in &self.sets {
+                writeln!(
+                    out,
+                    "{pad}fn set_args_{i}(&mut self, address: u64, out: &mut Insn, args: &args_{i});"
                 )?;
             }
         }
