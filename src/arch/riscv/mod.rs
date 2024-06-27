@@ -115,6 +115,10 @@ impl Decoder {
     pub(crate) fn new(opts: crate::Options, rv_opts: Options) -> Self {
         Self { opts, rv_opts }
     }
+
+    fn alias(&self) -> bool {
+        self.opts.alias
+    }
 }
 
 impl super::Decoder for Decoder {
@@ -240,7 +244,7 @@ macro_rules! impl_ex_shift {
     };
 }
 
-macro_rules! impl_has_ext {
+macro_rules! impl_cond_ext {
     ($($func:ident = $name:ident),+$(,)?) => {
         $(fn $func(&self) -> bool {
             self.rv_opts.ext.$name
@@ -249,26 +253,26 @@ macro_rules! impl_has_ext {
 }
 
 impl RiscvDecode for Decoder {
-    fn alias(&self) -> bool {
-        self.opts.alias
+    fn cond_alias(&self) -> bool {
+        self.alias()
     }
 
-    fn has_rv64i(&self) -> bool {
+    fn cond_rv64i(&self) -> bool {
         self.rv_opts.xlen == Xlen::X64
     }
 
-    fn has_rv128i(&self) -> bool {
+    fn cond_rv128i(&self) -> bool {
         self.rv_opts.xlen == Xlen::X128
     }
 
-    impl_has_ext! {
-        has_a = a,
-        has_d = d,
-        has_f = f,
-        has_m = m,
-        has_zcb = zcb,
-        has_zfh = zfh,
-        has_zicsr = zicsr,
+    impl_cond_ext! {
+        cond_a = a,
+        cond_d = d,
+        cond_f = f,
+        cond_m = m,
+        cond_zcb = zcb,
+        cond_zfh = zfh,
+        cond_zicsr = zicsr,
     }
 
     impl_ex_shift! {

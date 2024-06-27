@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     collections::HashSet,
     fs::{self, File},
     io::{self, BufWriter, Write},
@@ -8,55 +7,44 @@ use std::{
 
 use decodetree::{
     gen::{Gen, Generator, Pad},
-    Pattern, ValueKind,
+    Parser, Pattern,
 };
 
 #[derive(Default)]
 struct Helper {
     args: HashSet<String>,
     sets: HashSet<String>,
-    cond: HashSet<String>,
 }
 
-impl Helper {
-    fn is_cond(s: &str) -> bool {
-        s == "alias" || s.starts_with("has_")
-    }
-}
-
-impl<T> Gen<T> for Helper {
-    fn pass_arg(&self, name: &str) -> bool {
-        !Self::is_cond(name)
+impl<'a, T> Gen<T, &'a str> for Helper {
+    fn trait_attrs(&self) -> &[&str] {
+        &["#[allow(clippy::too_many_arguments)]"]
     }
 
-    fn additional_args(&self) -> &[(&str, &str)] {
+    fn trans_args(&self) -> &[(&str, &str)] {
         &[("address", "u64"), ("out", "&mut Insn")]
     }
 
-    fn gen_trans_body<W: Write>(
+    fn trans_body<W: Write>(
         &mut self,
         out: &mut W,
         pad: Pad,
-        pattern: &Pattern<T>,
+        pattern: &Pattern<T, &'a str>,
     ) -> io::Result<bool> {
         let p = pad.shift();
         writeln!(out, " {{")?;
-        let name = pattern.name.to_uppercase();
+        let name = pattern.name().to_uppercase();
         writeln!(out, "{p}out.set_opcode(opcode::{name});")?;
-        for i in pattern.args.iter() {
-            let name = &i.name;
-            if Self::is_cond(name) {
-                if !self.cond.contains(name) {
-                    self.cond.insert(name.clone());
+        for i in pattern.values() {
+            let name = i.name();
+            if i.is_set() {
+                if !self.sets.contains(*name) {
+                    self.sets.insert(name.to_string());
                 }
-            } else if i.is_set() {
-                if !self.sets.contains(name) {
-                    self.sets.insert(name.clone());
-                }
-                writeln!(out, "{p}self.set_args_{name}(address, out, {name});")?;
+                writeln!(out, "{p}self.set_args_{name}(address, out, &{name});")?;
             } else {
-                if !self.args.contains(name) {
-                    self.args.insert(name.clone());
+                if !self.args.contains(*name) {
+                    self.args.insert(name.to_string());
                 }
                 writeln!(out, "{p}self.set_{name}(address, out, {name} as i64);")?;
             }
@@ -66,7 +54,7 @@ impl<T> Gen<T> for Helper {
         Ok(true)
     }
 
-    fn gen_trait_body<W: Write>(&mut self, out: &mut W, pad: Pad) -> io::Result<()> {
+    fn trait_body<W: Write>(&mut self, out: &mut W, pad: Pad) -> io::Result<()> {
         if !self.args.is_empty() {
             writeln!(out)?;
             for i in &self.args {
@@ -87,60 +75,25 @@ impl<T> Gen<T> for Helper {
             }
         }
 
-        if !self.cond.is_empty() {
-            writeln!(out)?;
-            for i in &self.cond {
-                writeln!(out, "{pad}fn {i}(&self) -> bool;")?;
-            }
-        }
-
         Ok(())
     }
 
-    fn additional_cond(&self, pattern: &Pattern<T>) -> Option<Cow<'static, str>> {
-        if pattern.args.iter().any(|i| Self::is_cond(&i.name)) {
-            let mut out = String::new();
-            for i in pattern.args.iter().filter(|i| Self::is_cond(&i.name)) {
-                if let ValueKind::Const(val) = i.kind {
-                    if !out.is_empty() {
-                        out.push_str(" && ");
-                    }
-                    if val == 0 {
-                        out.push('!');
-                    }
-                    out.push_str("self.");
-                    out.push_str(&i.name);
-                    out.push_str("()");
-                }
-            }
-            return Some(Cow::Owned(out));
-        }
-        None
-    }
-
-    fn gen_on_success<W: Write>(
+    fn trans_success<W: Write>(
         &mut self,
         out: &mut W,
         pad: Pad,
-        pattern: &Pattern<T>,
+        pattern: &Pattern<T, &'a str>,
     ) -> io::Result<()> {
-        // set alias flag if pattern has alias=1
-        if let Some(arg) = pattern.args.iter().find(|i| i.name == "alias") {
-            if let ValueKind::Const(val) = arg.kind {
-                if val != 0 {
-                    writeln!(out, "{pad}out.set_alias();")?;
-                }
+        // set alias flag if pattern has alias condition
+        if let Some(cond) = pattern.conditions().iter().find(|i| *i.name() == "alias") {
+            if !cond.invert() {
+                writeln!(out, "{pad}out.set_alias();")?;
             }
         }
         Ok(())
     }
 
-    fn gen_opcodes<W: Write>(
-        &mut self,
-        out: &mut W,
-        pad: Pad,
-        opcodes: &HashSet<&str>,
-    ) -> io::Result<()> {
+    fn end<W: Write>(&mut self, out: &mut W, pad: Pad, opcodes: &HashSet<&str>) -> io::Result<()> {
         let opcodes = {
             let mut vec: Vec<_> = opcodes.iter().collect();
             vec.sort();
@@ -202,7 +155,8 @@ where
     println!("cargo:rerun-if-changed={path}");
 
     let src = fs::read_to_string(path).unwrap();
-    let tree = match decodetree::parse::<T>(&src) {
+    let parser = Parser::<T, &str>::new(&src).set_insn_size(&[16, 32]);
+    let mut tree = match parser.parse() {
         Ok(tree) => tree,
         Err(errors) => {
             for err in errors.iter(path) {
@@ -216,10 +170,11 @@ where
     }
     let mut out = BufWriter::new(File::create(out).unwrap());
 
-    Generator::<T, Helper>::builder()
+    tree.optimize();
+    Generator::builder()
         .trait_name(trait_name)
         .build(&tree, Helper::default())
-        .gen(&mut out)
+        .generate(&mut out)
         .unwrap();
 }
 
