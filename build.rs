@@ -46,7 +46,7 @@ impl<'a, T> Gen<T, &'a str> for Helper {
                 if !self.args.contains(*name) {
                     self.args.insert(name.to_string());
                 }
-                writeln!(out, "{p}self.set_{name}(address, out, {name} as i64);")?;
+                writeln!(out, "{p}self.set_{name}(address, out, {name} as i32);")?;
             }
         }
         writeln!(out, "{p}true")?;
@@ -60,7 +60,7 @@ impl<'a, T> Gen<T, &'a str> for Helper {
             for i in &self.args {
                 writeln!(
                     out,
-                    "{pad}fn set_{i}(&mut self, address: u64, out: &mut Insn, {i}: i64);"
+                    "{pad}fn set_{i}(&mut self, address: u64, out: &mut Insn, {i}: i32);"
                 )?;
             }
         }
@@ -101,18 +101,17 @@ impl<'a, T> Gen<T, &'a str> for Helper {
         };
 
         writeln!(out)?;
-        writeln!(out, "{pad}pub mod opcode {{")?;
+        writeln!(out, "{pad}pub mod opcode_generated {{")?;
         {
             let pad = pad.shift();
-            writeln!(out, "{pad}use super::Opcode;")?;
-            writeln!(out, "{pad}pub const INVALID: Opcode = Opcode(0);")?;
+            writeln!(out, "{pad}use super::opcode::{{Opcode, BASE_OPCODE}};")?;
             for (i, s) in opcodes.iter().enumerate() {
-                writeln!(
-                    out,
-                    "{pad}pub const {}: Opcode = Opcode({});",
-                    s.to_uppercase(),
-                    i + 1
-                )?;
+                write!(out, "{pad}pub const {}: Opcode = Opcode(", s.to_uppercase())?;
+                write!(out, "BASE_OPCODE")?;
+                if i > 0 {
+                    write!(out, " + {i}")?;
+                }
+                writeln!(out, ");")?;
             }
         }
         writeln!(out, "{pad}}}")?; // pub mod opcode

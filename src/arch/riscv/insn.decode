@@ -104,9 +104,11 @@
 
 # Formats 16:
 @cr           ....  ..... .....  .. %rd rs2=%rs2_5
+@cr3          ....  ..... .....  .. %rd rs1=%rd rs2=%rs2_5
 @ci_c         ... . ..... .....  .. rds=%rd          imm=%imm_ci
 @ci           ... . ..... .....  .. %rd   rs1=%rd    imm=%imm_ci
 @cs_2         ... ... ... .. ... .. rd=%rs1_3 rs2=%rs2_3
+@cs_3         ... ... ... .. ... .. rd=%rs1_3 rs1=%rs1_3 rs2=%rs2_3
 
 @cl_q         ... . .....  ..... .. rd=%rs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
 @cl_d         ... ... ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
@@ -145,11 +147,13 @@
 @c_jalr       ... . .....  ..... .. &jalr imm=0 rs1=%rd
 @c_mv         ... . .....  ..... .. %rd rs1=%rs2_5
 
-@c_addi4spn   ... .  ..... ..... .. rd=%rs2_3 rs1=2 imm=%nzuimm_ciw 
+@c_addi4spn   ... .  ..... ..... .. rd=%rs2_3 rs1=2 imm=%nzuimm_ciw
 @c_addi16sp   ... .  ..... ..... .. rd=2 imm=%imm_addi16sp
 
 @c_shift      ... . .. ... ..... .. rds=%rs1_3 uimm=%shrimm_6bit
+@c_shift_sh   ... . .. ... ..... .. rd=%rs1_3 rs1=%rs1_3 uimm=%shrimm_6bit
 @c_shift2     ... . .. ... ..... .. rds=%rd uimm=%shlimm_6bit
+@c_shift2_sh  ... . .. ... ..... .. rd=%rd rs1=%rd uimm=%shlimm_6bit
 
 @c_andi       ... . .. ... ..... .. rds=%rs1_3 imm=%imm_ci
 
@@ -181,7 +185,9 @@
 
 @sh      ......  ...... .....  ... ..... .......         %rd %rs1 uimm=%sh7
 @csr     ............   .....  ... ..... .......         %rd %csr %rs1
+@csr2    ............   .....  ... ..... .......             %csr %rs1
 @csri    ............   .....  ... ..... .......         %rd %csr imm=%rs1
+@csri2   ............   .....  ... ..... .......             %csr imm=%rs1
 
 @atom_ld ..... aq:1 rl:1 ..... ........ ..... ....... %rd addr_reg=%rs1
 @atom_st ..... aq:1 rl:1 ..... ........ ..... ....... %rd %rs2 addr_reg=%rs1
@@ -242,33 +248,45 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 # *** RV32/64C Standard Extension (Quadrant 0) ***
 {
   # Opcode of all zeros is illegal; rd != 0, nzuimm == 0 is reserved.
-  illegal         000  000 000 00 --- 00 ? alias
+  unimp           000  000 000 00 --- 00 ? alias
   c_unimp         000  000 000 00 --- 00
+  addi            000  ... ... .. ... 00 @c_addi4spn ? alias
   c_addi4spn      000  ... ... .. ... 00 @c_addi4spn
 }
 {
   c_lq            001  ... ... .. ... 00 @cl_q ? rv128i
+  fld             001  ... ... .. ... 00 @cfl_d ? alias
   c_fld           001  ... ... .. ... 00 @cfl_d
 }
-c_lw              010  ... ... .. ... 00 @cl_w
+{
+  lw              010  ... ... .. ... 00 @cl_w ? alias
+  c_lw            010  ... ... .. ... 00 @cl_w
+}
 {
   c_sq            101  ... ... .. ... 00 @cs_q ? rv128i
+  fsd             101  ... ... .. ... 00 @cfs_d ? alias
   c_fsd           101  ... ... .. ... 00 @cfs_d
 }
-c_sw              110  ... ... .. ... 00 @cs_w
+{
+  sw              110  ... ... .. ... 00 @cs_w ? alias
+  c_sw            110  ... ... .. ... 00 @cs_w
+}
 
 # *** RV32C and RV64C specific Standard Extension (Quadrant 0) ***
 {
+  ld              011  ... ... .. ... 00 @cl_d ? rv64i alias
   c_ld            011  ... ... .. ... 00 @cl_d ? rv64i
   c_flw           011  ... ... .. ... 00 @cfl_w
 }
 {
+  sd              111  ... ... .. ... 00 @cs_d ? rv64i alias
   c_sd            111  ... ... .. ... 00 @cs_d ? rv64i
   c_fsw           111  ... ... .. ... 00 @cfs_w
 }
 
 # *** RV32/64C Standard Extension (Quadrant 1) ***
 {
+  nop             000 0  00000  00000 01 ? alias
   addi            000 .  .....  ..... 01 @ci ? alias
   c_addi          000 .  .....  ..... 01 @ci_c
 }
@@ -278,53 +296,103 @@ c_sw              110  ... ... .. ... 00 @cs_w
 }
 {
   illegal         011 0  -----  00000 01 # c.addi16sp and c.lui, RES nzimm=0
+  addi            011 .  00010  ..... 01 @i rd=2 rs1=2 imm=%imm_addi16sp ? alias
   c_addi16sp      011 .  00010  ..... 01 @c_addi16sp
+  lui             011 .  .....  ..... 01 @c_lui ? alias
   c_lui           011 .  .....  ..... 01 @c_lui
 }
-c_srli            100 . 00 ...  ..... 01 @c_shift
-c_srai            100 . 01 ...  ..... 01 @c_shift
-c_andi            100 . 10 ...  ..... 01 @c_andi
-c_sub             100 0 11 ... 00 ... 01 @cs_2
-c_xor             100 0 11 ... 01 ... 01 @cs_2
-c_or              100 0 11 ... 10 ... 01 @cs_2
-c_and             100 0 11 ... 11 ... 01 @cs_2
-c_j               101     ........... 01 @cj
-c_beqz            110  ... ...  ..... 01 @cb_z
-c_bnez            111  ... ...  ..... 01 @cb_z
+{
+  srli            100 . 00 ...  ..... 01 @c_shift_sh ? alias
+  c_srli          100 . 00 ...  ..... 01 @c_shift
+}
+{
+  srai            100 . 01 ...  ..... 01 @c_shift_sh ? alias
+  c_srai          100 . 01 ...  ..... 01 @c_shift
+}
+{
+  andi            100 . 10 ...  ..... 01 @i rd=%rs1_3 rs1=%rs1_3 imm=%imm_ci ? alias
+  c_andi          100 . 10 ...  ..... 01 @c_andi
+}
+{
+  sub             100 0 11 ... 00 ... 01 @cs_3 ? alias
+  c_sub           100 0 11 ... 00 ... 01 @cs_2
+}
+{
+  xor             100 0 11 ... 01 ... 01 @cs_3 ? alias
+  c_xor           100 0 11 ... 01 ... 01 @cs_2
+}
+{
+  or              100 0 11 ... 10 ... 01 @cs_3 ? alias
+  c_or            100 0 11 ... 10 ... 01 @cs_2
+}
+{
+  and             100 0 11 ... 11 ... 01 @cs_3 ? alias
+  c_and           100 0 11 ... 11 ... 01 @cs_2
+}
+{
+  j               101     ........... 01 @j2 rel=%imm_cj ? alias
+  c_j             101     ........... 01 @cj
+}
+{
+  beqz            110  ... ...  ..... 01 @b1 rs1=%rs1_3 rel=%imm_cb ? alias
+  c_beqz          110  ... ...  ..... 01 @cb_z
+}
+{
+  bnez            111  ... ...  ..... 01 @b1 rs1=%rs1_3 rel=%imm_cb ? alias
+  c_bnez          111  ... ...  ..... 01 @cb_z
+}
 
 # *** RV64C and RV32C specific Standard Extension (Quadrant 1) ***
 {
   c64_illegal     001 -  00000  ----- 01 # c.addiw, RES rd=0
-  sext_w          001 0  .....  00000 01 @r2 rs1=%rd ? rv128i alias
-  addiw           001 .  .....  ..... 01 @ci ? rv128i alias
+  sext_w          001 0  .....  00000 01 @r2 rs1=%rd ? rv64i alias
+  addiw           001 .  .....  ..... 01 @ci ? rv64i alias
   c_addiw         001 .  .....  ..... 01 @ci_c ? rv64i
   c_jal           001     ........... 01 @cj rd=1
 }
-c_subw            100 1 11 ... 00 ... 01 @cs_2
-c_addw            100 1 11 ... 01 ... 01 @cs_2
+{
+  subw            100 1 11 ... 00 ... 01 @cs_3 ? alias
+  c_subw          100 1 11 ... 00 ... 01 @cs_2
+}
+{
+  addw            100 1 11 ... 01 ... 01 @cs_3 ? alias
+  c_addw          100 1 11 ... 01 ... 01 @cs_2
+}
 
 # *** RV32/64C Standard Extension (Quadrant 2) ***
-c_slli            000 .  .....  ..... 10 @c_shift2
+{
+  slli            000 .  .....  ..... 10 @c_shift2_sh ? alias
+  c_slli          000 .  .....  ..... 10 @c_shift2
+}
 {
   c_lqsp          001  ... ... .. ... 10 @c_lqsp ? rv128i
+  fld             001 .  .....  ..... 10 @c_fldsp ? alias
   c_fldsp         001 .  .....  ..... 10 @c_fldsp
 }
 {
   illegal         010 -  00000  ----- 10 # c.lwsp, RES rd=0
+  lw              010 .  .....  ..... 10 @c_lwsp ? alias
   c_lwsp          010 .  .....  ..... 10 @c_lwsp
 }
 {
   illegal         100 0  00000  00000 10 # c.jr, RES rs1=0
+  ret             100 0  00001  00000 10 ? alias
+  jr              100 0  .....  00000 10 @jr rs1=%rd imm=0 ? alias
   c_jr            100 0  .....  00000 10 @c_jr
+  mv              100 0  .....  ..... 10 @r2 rs1=%rs2_5 ? alias
   c_mv            100 0  .....  ..... 10 @c_mv
 }
 {
+  ebreak          100 1  00000  00000 10 ? alias
   c_ebreak        100 1  00000  00000 10
+  jalr            100 1  .....  00000 10 @jalr rd=1 rs1=%rd imm=0 ? alias
   c_jalr          100 1  .....  00000 10 @c_jr # TODO: implicit ra
+  add             100 1  .....  ..... 10 @cr3 ? alias
   c_add           100 1  .....  ..... 10 @cr
 }
 {
   c_sqsp          101  ... ... .. ... 10 @c_sqsp ? rv128i
+  fsd             101   ......  ..... 10 @c_fsdsp ? alias
   c_fsdsp         101   ......  ..... 10 @c_fsdsp
 
   # *** RV64 and RV32 Zcmp/Zcmt Extension ***
@@ -339,15 +407,20 @@ c_slli            000 .  .....  ..... 10 @c_shift2
     cm_jalt       101  000   ........ 10 @cm_jt
   ]
 }
-c_swsp            110 .  .....  ..... 10 @c_swsp
+{
+  sw              110 .  .....  ..... 10 @c_swsp ? alias
+  c_swsp          110 .  .....  ..... 10 @c_swsp
+}
 
 # *** RV32C and RV64C specific Standard Extension (Quadrant 2) ***
 {
   c64_illegal     011 -  00000  ----- 10 # c.ldsp, RES rd=0
+  ld              011 .  .....  ..... 10 @c_ldsp ? rv64i alias
   c_ldsp          011 .  .....  ..... 10 @c_ldsp ? rv64i
   c_flwsp         011 .  .....  ..... 10 @c_flwsp
 }
 {
+  sd              111 .  .....  ..... 10 @c_sdsp ? rv64i alias
   c_sdsp          111 .  .....  ..... 10 @c_sdsp ? rv64i
   c_fswsp         111 .  .....  ..... 10 @c_fswsp
 }
@@ -388,8 +461,16 @@ auipc       ....................       ..... 0010111 @u
   bnez      ....... .....    00000 001 ..... 1100011 @b1a     ? alias
   bne       ....... .....    ..... 001 ..... 1100011 @b2
 }
-blt         ....... .....    ..... 100 ..... 1100011 @b2
-bge         ....... .....    ..... 101 ..... 1100011 @b2
+{
+  bltz      ....... 00000    ..... 100 ..... 1100011 @b1      ? alias
+  bgtz      ....... .....    00000 100 ..... 1100011 @b1a     ? alias
+  blt       ....... .....    ..... 100 ..... 1100011 @b2
+}
+{
+  bgez      ....... 00000    ..... 101 ..... 1100011 @b1      ? alias
+  blez      ....... .....    00000 101 ..... 1100011 @b1a     ? alias
+  bge       ....... .....    ..... 101 ..... 1100011 @b2
+}
 bltu        ....... .....    ..... 110 ..... 1100011 @b2
 bgeu        ....... .....    ..... 111 ..... 1100011 @b2
 lb          ............     ..... 000 ..... 0000011 @l
@@ -406,11 +487,20 @@ sw          .......  .....   ..... 010 ..... 0100011 @s
   addi      ............     ..... 000 ..... 0010011 @i
 }
 slti        ............     ..... 010 ..... 0010011 @i
-sltiu       ............     ..... 011 ..... 0010011 @i
-xori        ............     ..... 100 ..... 0010011 @i
+{
+  seqz      000000000001     ..... 011 ..... 0010011 @r2      ? alias
+  sltiu     ............     ..... 011 ..... 0010011 @i
+}
+{
+  not       111111111111     ..... 100 ..... 0010011 @r2      ? alias
+  xori      ............     ..... 100 ..... 0010011 @i
+}
 # cbo.prefetch_{i,r,m} instructions are ori with rd=x0 and not decoded.
 ori         ............     ..... 110 ..... 0010011 @i
-andi        ............     ..... 111 ..... 0010011 @i
+{
+  zext_b    000011111111     ..... 111 ..... 0010011 @r2      ? alias
+  andi      ............     ..... 111 ..... 0010011 @i
+}
 
 slli        00000. ......    ..... 001 ..... 0010011 @sh # TODO: rv128i
 srli        00000. ......    ..... 101 ..... 0010011 @sh # TODO: rv128i
@@ -422,7 +512,10 @@ add         0000000 .....    ..... 000 ..... 0110011 @r3
   sub       0100000 .....    ..... 000 ..... 0110011 @r3
 }
 sll         0000000 .....    ..... 001 ..... 0110011 @r3
-slt         0000000 .....    ..... 010 ..... 0110011 @r3
+{
+  sgtz      0000000 .....    00000 010 ..... 0110011 @r2a     ? alias
+  slt       0000000 .....    ..... 010 ..... 0110011 @r3
+}
 {
   snez      0000000 .....    00000 011 ..... 0110011 @r2a     ? alias
   sltu      0000000 .....    ..... 011 ..... 0110011 @r3
@@ -442,11 +535,28 @@ and         0000000 .....    ..... 111 ..... 0110011 @r3
 fence_i     ---- ---- ----   ----- 001 ----- 0001111
 
 # *** Zicsr Extension ***
-csrrw       ............     ..... 001 ..... 1110011 @csr     ? zicsr
-csrrs       ............     ..... 010 ..... 1110011 @csr     ? zicsr
-csrrc       ............     ..... 011 ..... 1110011 @csr     ? zicsr
+{
+  fsflags   000000000001     ..... 001 00000 1110011 %rs1     ? zicsr alias
+  fsrm      000000000010     ..... 001 00000 1110011 %rs1     ? zicsr alias
+  fscsr     000000000011     ..... 001 00000 1110011 %rs1     ? zicsr alias
+  csrrw     ............     ..... 001 ..... 1110011 @csr     ? zicsr
+}
+{
+  frflags   000000000001     00000 010 ..... 1110011 %rd      ? zicsr alias
+  frrm      000000000010     00000 010 ..... 1110011 %rd      ? zicsr alias
+  frcsr     000000000011     00000 010 ..... 1110011 %rd      ? zicsr alias
+  csrs      ............     ..... 010 00000 1110011 @csr2    ? zicsr
+  csrrs     ............     ..... 010 ..... 1110011 @csr     ? zicsr
+}
+{
+  csrc      ............     ..... 011 00000 1110011 @csr2    ? zicsr
+  csrrc     ............     ..... 011 ..... 1110011 @csr     ? zicsr
+}
 csrrwi      ............     ..... 101 ..... 1110011 @csri    ? zicsr
-csrrsi      ............     ..... 110 ..... 1110011 @csri    ? zicsr
+{
+  csrsi     ............     ..... 110 00000 1110011 @csri2   ? zicsr
+  csrrsi    ............     ..... 110 ..... 1110011 @csri    ? zicsr
+}
 csrrci      ............     ..... 111 ..... 1110011 @csri    ? zicsr
 
 # *** RV64I Base Instruction Set (in addition to RV32I) ***
