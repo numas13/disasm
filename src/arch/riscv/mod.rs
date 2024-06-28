@@ -109,11 +109,16 @@ pub struct Options {
 pub(crate) struct Decoder {
     opts: crate::Options,
     rv_opts: Options,
+    address: u64,
 }
 
 impl Decoder {
     pub(crate) fn new(opts: crate::Options, rv_opts: Options) -> Self {
-        Self { opts, rv_opts }
+        Self {
+            opts,
+            rv_opts,
+            address: 0,
+        }
     }
 
     fn alias(&self) -> bool {
@@ -134,7 +139,8 @@ impl super::Decoder for Decoder {
         out.clear();
         let mut raw = [0; 4];
         raw[..len].copy_from_slice(&bytes[..len]);
-        if RiscvDecode::decode(self, u32::from_le_bytes(raw), address, out.peek()) {
+        self.address = address;
+        if RiscvDecode::decode(self, u32::from_le_bytes(raw), out.peek()) {
             // decoded len bytes
             out.next();
             Ok(len)
@@ -313,91 +319,91 @@ impl RiscvDecode for Decoder {
         value
     }
 
-    fn set_rd(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_rd(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(x(value));
     }
 
     /// C-ext, rd = op(rd, ...)
-    fn set_rds(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_rds(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(x(value));
     }
 
-    fn set_rs1(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_rs1(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(x(value));
     }
 
-    fn set_rs2(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_rs2(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(x(value));
     }
 
-    fn set_fd(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_fd(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(f(value));
     }
 
-    fn set_fs1(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_fs1(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(f(value));
     }
 
-    fn set_fs2(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_fs2(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(f(value));
     }
 
-    fn set_fs3(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_fs3(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(f(value));
     }
 
-    fn set_rm(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_rm(&mut self, out: &mut Insn, value: i32) {
         out.push_arch_spec(OPERAND_RM, value as u64);
     }
 
-    fn set_vm(&mut self, _: u64, _: &mut Insn, _: i32) {
+    fn set_vm(&mut self, _: &mut Insn, _: i32) {
         // TODO:
     }
 
-    fn set_addr_reg(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_addr_reg(&mut self, out: &mut Insn, value: i32) {
         out.push_addr_reg(x(value));
     }
 
-    fn set_rel(&mut self, address: u64, out: &mut Insn, rel: i32) {
-        out.push_addr(rel_addr(address, rel));
+    fn set_rel(&mut self, out: &mut Insn, rel: i32) {
+        out.push_addr(rel_addr(self.address, rel));
     }
 
-    fn set_aq(&mut self, _: u64, out: &mut Insn, aq: i32) {
+    fn set_aq(&mut self, out: &mut Insn, aq: i32) {
         out.insert_flags(aq != 0, INSN_AQ);
     }
 
-    fn set_rl(&mut self, _: u64, out: &mut Insn, rl: i32) {
+    fn set_rl(&mut self, out: &mut Insn, rl: i32) {
         out.insert_flags(rl != 0, INSN_RL);
     }
 
-    fn set_csr(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_csr(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(csr(value));
     }
 
-    fn set_imm(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_imm(&mut self, out: &mut Insn, value: i32) {
         out.push_imm(value as i64);
     }
 
-    fn set_uimm(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_uimm(&mut self, out: &mut Insn, value: i32) {
         out.push_uimm(value as u64);
     }
 
-    fn set_imm_u(&mut self, _: u64, out: &mut Insn, value: i32) {
+    fn set_imm_u(&mut self, out: &mut Insn, value: i32) {
         out.push_uimm((value as u64 >> 12) & 0xfffff);
     }
 
-    fn set_args_offset(&mut self, _: u64, insn: &mut Insn, args: &generated::args_offset) {
+    fn set_args_offset(&mut self, insn: &mut Insn, args: generated::args_offset) {
         insn.push_offset(x(args.rs1), args.imm as i64);
     }
 
-    fn set_args_j(&mut self, address: u64, insn: &mut Insn, args: &generated::args_j) {
+    fn set_args_j(&mut self, insn: &mut Insn, args: generated::args_j) {
         if !self.alias() || args.rd != 1 {
             insn.push_reg(x(args.rd));
         }
-        insn.push_addr(rel_addr(address, args.imm));
+        insn.push_addr(rel_addr(self.address, args.imm));
     }
 
-    fn set_args_jr(&mut self, _: u64, insn: &mut Insn, args: &generated::args_jr) {
+    fn set_args_jr(&mut self, insn: &mut Insn, args: generated::args_jr) {
         let rs1 = x(args.rs1);
         if args.imm != 0 {
             insn.push_offset(rs1, args.imm as i64);
@@ -406,7 +412,7 @@ impl RiscvDecode for Decoder {
         }
     }
 
-    fn set_args_jalr(&mut self, _: u64, insn: &mut Insn, args: &generated::args_jalr) {
+    fn set_args_jalr(&mut self, insn: &mut Insn, args: generated::args_jalr) {
         if !self.alias() || args.rd != 1 {
             insn.push_reg(x(args.rd));
         }
@@ -417,40 +423,40 @@ impl RiscvDecode for Decoder {
         }
     }
 
-    fn set_args_fence(&mut self, _: u64, insn: &mut Insn, args: &generated::args_fence) {
+    fn set_args_fence(&mut self, insn: &mut Insn, args: generated::args_fence) {
         if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
             insn.push_arch_spec(OPERAND_FENCE, args.pred as u64);
             insn.push_arch_spec(OPERAND_FENCE, args.succ as u64);
         }
     }
 
-    fn set_args_rmrr(&mut self, _: u64, _: &mut Insn, _: &generated::args_rmrr) {
+    fn set_args_rmrr(&mut self, _: &mut Insn, _: generated::args_rmrr) {
         // TODO:
     }
 
-    fn set_args_rmr(&mut self, _: u64, _: &mut Insn, _: &generated::args_rmr) {
+    fn set_args_rmr(&mut self, _: &mut Insn, _: generated::args_rmr) {
         // TODO:
     }
 
-    fn set_args_r2nfvm(&mut self, _: u64, _: &mut Insn, _: &generated::args_r2nfvm) {
+    fn set_args_r2nfvm(&mut self, _: &mut Insn, _: generated::args_r2nfvm) {
         // TODO:
     }
 
-    fn set_args_rnfvm(&mut self, _: u64, _: &mut Insn, _: &generated::args_rnfvm) {
+    fn set_args_rnfvm(&mut self, _: &mut Insn, _: generated::args_rnfvm) {
         // TODO:
     }
 
-    fn set_args_k_aes(&mut self, _: u64, _: &mut Insn, _: &generated::args_k_aes) {
+    fn set_args_k_aes(&mut self, _: &mut Insn, _: generated::args_k_aes) {
         // TODO:
     }
 
-    fn set_args_cmpp(&mut self, _: u64, _: &mut Insn, _: &generated::args_cmpp) {
-        // TODO:
-    }
+    // fn set_args_cmpp(&mut self, _: &mut Insn, _: generated::args_cmpp) {
+    //     // TODO:
+    // }
 
-    fn set_args_cmjt(&mut self, _: u64, _: &mut Insn, _: &generated::args_cmjt) {
-        // TODO:
-    }
+    // fn set_args_cmjt(&mut self, _: &mut Insn, _: generated::args_cmjt) {
+    //     // TODO:
+    // }
 }
 
 fn x(index: i32) -> Reg {

@@ -255,8 +255,8 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 }
 {
   c_lq            001  ... ... .. ... 00 @cl_q ? rv128i
-  fld             001  ... ... .. ... 00 @cfl_d ? alias
-  c_fld           001  ... ... .. ... 00 @cfl_d
+  fld             001  ... ... .. ... 00 @cfl_d ? d alias
+  c_fld           001  ... ... .. ... 00 @cfl_d ? d
 }
 {
   lw              010  ... ... .. ... 00 @cl_w ? alias
@@ -264,8 +264,8 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 }
 {
   c_sq            101  ... ... .. ... 00 @cs_q ? rv128i
-  fsd             101  ... ... .. ... 00 @cfs_d ? alias
-  c_fsd           101  ... ... .. ... 00 @cfs_d
+  fsd             101  ... ... .. ... 00 @cfs_d ? d alias
+  c_fsd           101  ... ... .. ... 00 @cfs_d ? d
 }
 {
   sw              110  ... ... .. ... 00 @cs_w ? alias
@@ -276,12 +276,14 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 {
   ld              011  ... ... .. ... 00 @cl_d ? rv64i alias
   c_ld            011  ... ... .. ... 00 @cl_d ? rv64i
-  c_flw           011  ... ... .. ... 00 @cfl_w
+  flw             011  ... ... .. ... 00 @cfl_w ? f alias
+  c_flw           011  ... ... .. ... 00 @cfl_w ? f
 }
 {
   sd              111  ... ... .. ... 00 @cs_d ? rv64i alias
   c_sd            111  ... ... .. ... 00 @cs_d ? rv64i
-  c_fsw           111  ... ... .. ... 00 @cfs_w
+  fsw             111  ... ... .. ... 00 @cfs_w ? f alias
+  c_fsw           111  ... ... .. ... 00 @cfs_w ? f
 }
 
 # *** RV32/64C Standard Extension (Quadrant 1) ***
@@ -366,8 +368,8 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 }
 {
   c_lqsp          001  ... ... .. ... 10 @c_lqsp ? rv128i
-  fld             001 .  .....  ..... 10 @c_fldsp ? alias
-  c_fldsp         001 .  .....  ..... 10 @c_fldsp
+  fld             001 .  .....  ..... 10 @c_fldsp ? d alias
+  c_fldsp         001 .  .....  ..... 10 @c_fldsp ? d
 }
 {
   illegal         010 -  00000  ----- 10 # c.lwsp, RES rd=0
@@ -392,20 +394,21 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 }
 {
   c_sqsp          101  ... ... .. ... 10 @c_sqsp ? rv128i
-  fsd             101   ......  ..... 10 @c_fsdsp ? alias
-  c_fsdsp         101   ......  ..... 10 @c_fsdsp
+  fsd             101   ......  ..... 10 @c_fsdsp ? d alias
+  c_fsdsp         101   ......  ..... 10 @c_fsdsp ? d
 
-  # *** RV64 and RV32 Zcmp/Zcmt Extension ***
-  [
-    cm_push       101  11000  .... .. 10 @cm_pp
-    cm_pop        101  11010  .... .. 10 @cm_pp
-    cm_popret     101  11110  .... .. 10 @cm_pp
-    cm_popretz    101  11100  .... .. 10 @cm_pp
-    cm_mva01s     101  011 ... 11 ... 10 @cm_mv
-    cm_mvsa01     101  011 ... 01 ... 10 @cm_mv
-
-    cm_jalt       101  000   ........ 10 @cm_jt
-  ]
+# TODO:
+#  # *** RV64 and RV32 Zcmp/Zcmt Extension ***
+#  [
+#    cm_push       101  11000  .... .. 10 @cm_pp
+#    cm_pop        101  11010  .... .. 10 @cm_pp
+#    cm_popret     101  11110  .... .. 10 @cm_pp
+#    cm_popretz    101  11100  .... .. 10 @cm_pp
+#    cm_mva01s     101  011 ... 11 ... 10 @cm_mv
+#    cm_mvsa01     101  011 ... 01 ... 10 @cm_mv
+#
+#    cm_jalt       101  000   ........ 10 @cm_jt
+#  ]
 }
 {
   sw              110 .  .....  ..... 10 @c_swsp ? alias
@@ -417,12 +420,14 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
   c64_illegal     011 -  00000  ----- 10 # c.ldsp, RES rd=0
   ld              011 .  .....  ..... 10 @c_ldsp ? rv64i alias
   c_ldsp          011 .  .....  ..... 10 @c_ldsp ? rv64i
-  c_flwsp         011 .  .....  ..... 10 @c_flwsp
+  flw             011 .  .....  ..... 10 @c_flwsp ? f alias
+  c_flwsp         011 .  .....  ..... 10 @c_flwsp ? f
 }
 {
   sd              111 .  .....  ..... 10 @c_sdsp ? rv64i alias
   c_sdsp          111 .  .....  ..... 10 @c_sdsp ? rv64i
-  c_fswsp         111 .  .....  ..... 10 @c_fswsp
+  fsw             111 .  .....  ..... 10 @c_fswsp ? f alias
+  c_fswsp         111 .  .....  ..... 10 @c_fswsp ? f
 }
 
 # *** RV64 and RV32 Zcb Extension ***

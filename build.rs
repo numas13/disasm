@@ -1,5 +1,8 @@
 use std::{
-    collections::HashSet,
+    collections::{
+        hash_map::{Entry, HashMap},
+        HashSet,
+    },
     fs::{self, File},
     io::{self, BufWriter, Write},
     path::Path,
@@ -20,6 +23,7 @@ struct UserGen<'src> {
 
     args: HashSet<String>,
     sets: HashSet<String>,
+    formats: HashMap<String, Vec<(String, String)>>,
 
     set_args: String,
     set_args_def: String,
@@ -30,7 +34,7 @@ impl<'src> UserGen<'src> {
         let mut set_args = String::from("");
         let mut set_args_def = String::from("&mut self");
 
-        for (i, (arg, ty)) in Self::trans_args().iter().enumerate() {
+        for (i, (arg, ty)) in Self::shared_args().iter().enumerate() {
             if i != 0 {
                 set_args.push_str(", ");
             }
@@ -50,14 +54,18 @@ impl<'src> UserGen<'src> {
         }
     }
 
-    fn trans_args() -> &'static [(&'static str, &'static str)] {
-        &[("address", "u64"), ("out", "&mut Insn")]
+    fn shared_args() -> &'static [(&'static str, &'static str)] {
+        &[("out", "&mut Insn")]
     }
 }
 
 impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
     fn trait_attrs(&self) -> &[&str] {
         &["#[allow(clippy::too_many_arguments)]"]
+    }
+
+    fn decode_args(&self) -> &[(&str, &str)] {
+        Self::shared_args()
     }
 
     fn cond_args(&self, name: &str) -> &[(&str, &str)] {
@@ -68,59 +76,49 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         }
     }
 
-    fn decode_args(&self) -> &[(&str, &str)] {
-        Self::trans_args()
+    fn trans_proto_check(&self, _: &str) -> bool {
+        // do not generate translate functions
+        false
     }
 
-    fn trans_args(&self, _: &str) -> &[(&str, &str)] {
-        Self::trans_args()
-    }
-
-    fn trans_body<W: Write>(
-        &mut self,
-        out: &mut W,
-        mut pad: Pad,
-        pattern: &Pattern<T, &'src str>,
-    ) -> io::Result<bool> {
-        let args = &self.set_args;
-
-        writeln!(out, " {{")?;
-        pad.right();
-        let pattern_name = pattern.name().to_uppercase();
-        writeln!(out, "{pad}out.set_opcode(opcode::{pattern_name});")?;
-        for value in pattern.values() {
-            let name = value.name();
-            let (hash_set, call, c) = if value.is_set() {
-                (&mut self.sets, "self.set_args_", "&")
-            } else {
-                (&mut self.args, "self.set_", "")
-            };
-            if !hash_set.contains(*name) {
-                hash_set.insert(name.to_string());
-            }
-            writeln!(out, "{pad}{call}{name}({args}, {c}{name});")?;
-        }
-        writeln!(out, "{pad}true")?;
-        pad.left();
-        writeln!(out, "{pad}}}")?;
-        Ok(true)
-    }
-
-    fn trait_body<W: Write>(&mut self, out: &mut W, pad: Pad) -> io::Result<()> {
-        let args = &self.set_args_def;
+    fn trait_body<W: Write>(&mut self, out: &mut W, mut pad: Pad) -> io::Result<()> {
+        let set_args = &self.set_args_def;
 
         if !self.args.is_empty() {
             writeln!(out)?;
         }
         for i in &self.args {
-            writeln!(out, "{pad}fn set_{i}({args}, {i}: i32);")?;
+            writeln!(out, "{pad}fn set_{i}({set_args}, {i}: i32);")?;
         }
 
         if !self.sets.is_empty() {
             writeln!(out)?;
         }
         for i in &self.sets {
-            writeln!(out, "{pad}fn set_args_{i}({args}, args: &args_{i});")?;
+            writeln!(out, "{pad}fn set_args_{i}({set_args}, args: args_{i});")?;
+        }
+
+        for (name, args) in &self.formats {
+            writeln!(out)?;
+            write!(out, "{pad}fn {name}({set_args}, opcode: Opcode")?;
+            for (arg, ty) in args {
+                write!(out, ", {arg}: {ty}")?;
+            }
+            writeln!(out, ") {{")?;
+            pad.right();
+
+            writeln!(out, "{pad}out.set_opcode(opcode);")?;
+
+            for (arg, ty) in args {
+                let prefix = if ty.starts_with("args_") { "args_" } else { "" };
+                writeln!(
+                    out,
+                    "{pad}self.set_{prefix}{arg}({}, {arg});",
+                    self.set_args
+                )?;
+            }
+            pad.left();
+            writeln!(out, "{pad}}}")?;
         }
 
         Ok(())
@@ -138,6 +136,44 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
                 writeln!(out, "{pad}out.set_alias();")?;
             }
         }
+
+        let mut format = String::from("format");
+        for value in pattern.values() {
+            let name = value.name();
+            let hash_set = if value.is_set() {
+                &mut self.sets
+            } else {
+                &mut self.args
+            };
+            if !hash_set.contains(*name) {
+                hash_set.insert(name.to_string());
+            }
+            format.push('_');
+            format.push_str(name);
+        }
+
+        write!(out, "{pad}self.{format}({}", self.set_args)?;
+        write!(out, ", opcode::{}", pattern.name().to_uppercase())?;
+
+        for value in pattern.values() {
+            write!(out, ", {}", value.name())?;
+        }
+        writeln!(out, ");")?;
+
+        if let Entry::Vacant(e) = self.formats.entry(format) {
+            let mut args = Vec::new();
+            for value in pattern.values() {
+                let name = String::from(*value.name());
+                let ty = if value.is_set() {
+                    format!("args_{name}")
+                } else {
+                    "i32".into()
+                };
+                args.push((name, ty));
+            }
+            e.insert(args);
+        }
+
         Ok(())
     }
 
