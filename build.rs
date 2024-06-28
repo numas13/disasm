@@ -3,76 +3,124 @@ use std::{
     fs::{self, File},
     io::{self, BufWriter, Write},
     path::Path,
+    process,
 };
 
 use decodetree::{
-    gen::{Gen, Generator, Pad},
-    Parser, Pattern,
+    gen::{Gen, Pad},
+    Insn, Parser, Pattern,
 };
 
+#[cfg(not(any(feature = "riscv")))]
+compile_error!("enable at least one arch");
+
 #[derive(Default)]
-struct Helper {
+struct UserGen<'src> {
+    generate: Generate<'src>,
+
     args: HashSet<String>,
     sets: HashSet<String>,
+
+    set_args: String,
+    set_args_def: String,
 }
 
-impl<'a, T> Gen<T, &'a str> for Helper {
+impl<'src> UserGen<'src> {
+    fn new(generate: Generate<'src>) -> Self {
+        let mut set_args = String::from("");
+        let mut set_args_def = String::from("&mut self");
+
+        for (i, (arg, ty)) in Self::trans_args().iter().enumerate() {
+            if i != 0 {
+                set_args.push_str(", ");
+            }
+            set_args.push_str(arg);
+
+            set_args_def.push_str(", ");
+            set_args_def.push_str(arg);
+            set_args_def.push_str(": ");
+            set_args_def.push_str(ty);
+        }
+
+        Self {
+            generate,
+            set_args,
+            set_args_def,
+            ..Self::default()
+        }
+    }
+
+    fn trans_args() -> &'static [(&'static str, &'static str)] {
+        &[("address", "u64"), ("out", "&mut Insn")]
+    }
+}
+
+impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
     fn trait_attrs(&self) -> &[&str] {
         &["#[allow(clippy::too_many_arguments)]"]
     }
 
-    fn trans_args(&self) -> &[(&str, &str)] {
-        &[("address", "u64"), ("out", "&mut Insn")]
+    fn cond_args(&self, name: &str) -> &[(&str, &str)] {
+        if name.starts_with("is_") {
+            &[("insn", "RawInsn")]
+        } else {
+            &[]
+        }
+    }
+
+    fn decode_args(&self) -> &[(&str, &str)] {
+        Self::trans_args()
+    }
+
+    fn trans_args(&self, _: &str) -> &[(&str, &str)] {
+        Self::trans_args()
     }
 
     fn trans_body<W: Write>(
         &mut self,
         out: &mut W,
-        pad: Pad,
-        pattern: &Pattern<T, &'a str>,
+        mut pad: Pad,
+        pattern: &Pattern<T, &'src str>,
     ) -> io::Result<bool> {
-        let p = pad.shift();
+        let args = &self.set_args;
+
         writeln!(out, " {{")?;
-        let name = pattern.name().to_uppercase();
-        writeln!(out, "{p}out.set_opcode(opcode::{name});")?;
-        for i in pattern.values() {
-            let name = i.name();
-            if i.is_set() {
-                if !self.sets.contains(*name) {
-                    self.sets.insert(name.to_string());
-                }
-                writeln!(out, "{p}self.set_args_{name}(address, out, &{name});")?;
+        pad.right();
+        let pattern_name = pattern.name().to_uppercase();
+        writeln!(out, "{pad}out.set_opcode(opcode::{pattern_name});")?;
+        for value in pattern.values() {
+            let name = value.name();
+            let (hash_set, call, c) = if value.is_set() {
+                (&mut self.sets, "self.set_args_", "&")
             } else {
-                if !self.args.contains(*name) {
-                    self.args.insert(name.to_string());
-                }
-                writeln!(out, "{p}self.set_{name}(address, out, {name} as i32);")?;
+                (&mut self.args, "self.set_", "")
+            };
+            if !hash_set.contains(*name) {
+                hash_set.insert(name.to_string());
             }
+            writeln!(out, "{pad}{call}{name}({args}, {c}{name});")?;
         }
-        writeln!(out, "{p}true")?;
+        writeln!(out, "{pad}true")?;
+        pad.left();
         writeln!(out, "{pad}}}")?;
         Ok(true)
     }
 
     fn trait_body<W: Write>(&mut self, out: &mut W, pad: Pad) -> io::Result<()> {
+        let args = &self.set_args_def;
+
         if !self.args.is_empty() {
             writeln!(out)?;
-            for i in &self.args {
-                writeln!(
-                    out,
-                    "{pad}fn set_{i}(&mut self, address: u64, out: &mut Insn, {i}: i32);"
-                )?;
-            }
+        }
+        for i in &self.args {
+            writeln!(out, "{pad}fn set_{i}({args}, {i}: i32);")?;
         }
 
         if !self.sets.is_empty() {
             writeln!(out)?;
-            for i in &self.sets {
-                writeln!(
-                    out,
-                    "{pad}fn set_args_{i}(&mut self, address: u64, out: &mut Insn, args: &args_{i});"
-                )?;
-            }
+        }
+        for i in &self.sets {
+            writeln!(out, "{pad}fn set_args_{i}({args}, args: &args_{i});")?;
         }
 
         Ok(())
@@ -82,7 +130,7 @@ impl<'a, T> Gen<T, &'a str> for Helper {
         &mut self,
         out: &mut W,
         pad: Pad,
-        pattern: &Pattern<T, &'a str>,
+        pattern: &Pattern<T, &'src str>,
     ) -> io::Result<()> {
         // set alias flag if pattern has alias condition
         if let Some(cond) = pattern.conditions().iter().find(|i| *i.name() == "alias") {
@@ -93,7 +141,14 @@ impl<'a, T> Gen<T, &'a str> for Helper {
         Ok(())
     }
 
-    fn end<W: Write>(&mut self, out: &mut W, pad: Pad, opcodes: &HashSet<&str>) -> io::Result<()> {
+    fn end<W: Write>(
+        &mut self,
+        out: &mut W,
+        mut pad: Pad,
+        opcodes: &HashSet<&str>,
+    ) -> io::Result<()> {
+        writeln!(out, "type RawInsn = {};", self.generate.insn_type)?;
+
         let opcodes = {
             let mut vec: Vec<_> = opcodes.iter().collect();
             vec.sort();
@@ -102,18 +157,17 @@ impl<'a, T> Gen<T, &'a str> for Helper {
 
         writeln!(out)?;
         writeln!(out, "{pad}pub mod opcode_generated {{")?;
-        {
-            let pad = pad.shift();
-            writeln!(out, "{pad}use super::opcode::{{Opcode, BASE_OPCODE}};")?;
-            for (i, s) in opcodes.iter().enumerate() {
-                write!(out, "{pad}pub const {}: Opcode = Opcode(", s.to_uppercase())?;
-                write!(out, "BASE_OPCODE")?;
-                if i > 0 {
-                    write!(out, " + {i}")?;
-                }
-                writeln!(out, ");")?;
+        pad.right();
+        writeln!(out, "{pad}use super::opcode::{{Opcode, BASE_OPCODE}};")?;
+        for (i, s) in opcodes.iter().enumerate() {
+            write!(out, "{pad}pub const {}: Opcode = Opcode(", s.to_uppercase())?;
+            write!(out, "BASE_OPCODE")?;
+            if i > 0 {
+                write!(out, " + {i}")?;
             }
+            writeln!(out, ");")?;
         }
+        pad.left();
         writeln!(out, "{pad}}}")?; // pub mod opcode
 
         writeln!(out)?;
@@ -122,68 +176,103 @@ impl<'a, T> Gen<T, &'a str> for Helper {
             out,
             "{pad}pub fn mnemonic(opcode: Opcode) -> Option<&'static str> {{"
         )?;
-        {
-            let pad = pad.shift();
-            writeln!(out, "{pad}Some(match opcode {{")?;
-            {
-                let pad = pad.shift();
-                for i in opcodes {
-                    write!(out, "{pad}opcode::{} => \"", i.to_uppercase())?;
-                    for c in i.chars() {
-                        match c {
-                            '_' => write!(out, ".")?,
-                            _ => write!(out, "{}", c)?,
-                        }
-                    }
-                    writeln!(out, "\",")?;
+        pad.right();
+        writeln!(out, "{pad}Some(match opcode {{")?;
+        pad.right();
+        for i in opcodes {
+            write!(out, "{pad}opcode::{} => \"", i.to_uppercase())?;
+            for c in i.chars() {
+                match c {
+                    '_' => write!(out, ".")?,
+                    _ => write!(out, "{}", c)?,
                 }
-                writeln!(out, "{pad}_ => return None,")?;
             }
-            writeln!(out, "{pad}}})")?; // match
+            writeln!(out, "\",")?;
         }
+        writeln!(out, "{pad}_ => return None,")?;
+        pad.left();
+        writeln!(out, "{pad}}})")?; // match
+        pad.left();
         writeln!(out, "{pad}}}")?; // fn mnemonic
 
         Ok(())
     }
 }
 
-fn gen<T>(trait_name: &str, path: &str, out: &str)
-where
-    T: Default + std::hash::Hash + std::fmt::LowerHex + Ord + decodetree::Insn,
-{
-    println!("cargo:rerun-if-changed={path}");
+#[derive(Copy, Clone)]
+struct Generate<'a> {
+    source: &'a str,
+    trait_name: &'a str,
+    insn_type: &'a str,
+    insn_size: &'a [u32],
+    value_type: &'a str,
+    optimize: bool,
+    stubs: bool,
+    variable_size: bool,
+}
 
-    let src = fs::read_to_string(path).unwrap();
-    let parser = Parser::<T, &str>::new(&src).set_insn_size(&[16, 32]);
-    let mut tree = match parser.parse() {
-        Ok(tree) => tree,
-        Err(errors) => {
-            for err in errors.iter(path) {
-                eprintln!("{err}");
-            }
-            std::process::exit(1);
+impl Default for Generate<'_> {
+    fn default() -> Self {
+        Self {
+            source: "",
+            trait_name: "Decode",
+            insn_type: "u32",
+            insn_size: &[32],
+            value_type: "i32",
+            optimize: true,
+            stubs: false,
+            variable_size: false,
         }
-    };
-    if let Some(parent) = Path::new(out).parent() {
-        fs::create_dir_all(parent).unwrap();
     }
-    let mut out = BufWriter::new(File::create(out).unwrap());
+}
 
-    tree.optimize();
-    Generator::builder()
-        .trait_name(trait_name)
-        .build(&tree, Helper::default())
-        .generate(&mut out)
-        .unwrap();
+impl<'a> Generate<'a> {
+    fn gen<T: Insn>(self, out: impl AsRef<Path>) {
+        println!("cargo:rerun-if-changed={}", self.source);
+
+        let src = fs::read_to_string(self.source).unwrap();
+        let parser = Parser::<T, &str>::new(&src).set_insn_size(self.insn_size);
+        let mut tree = match parser.parse() {
+            Ok(tree) => tree,
+            Err(errors) => {
+                for err in errors.iter(self.source) {
+                    eprintln!("{err}");
+                }
+                process::exit(1);
+            }
+        };
+        if self.optimize {
+            tree.optimize();
+        }
+
+        if let Some(parent) = out.as_ref().parent() {
+            fs::create_dir_all(parent).unwrap();
+        }
+        let mut out = BufWriter::new(File::create(&out).unwrap());
+
+        decodetree::Generator::builder()
+            .trait_name(self.trait_name)
+            .insn_type(self.insn_type)
+            .value_type(self.value_type)
+            .stubs(self.stubs)
+            .variable_size(self.variable_size)
+            .build(&tree, UserGen::new(self))
+            .generate(&mut out)
+            .unwrap();
+    }
 }
 
 fn main() {
     let out_dir = std::env::var("OUT_DIR").unwrap();
 
     #[cfg(feature = "riscv")]
-    gen::<u32>(
-        "RiscvDecode",
-        "src/arch/riscv/insn.decode",
-        &format!("{out_dir}/arch/riscv/decode.rs"),
-    );
+    Generate {
+        source: "src/arch/riscv/insn.decode",
+        trait_name: "RiscvDecode",
+        insn_size: &[16, 32],
+        insn_type: "u32",
+        value_type: "i32",
+        ..Generate::default()
+    }
+    .gen::<u32>(format!("{out_dir}/arch/riscv/generated.rs"));
 }

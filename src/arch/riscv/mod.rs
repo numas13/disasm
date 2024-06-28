@@ -1,4 +1,4 @@
-mod gen;
+mod generated;
 
 #[cfg(feature = "print")]
 use core::fmt;
@@ -7,11 +7,11 @@ use alloc::borrow::Cow;
 
 #[cfg(feature = "print")]
 use crate::Operand;
-use crate::{Bundle, Insn, Opcode, Reg, RegClass};
+use crate::{Bundle, Insn, Reg, RegClass};
 
-use self::gen::RiscvDecode;
+use self::generated::RiscvDecode;
 
-pub use self::gen::opcode;
+pub use self::generated::opcode;
 
 pub const REG_CLASS_CSR: RegClass = RegClass::arch(0);
 
@@ -119,28 +119,6 @@ impl Decoder {
     fn alias(&self) -> bool {
         self.opts.alias
     }
-
-    #[allow(clippy::too_many_arguments)]
-    fn same_rs1_rs2(
-        &mut self,
-        address: u64,
-        out: &mut Insn,
-        fd: i32,
-        fs1: i32,
-        fs2: i32,
-        op1: Opcode,
-        op2: Opcode,
-    ) -> bool {
-        self.set_fd(address, out, fd);
-        self.set_fs1(address, out, fs1);
-        if fs1 != fs2 {
-            self.set_fs2(address, out, fs2);
-            out.set_opcode(op1);
-        } else {
-            out.set_opcode(op2);
-        }
-        true
-    }
 }
 
 impl super::Decoder for Decoder {
@@ -199,15 +177,7 @@ impl super::Decoder for Decoder {
 
     #[cfg(feature = "mnemonic")]
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
-        let m = match insn.opcode() {
-            opcode::FMV_S => "fmv.s",
-            opcode::FMV_D => "fmv.d",
-            opcode::FABS_S => "fabs.s",
-            opcode::FABS_D => "fabs.d",
-            opcode::FNEG_S => "fneg.s",
-            opcode::FNEG_D => "fneg.d",
-            _ => self::gen::mnemonic(insn.opcode())?,
-        };
+        let m = self::generated::mnemonic(insn.opcode())?;
         let flags = insn.flags();
         let s = match (flags & INSN_AQ != 0, flags & INSN_RL != 0) {
             (true, true) => "aqrl",
@@ -268,7 +238,7 @@ impl super::Decoder for Decoder {
 
 macro_rules! impl_ex_shift {
     ($($name:ident = $shift:expr),+ $(,)?) => {
-        $(fn $name(&mut self, value: i32) -> i32 {
+        $(fn $name(&self, value: i32) -> i32 {
             value << $shift
         })+
     };
@@ -305,6 +275,10 @@ impl RiscvDecode for Decoder {
         cond_zicsr = zicsr,
     }
 
+    fn cond_is_same_rs1_rs2(&self, insn: u32) -> bool {
+        self.extract_rs1(insn) == self.extract_rs2(insn)
+    }
+
     impl_ex_shift! {
         ex_shift_1 = 1,
         ex_shift_2 = 2,
@@ -313,11 +287,11 @@ impl RiscvDecode for Decoder {
         ex_shift_12 = 12,
     }
 
-    fn ex_plus_1(&mut self, value: i32) -> i32 {
+    fn ex_plus_1(&self, value: i32) -> i32 {
         value + 1
     }
 
-    fn ex_sreg_register(&mut self, value: i32) -> i32 {
+    fn ex_sreg_register(&self, value: i32) -> i32 {
         if value < 2 {
             value + 8
         } else {
@@ -325,16 +299,16 @@ impl RiscvDecode for Decoder {
         }
     }
 
-    fn ex_rvc_register(&mut self, value: i32) -> i32 {
+    fn ex_rvc_register(&self, value: i32) -> i32 {
         value + 8
     }
 
-    fn ex_rvc_shiftli(&mut self, value: i32) -> i32 {
+    fn ex_rvc_shiftli(&self, value: i32) -> i32 {
         // TODO: rv128c
         value
     }
 
-    fn ex_rvc_shiftri(&mut self, value: i32) -> i32 {
+    fn ex_rvc_shiftri(&self, value: i32) -> i32 {
         // TODO: rv128c
         value
     }
@@ -412,18 +386,18 @@ impl RiscvDecode for Decoder {
         out.push_uimm((value as u64 >> 12) & 0xfffff);
     }
 
-    fn set_args_offset(&mut self, _: u64, insn: &mut Insn, args: &gen::args_offset) {
+    fn set_args_offset(&mut self, _: u64, insn: &mut Insn, args: &generated::args_offset) {
         insn.push_offset(x(args.rs1), args.imm as i64);
     }
 
-    fn set_args_j(&mut self, address: u64, insn: &mut Insn, args: &gen::args_j) {
+    fn set_args_j(&mut self, address: u64, insn: &mut Insn, args: &generated::args_j) {
         if !self.alias() || args.rd != 1 {
             insn.push_reg(x(args.rd));
         }
         insn.push_addr(rel_addr(address, args.imm));
     }
 
-    fn set_args_jr(&mut self, _: u64, insn: &mut Insn, args: &gen::args_jr) {
+    fn set_args_jr(&mut self, _: u64, insn: &mut Insn, args: &generated::args_jr) {
         let rs1 = x(args.rs1);
         if args.imm != 0 {
             insn.push_offset(rs1, args.imm as i64);
@@ -432,7 +406,7 @@ impl RiscvDecode for Decoder {
         }
     }
 
-    fn set_args_jalr(&mut self, _: u64, insn: &mut Insn, args: &gen::args_jalr) {
+    fn set_args_jalr(&mut self, _: u64, insn: &mut Insn, args: &generated::args_jalr) {
         if !self.alias() || args.rd != 1 {
             insn.push_reg(x(args.rd));
         }
@@ -443,91 +417,39 @@ impl RiscvDecode for Decoder {
         }
     }
 
-    fn set_args_fence(&mut self, _: u64, insn: &mut Insn, args: &gen::args_fence) {
+    fn set_args_fence(&mut self, _: u64, insn: &mut Insn, args: &generated::args_fence) {
         if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
             insn.push_arch_spec(OPERAND_FENCE, args.pred as u64);
             insn.push_arch_spec(OPERAND_FENCE, args.succ as u64);
         }
     }
 
-    fn set_args_rmrr(&mut self, _: u64, _: &mut Insn, _: &gen::args_rmrr) {
+    fn set_args_rmrr(&mut self, _: u64, _: &mut Insn, _: &generated::args_rmrr) {
         // TODO:
     }
 
-    fn set_args_rmr(&mut self, _: u64, _: &mut Insn, _: &gen::args_rmr) {
+    fn set_args_rmr(&mut self, _: u64, _: &mut Insn, _: &generated::args_rmr) {
         // TODO:
     }
 
-    fn set_args_r2nfvm(&mut self, _: u64, _: &mut Insn, _: &gen::args_r2nfvm) {
+    fn set_args_r2nfvm(&mut self, _: u64, _: &mut Insn, _: &generated::args_r2nfvm) {
         // TODO:
     }
 
-    fn set_args_rnfvm(&mut self, _: u64, _: &mut Insn, _: &gen::args_rnfvm) {
+    fn set_args_rnfvm(&mut self, _: u64, _: &mut Insn, _: &generated::args_rnfvm) {
         // TODO:
     }
 
-    fn set_args_k_aes(&mut self, _: u64, _: &mut Insn, _: &gen::args_k_aes) {
+    fn set_args_k_aes(&mut self, _: u64, _: &mut Insn, _: &generated::args_k_aes) {
         // TODO:
     }
 
-    fn set_args_cmpp(&mut self, _: u64, _: &mut Insn, _: &gen::args_cmpp) {
+    fn set_args_cmpp(&mut self, _: u64, _: &mut Insn, _: &generated::args_cmpp) {
         // TODO:
     }
 
-    fn set_args_cmjt(&mut self, _: u64, _: &mut Insn, _: &gen::args_cmjt) {
+    fn set_args_cmjt(&mut self, _: u64, _: &mut Insn, _: &generated::args_cmjt) {
         // TODO:
-    }
-
-    fn trans_fsgnj_s(&mut self, address: u64, out: &mut Insn, fd: i32, fs1: i32, fs2: i32) -> bool {
-        self.same_rs1_rs2(address, out, fd, fs1, fs2, opcode::FSGNJ_S, opcode::FMV_S)
-    }
-
-    fn trans_fsgnj_d(&mut self, address: u64, out: &mut Insn, fd: i32, fs1: i32, fs2: i32) -> bool {
-        self.same_rs1_rs2(address, out, fd, fs1, fs2, opcode::FSGNJ_D, opcode::FMV_D)
-    }
-
-    fn trans_fsgnjx_s(
-        &mut self,
-        address: u64,
-        out: &mut Insn,
-        fd: i32,
-        fs1: i32,
-        fs2: i32,
-    ) -> bool {
-        self.same_rs1_rs2(address, out, fd, fs1, fs2, opcode::FSGNJX_S, opcode::FABS_S)
-    }
-
-    fn trans_fsgnjx_d(
-        &mut self,
-        address: u64,
-        out: &mut Insn,
-        fd: i32,
-        fs1: i32,
-        fs2: i32,
-    ) -> bool {
-        self.same_rs1_rs2(address, out, fd, fs1, fs2, opcode::FSGNJX_D, opcode::FABS_D)
-    }
-
-    fn trans_fsgnjn_s(
-        &mut self,
-        address: u64,
-        out: &mut Insn,
-        fd: i32,
-        fs1: i32,
-        fs2: i32,
-    ) -> bool {
-        self.same_rs1_rs2(address, out, fd, fs1, fs2, opcode::FSGNJN_S, opcode::FNEG_S)
-    }
-
-    fn trans_fsgnjn_d(
-        &mut self,
-        address: u64,
-        out: &mut Insn,
-        fd: i32,
-        fs1: i32,
-        fs2: i32,
-    ) -> bool {
-        self.same_rs1_rs2(address, out, fd, fs1, fs2, opcode::FSGNJN_D, opcode::FNEG_D)
     }
 }
 
