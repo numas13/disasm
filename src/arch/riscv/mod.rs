@@ -150,24 +150,45 @@ impl super::Decoder for Decoder {
         }
     }
 
-    #[cfg(feature = "print")]
+    #[cfg(feature = "mnemonic")]
+    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
+        let m = self::generated::mnemonic(insn.opcode())?;
+        let flags = insn.flags();
+        let s = match (flags & INSN_AQ != 0, flags & INSN_RL != 0) {
+            (true, true) => "aqrl",
+            (true, false) => "aq",
+            (false, true) => "rl",
+            (false, false) => "",
+        };
+        Some((m, s))
+    }
+}
+
+#[cfg(feature = "print")]
+pub(crate) struct Printer {
+    abi_regs: bool,
+}
+
+#[cfg(feature = "print")]
+impl Printer {
+    pub(crate) fn new(opts: crate::Options, _: Options) -> Self {
+        Self {
+            abi_regs: opts.abi_regs,
+        }
+    }
+}
+
+#[cfg(feature = "print")]
+impl super::Printer for Printer {
     fn register_name(&self, reg: Reg) -> Cow<'static, str> {
         let index = reg.index() as usize;
         match reg.class() {
             RegClass::INT => {
-                let names = if self.opts.abi_regs {
-                    X_ABI_NAME
-                } else {
-                    X_NAME
-                };
+                let names = if self.abi_regs { X_ABI_NAME } else { X_NAME };
                 names[index].into()
             }
             RegClass::FLOAT => {
-                let names = if self.opts.abi_regs {
-                    F_ABI_NAME
-                } else {
-                    F_NAME
-                };
+                let names = if self.abi_regs { F_ABI_NAME } else { F_NAME };
                 names[index].into()
             }
             REG_CLASS_CSR => match index {
@@ -181,20 +202,6 @@ impl super::Decoder for Decoder {
         }
     }
 
-    #[cfg(feature = "mnemonic")]
-    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
-        let m = self::generated::mnemonic(insn.opcode())?;
-        let flags = insn.flags();
-        let s = match (flags & INSN_AQ != 0, flags & INSN_RL != 0) {
-            (true, true) => "aqrl",
-            (true, false) => "aq",
-            (false, true) => "rl",
-            (false, false) => "",
-        };
-        Some((m, s))
-    }
-
-    #[cfg(feature = "print")]
     #[allow(unused_variables)]
     fn print_operand_check(&self, operand: &Operand) -> bool {
         if let Operand::ArchSpec(ty, value) = operand {
@@ -204,7 +211,6 @@ impl super::Decoder for Decoder {
         }
     }
 
-    #[cfg(feature = "print")]
     fn print_operand(
         &self,
         fmt: &mut fmt::Formatter,

@@ -11,7 +11,7 @@ use core::fmt;
 
 use alloc::boxed::Box;
 
-use crate::arch::Decoder;
+use crate::arch::{Decoder, Printer};
 
 pub use crate::insn::{Bundle, Insn, Opcode};
 pub use crate::operand::{Operand, Reg, RegClass};
@@ -56,6 +56,8 @@ impl Default for Options {
 pub struct Disasm {
     address: u64,
     decoder: Box<dyn Decoder>,
+    #[cfg(feature = "print")]
+    printer: Box<dyn Printer>,
 }
 
 impl Disasm {
@@ -66,10 +68,18 @@ impl Disasm {
         }
     }
 
+    fn new_printer(arch: Arch, opts: Options) -> Box<dyn Printer> {
+        match arch {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(rv_opts) => Box::new(crate::arch::riscv::Printer::new(opts, rv_opts)),
+        }
+    }
+
     pub fn new(arch: Arch, address: u64, opts: Options) -> Self {
         Self {
-            decoder: Self::new_decoder(arch, opts),
             address,
+            decoder: Self::new_decoder(arch, opts),
+            printer: Self::new_printer(arch, opts),
         }
     }
 

@@ -125,7 +125,7 @@ where
             for (i, operand) in insn
                 .operands()
                 .iter()
-                .filter(|i| disasm.decoder.print_operand_check(i))
+                .filter(|i| disasm.printer.print_operand_check(i))
                 .enumerate()
             {
                 if i != 0 {

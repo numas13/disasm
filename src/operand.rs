@@ -102,16 +102,16 @@ pub struct Printer<'a>(&'a Disasm, &'a Operand);
 impl fmt::Display for Printer<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let Self(disasm, operand) = self;
-        if disasm.decoder.print_operand(fmt, operand)? {
+        if disasm.printer.print_operand(fmt, operand)? {
             return Ok(());
         }
         match operand {
             Operand::Reg(reg) => {
-                let reg = disasm.decoder.register_name(*reg);
+                let reg = disasm.printer.register_name(*reg);
                 fmt.write_str(&reg)?;
             }
             Operand::Offset(reg, imm) => {
-                let reg = disasm.decoder.register_name(*reg);
+                let reg = disasm.printer.register_name(*reg);
                 write!(fmt, "{imm}({reg})")?;
             }
             Operand::Imm(imm) => {
@@ -124,7 +124,7 @@ impl fmt::Display for Printer<'_> {
                 write!(fmt, "{addr:x}")?;
             }
             Operand::AddressReg(reg) => {
-                let reg = disasm.decoder.register_name(*reg);
+                let reg = disasm.printer.register_name(*reg);
                 write!(fmt, "({reg})")?;
             }
             Operand::ArchSpec(..) => todo!(),
