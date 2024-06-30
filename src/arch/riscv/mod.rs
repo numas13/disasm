@@ -5,9 +5,9 @@ use core::fmt;
 
 use alloc::borrow::Cow;
 
-#[cfg(feature = "print")]
-use crate::Operand;
 use crate::{Bundle, Insn, Reg, RegClass};
+#[cfg(feature = "print")]
+use crate::{Operand, OperandKind};
 
 use self::generated::RiscvDecode;
 
@@ -204,7 +204,7 @@ impl super::Printer for Printer {
 
     #[allow(unused_variables)]
     fn print_operand_check(&self, operand: &Operand) -> bool {
-        if let Operand::ArchSpec(ty, value) = operand {
+        if let OperandKind::ArchSpec(ty, value) = operand.kind() {
             !matches!(*ty, OPERAND_RM if *value == 7)
         } else {
             true
@@ -216,7 +216,7 @@ impl super::Printer for Printer {
         fmt: &mut fmt::Formatter,
         operand: &Operand,
     ) -> Result<bool, fmt::Error> {
-        if let &Operand::ArchSpec(ty, value) = operand {
+        if let &OperandKind::ArchSpec(ty, value) = operand.kind() {
             match ty {
                 OPERAND_FENCE => {
                     let fence = ['w', 'r', 'o', 'i'];
@@ -326,36 +326,44 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_rd(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(x(value));
+        out.push_reg(x(value).write());
+    }
+
+    fn set_rd_implicit(&mut self, out: &mut Insn, value: i32) {
+        out.push_reg(x(value).write().implicit());
     }
 
     /// C-ext, rd = op(rd, ...)
     fn set_rds(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(x(value));
+        out.push_reg(x(value).read().write());
     }
 
     fn set_rs1(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(x(value));
+        out.push_reg(x(value).read());
+    }
+
+    fn set_rs1_implicit(&mut self, out: &mut Insn, value: i32) {
+        out.push_reg(x(value).read().implicit());
     }
 
     fn set_rs2(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(x(value));
+        out.push_reg(x(value).read());
     }
 
     fn set_fd(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(f(value));
+        out.push_reg(f(value).write());
     }
 
     fn set_fs1(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(f(value));
+        out.push_reg(f(value).read());
     }
 
     fn set_fs2(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(f(value));
+        out.push_reg(f(value).read());
     }
 
     fn set_fs3(&mut self, out: &mut Insn, value: i32) {
-        out.push_reg(f(value));
+        out.push_reg(f(value).read());
     }
 
     fn set_rm(&mut self, out: &mut Insn, value: i32) {
@@ -367,7 +375,7 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_addr_reg(&mut self, out: &mut Insn, value: i32) {
-        out.push_addr_reg(x(value));
+        out.push_addr_reg(x(value).read());
     }
 
     fn set_rel(&mut self, out: &mut Insn, rel: i32) {
@@ -383,6 +391,7 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_csr(&mut self, out: &mut Insn, value: i32) {
+        // TODO: csr read/write
         out.push_reg(csr(value));
     }
 
@@ -399,18 +408,22 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_args_offset(&mut self, insn: &mut Insn, args: generated::args_offset) {
-        insn.push_offset(x(args.rs1), args.imm as i64);
+        insn.push_offset(x(args.rs1).read(), args.imm as i64);
+    }
+
+    fn set_args_offset_implicit(&mut self, insn: &mut Insn, args: generated::args_offset_implicit) {
+        insn.push_offset(x(args.rs1).read().implicit(), args.imm as i64);
     }
 
     fn set_args_j(&mut self, insn: &mut Insn, args: generated::args_j) {
-        if !self.alias() || args.rd != 1 {
-            insn.push_reg(x(args.rd));
-        }
+        insn.push_operand(
+            Operand::reg(x(args.rd).write()).non_printable(self.alias() && args.rd == 1),
+        );
         insn.push_addr(rel_addr(self.address, args.imm));
     }
 
     fn set_args_jr(&mut self, insn: &mut Insn, args: generated::args_jr) {
-        let rs1 = x(args.rs1);
+        let rs1 = x(args.rs1).read();
         if args.imm != 0 {
             insn.push_offset(rs1, args.imm as i64);
         } else {
@@ -419,17 +432,19 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_args_jalr(&mut self, insn: &mut Insn, args: generated::args_jalr) {
-        if !self.alias() || args.rd != 1 {
-            insn.push_reg(x(args.rd));
-        }
-        if !self.alias() || args.imm != 0 {
-            insn.push_offset(x(args.rs1), args.imm as i64);
+        insn.push_operand(
+            Operand::reg(x(args.rd).write()).non_printable(self.alias() && args.rd == 1),
+        );
+        let rs1 = x(args.rs1).read();
+        if self.alias() && args.imm == 0 {
+            insn.push_reg(rs1);
         } else {
-            insn.push_reg(x(args.rs1));
+            insn.push_offset(rs1, args.imm as i64);
         }
     }
 
     fn set_args_fence(&mut self, insn: &mut Insn, args: generated::args_fence) {
+        // TODO: non_printable
         if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
             insn.push_arch_spec(OPERAND_FENCE, args.pred as u64);
             insn.push_arch_spec(OPERAND_FENCE, args.succ as u64);

@@ -46,19 +46,54 @@ pub struct Reg {
 }
 
 impl Reg {
+    const INDEX_SIZE: u32 = 40;
+
+    const READ_BIT: u64 = 1 << 40;
+    const WRITE_BIT: u64 = 1 << 41;
+    const IMPLICIT_BIT: u64 = 1 << 42;
+
+    const CLASS_OFFSET: u32 = 48;
+
     pub(crate) const fn new(class: RegClass, index: u64) -> Self {
-        assert!(index < (1 << 48));
+        assert!(index < (1 << Self::INDEX_SIZE));
         Self {
-            raw: ((class.0 as u64) << 48) | index,
+            raw: ((class.0 as u64) << Self::CLASS_OFFSET) | index,
         }
     }
 
+    pub(crate) const fn read(mut self) -> Self {
+        self.raw |= Self::READ_BIT;
+        self
+    }
+
+    pub(crate) const fn write(mut self) -> Self {
+        self.raw |= Self::WRITE_BIT;
+        self
+    }
+
+    pub(crate) const fn implicit(mut self) -> Self {
+        self.raw |= Self::IMPLICIT_BIT;
+        self
+    }
+
     pub const fn class(&self) -> RegClass {
-        RegClass((self.raw >> 48) as u16)
+        RegClass((self.raw >> Self::CLASS_OFFSET) as u16)
     }
 
     pub const fn index(&self) -> u64 {
-        self.raw & ((1 << 48) - 1)
+        self.raw & ((1 << Self::INDEX_SIZE) - 1)
+    }
+
+    pub const fn is_read(&self) -> bool {
+        (self.raw & Self::READ_BIT) != 0
+    }
+
+    pub const fn is_write(&self) -> bool {
+        (self.raw & Self::WRITE_BIT) != 0
+    }
+
+    pub const fn is_implicit(&self) -> bool {
+        (self.raw & Self::IMPLICIT_BIT) != 0
     }
 }
 
@@ -68,10 +103,8 @@ impl fmt::Debug for Reg {
     }
 }
 
-// TODO: add implicit flag
-// TODO: add print flag
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Operand {
+pub enum OperandKind {
     /// reg
     Reg(Reg),
     /// reg + offset
@@ -88,10 +121,46 @@ pub enum Operand {
     ArchSpec(u64, u64),
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct Operand {
+    kind: OperandKind,
+    printable: bool,
+}
+
 impl Operand {
+    pub(crate) fn new(kind: OperandKind) -> Self {
+        Self {
+            kind,
+            printable: true,
+        }
+    }
+
+    pub(crate) fn reg(reg: Reg) -> Self {
+        Self::new(OperandKind::Reg(reg))
+    }
+
+    pub(crate) fn non_printable(mut self, non_printable: bool) -> Self {
+        self.printable = !non_printable;
+        self
+    }
+
+    pub fn kind(&self) -> &OperandKind {
+        &self.kind
+    }
+
+    pub fn is_printable(&self) -> bool {
+        self.printable
+    }
+
     #[cfg(feature = "print")]
     pub fn printer<'a>(&'a self, disasm: &'a Disasm) -> Printer<'a> {
         Printer(disasm, self)
+    }
+}
+
+impl From<OperandKind> for Operand {
+    fn from(value: OperandKind) -> Self {
+        Operand::new(value)
     }
 }
 
@@ -102,32 +171,32 @@ pub struct Printer<'a>(&'a Disasm, &'a Operand);
 impl fmt::Display for Printer<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let Self(disasm, operand) = self;
-        if disasm.printer.print_operand(fmt, operand)? {
+        if !operand.is_printable() || disasm.printer.print_operand(fmt, operand)? {
             return Ok(());
         }
-        match operand {
-            Operand::Reg(reg) => {
-                let reg = disasm.printer.register_name(*reg);
-                fmt.write_str(&reg)?;
+        match &operand.kind {
+            OperandKind::Reg(reg) => {
+                let reg_name = disasm.printer.register_name(*reg);
+                fmt.write_str(&reg_name)?;
             }
-            Operand::Offset(reg, imm) => {
-                let reg = disasm.printer.register_name(*reg);
-                write!(fmt, "{imm}({reg})")?;
+            OperandKind::Offset(reg, imm) => {
+                let reg_name = disasm.printer.register_name(*reg);
+                write!(fmt, "{imm}({reg_name})")?;
             }
-            Operand::Imm(imm) => {
+            OperandKind::Imm(imm) => {
                 write!(fmt, "{imm}")?;
             }
-            Operand::Uimm(imm) => {
+            OperandKind::Uimm(imm) => {
                 write!(fmt, "{imm:#x}")?;
             }
-            Operand::Address(addr) => {
+            OperandKind::Address(addr) => {
                 write!(fmt, "{addr:x}")?;
             }
-            Operand::AddressReg(reg) => {
-                let reg = disasm.printer.register_name(*reg);
-                write!(fmt, "({reg})")?;
+            OperandKind::AddressReg(reg) => {
+                let reg_name = disasm.printer.register_name(*reg);
+                write!(fmt, "({reg_name})")?;
             }
-            Operand::ArchSpec(..) => todo!(),
+            OperandKind::ArchSpec(..) => todo!(),
         }
         Ok(())
     }

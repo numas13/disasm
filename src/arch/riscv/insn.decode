@@ -89,6 +89,7 @@
 
 # Argument sets:
 &offset   imm rs1
+&offset_implicit imm rs1
 &j        rd  imm
 &jr       rs1 imm
 &jalr     rd  rs1 imm
@@ -127,19 +128,19 @@
 @cj           ...    ........... .. rel=%imm_cj
 @cb_z         ... ... ... .. ... .. rs1=%rs1_3 rel=%imm_cb
 
-@c_lqsp       ... . .....  ..... .. %rd &offset imm=%uimm_6bit_lq rs1=2
-@c_ldsp       ... . .....  ..... .. %rd &offset imm=%uimm_6bit_ld rs1=2
-@c_lwsp       ... . .....  ..... .. %rd &offset imm=%uimm_6bit_lw rs1=2
-@c_sqsp       ... . .....  ..... .. rs2=%rs2_5 &offset imm=%uimm_6bit_sq rs1=2
-@c_sdsp       ... . .....  ..... .. rs2=%rs2_5 &offset imm=%uimm_6bit_sd rs1=2
-@c_swsp       ... . .....  ..... .. rs2=%rs2_5 &offset imm=%uimm_6bit_sw rs1=2
+@c_lqsp       ... . .....  ..... .. %rd &offset_implicit imm=%uimm_6bit_lq rs1=2
+@c_ldsp       ... . .....  ..... .. %rd &offset_implicit imm=%uimm_6bit_ld rs1=2
+@c_lwsp       ... . .....  ..... .. %rd &offset_implicit imm=%uimm_6bit_lw rs1=2
+@c_sqsp       ... . .....  ..... .. rs2=%rs2_5 &offset_implicit imm=%uimm_6bit_sq rs1=2
+@c_sdsp       ... . .....  ..... .. rs2=%rs2_5 &offset_implicit imm=%uimm_6bit_sd rs1=2
+@c_swsp       ... . .....  ..... .. rs2=%rs2_5 &offset_implicit imm=%uimm_6bit_sw rs1=2
 
-@c_flqsp      ... . .....  ..... .. %fd &offset imm=%uimm_6bit_lq rs1=2
-@c_fldsp      ... . .....  ..... .. %fd &offset imm=%uimm_6bit_ld rs1=2
-@c_flwsp      ... . .....  ..... .. %fd &offset imm=%uimm_6bit_lw rs1=2
-@c_fsqsp      ... . .....  ..... .. fs2=%fs2_5 &offset imm=%uimm_6bit_sq rs1=2
-@c_fsdsp      ... . .....  ..... .. fs2=%fs2_5 &offset imm=%uimm_6bit_sd rs1=2
-@c_fswsp      ... . .....  ..... .. fs2=%fs2_5 &offset imm=%uimm_6bit_sw rs1=2
+@c_flqsp      ... . .....  ..... .. %fd &offset_implicit imm=%uimm_6bit_lq rs1=2
+@c_fldsp      ... . .....  ..... .. %fd &offset_implicit imm=%uimm_6bit_ld rs1=2
+@c_flwsp      ... . .....  ..... .. %fd &offset_implicit imm=%uimm_6bit_lw rs1=2
+@c_fsqsp      ... . .....  ..... .. fs2=%fs2_5 &offset_implicit imm=%uimm_6bit_sq rs1=2
+@c_fsdsp      ... . .....  ..... .. fs2=%fs2_5 &offset_implicit imm=%uimm_6bit_sd rs1=2
+@c_fswsp      ... . .....  ..... .. fs2=%fs2_5 &offset_implicit imm=%uimm_6bit_sw rs1=2
 
 @c_li         ... . .....  ..... .. %rd imm=%imm_ci
 @c_lui        ... . .....  ..... .. %rd imm_u=%imm_lui
@@ -147,7 +148,7 @@
 @c_jalr       ... . .....  ..... .. &jalr imm=0 rs1=%rd
 @c_mv         ... . .....  ..... .. %rd rs1=%rs2_5
 
-@c_addi4spn   ... .  ..... ..... .. rd=%rs2_3 rs1=2 imm=%nzuimm_ciw
+@c_addi4spn   ... .  ..... ..... .. rd=%rs2_3 rs1_implicit=2 imm=%nzuimm_ciw
 @c_addi16sp   ... .  ..... ..... .. rd=2 imm=%imm_addi16sp
 
 @c_shift      ... . .. ... ..... .. rds=%rs1_3 uimm=%shrimm_6bit
@@ -298,7 +299,7 @@ sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
 }
 {
   illegal         011 0  -----  00000 01 # c.addi16sp and c.lui, RES nzimm=0
-  addi            011 .  00010  ..... 01 @i rd=2 rs1=2 imm=%imm_addi16sp ? alias
+  addi            011 .  00010  ..... 01 rd_implicit=2 rs1_implicit=2 imm=%imm_addi16sp ? alias
   c_addi16sp      011 .  00010  ..... 01 @c_addi16sp
   lui             011 .  .....  ..... 01 @c_lui ? alias
   c_lui           011 .  .....  ..... 01 @c_lui

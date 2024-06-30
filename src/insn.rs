@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 #[cfg(feature = "print")]
 use crate::PrinterInfo;
-use crate::{Operand, Reg};
+use crate::{Operand, OperandKind, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
 
@@ -64,36 +64,39 @@ impl Insn {
         self.operands.as_slice()
     }
 
-    pub(crate) fn push_operand(&mut self, operand: Operand) {
-        self.operands.push(operand);
+    pub(crate) fn push_operand<T>(&mut self, operand: T)
+    where
+        T: Into<Operand>,
+    {
+        self.operands.push(operand.into());
     }
 
     pub(crate) fn push_reg(&mut self, reg: Reg) {
-        self.push_operand(Operand::Reg(reg));
+        self.push_operand(OperandKind::Reg(reg));
     }
 
     pub(crate) fn push_offset(&mut self, reg: Reg, offset: i64) {
-        self.push_operand(Operand::Offset(reg, offset));
+        self.push_operand(OperandKind::Offset(reg, offset));
     }
 
     pub(crate) fn push_imm(&mut self, value: i64) {
-        self.push_operand(Operand::Imm(value));
+        self.push_operand(OperandKind::Imm(value));
     }
 
     pub(crate) fn push_uimm(&mut self, value: u64) {
-        self.push_operand(Operand::Uimm(value));
+        self.push_operand(OperandKind::Uimm(value));
     }
 
     pub(crate) fn push_addr(&mut self, addr: u64) {
-        self.push_operand(Operand::Address(addr));
+        self.push_operand(OperandKind::Address(addr));
     }
 
     pub(crate) fn push_addr_reg(&mut self, reg: Reg) {
-        self.push_operand(Operand::AddressReg(reg));
+        self.push_operand(OperandKind::AddressReg(reg));
     }
 
     pub(crate) fn push_arch_spec(&mut self, val0: u64, val1: u64) {
-        self.push_operand(Operand::ArchSpec(val0, val1));
+        self.push_operand(OperandKind::ArchSpec(val0, val1));
     }
 
     #[cfg(feature = "print")]
@@ -125,14 +128,14 @@ where
             for (i, operand) in insn
                 .operands()
                 .iter()
-                .filter(|i| disasm.printer.print_operand_check(i))
+                .filter(|i| i.is_printable() && disasm.printer.print_operand_check(i))
                 .enumerate()
             {
                 if i != 0 {
                     write!(fmt, ",")?;
                 }
                 operand.printer(disasm).fmt(fmt)?;
-                if let Operand::Address(addr) = operand {
+                if let OperandKind::Address(addr) = operand.kind() {
                     if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
                         write!(fmt, " <{sym_name}")?;
                         let diff = addr - sym_addr;
