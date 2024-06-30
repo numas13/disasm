@@ -117,6 +117,8 @@ pub enum OperandKind {
     Address(u64),
     /// address in reg
     AddressReg(Reg),
+    /// base + index * scale + offset
+    Indexed(Reg, Reg, u8, i32),
     /// architecture specific operand
     ArchSpec(u64, u64),
 }
@@ -137,6 +139,10 @@ impl Operand {
 
     pub(crate) fn reg(reg: Reg) -> Self {
         Self::new(OperandKind::Reg(reg))
+    }
+
+    pub(crate) fn arch(a: u64, b: u64) -> Self {
+        Self::new(OperandKind::ArchSpec(a, b))
     }
 
     pub(crate) fn non_printable(mut self, non_printable: bool) -> Self {
@@ -171,33 +177,6 @@ pub struct Printer<'a>(&'a Disasm, &'a Operand);
 impl fmt::Display for Printer<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let Self(disasm, operand) = self;
-        if !operand.is_printable() || disasm.printer.print_operand(fmt, operand)? {
-            return Ok(());
-        }
-        match &operand.kind {
-            OperandKind::Reg(reg) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                fmt.write_str(&reg_name)?;
-            }
-            OperandKind::Offset(reg, imm) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                write!(fmt, "{imm}({reg_name})")?;
-            }
-            OperandKind::Imm(imm) => {
-                write!(fmt, "{imm}")?;
-            }
-            OperandKind::Uimm(imm) => {
-                write!(fmt, "{imm:#x}")?;
-            }
-            OperandKind::Address(addr) => {
-                write!(fmt, "{addr:x}")?;
-            }
-            OperandKind::AddressReg(reg) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                write!(fmt, "({reg_name})")?;
-            }
-            OperandKind::ArchSpec(..) => todo!(),
-        }
-        Ok(())
+        disasm.printer.print_operand(fmt, disasm, operand)
     }
 }

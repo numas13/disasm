@@ -27,6 +27,8 @@ struct UserGen<'src> {
 
     set_args: String,
     set_args_def: String,
+
+    value_type: String,
 }
 
 impl<'src> UserGen<'src> {
@@ -50,6 +52,7 @@ impl<'src> UserGen<'src> {
             generate,
             set_args,
             set_args_def,
+            value_type: generate.value_type.into(),
             ..Self::default()
         }
     }
@@ -88,7 +91,11 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
             writeln!(out)?;
         }
         for i in &self.args {
-            writeln!(out, "{pad}fn set_{i}({set_args}, {i}: i32);")?;
+            writeln!(
+                out,
+                "{pad}fn set_{i}({set_args}, {i}: {});",
+                self.value_type
+            )?;
         }
 
         if !self.sets.is_empty() {
@@ -167,7 +174,7 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
                 let ty = if value.is_set() {
                     format!("args_{name}")
                 } else {
-                    "i32".into()
+                    self.value_type.clone()
                 };
                 args.push((name, ty));
             }

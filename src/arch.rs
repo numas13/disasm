@@ -1,35 +1,21 @@
 #[cfg(feature = "riscv")]
 pub mod riscv;
 
-#[cfg(feature = "print")]
-use core::fmt;
-
-use alloc::borrow::Cow;
-
-use crate::{Bundle, Insn, Operand, Reg};
+use crate::Bundle;
+#[cfg(feature = "mnemonic")]
+use crate::Insn;
 
 pub(crate) trait Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize>;
 
     #[cfg(feature = "mnemonic")]
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)>;
-}
 
-#[cfg(feature = "print")]
-pub(crate) trait Printer {
-    fn register_name(&self, reg: Reg) -> Cow<'static, str>;
+    fn insn_size_min(&self) -> u16;
 
-    #[allow(unused_variables)]
-    fn print_operand_check(&self, operand: &Operand) -> bool {
-        true
-    }
+    fn insn_size_max(&self) -> u16;
 
-    #[allow(unused_variables)]
-    fn print_operand(
-        &self,
-        fmt: &mut fmt::Formatter,
-        operand: &Operand,
-    ) -> Result<bool, fmt::Error> {
-        Ok(true)
+    fn insn_alignment(&self) -> u16 {
+        self.insn_size_min()
     }
 }

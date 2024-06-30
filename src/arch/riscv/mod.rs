@@ -1,17 +1,15 @@
 mod generated;
-
 #[cfg(feature = "print")]
-use core::fmt;
+mod printer;
 
-use alloc::borrow::Cow;
-
-use crate::{Bundle, Insn, Reg, RegClass};
-#[cfg(feature = "print")]
-use crate::{Operand, OperandKind};
+use crate::{Bundle, Insn, Operand, Reg, RegClass};
 
 use self::generated::RiscvDecode;
 
 pub use self::generated::opcode;
+
+#[cfg(feature = "print")]
+pub(crate) use self::printer::printer;
 
 pub const REG_CLASS_CSR: RegClass = RegClass::arch(0);
 
@@ -26,39 +24,8 @@ pub const RM_RMM: u8 = 4;
 pub const RM_DYN: u8 = 7;
 
 const OPERAND_FENCE: u64 = 0;
+
 const OPERAND_RM: u64 = 1;
-
-#[rustfmt::skip]
-const X_NAME: [&str; 32] = [
-    "x0",  "x1",  "x2",  "x3",  "x4",  "x5",  "x6",  "x7",
-    "x8",  "x9",  "x10", "x11", "x12", "x13", "x14", "x15",
-    "x16", "x17", "x18", "x19", "x20", "x21", "x22", "x23",
-    "x24", "x25", "x26", "x27", "x28", "x29", "x30", "x31",
-];
-
-#[rustfmt::skip]
-const X_ABI_NAME: [&str; 32] = [
-    "zero", "ra",   "sp",   "gp",   "tp",   "t0",   "t1",   "t2",
-    "s0",   "s1",   "a0",   "a1",   "a2",   "a3",   "a4",   "a5",
-    "a6",   "a7",   "s2",   "s3",   "s4",   "s5",   "s6",   "s7",
-    "s8",   "s9",   "s10",  "s11",  "t3",   "t4",   "t5",   "t6",
-];
-
-#[rustfmt::skip]
-const F_NAME: [&str; 32] = [
-    "f0",  "f1",  "f2",  "f3",  "f4",  "f5",  "f6",  "f7",
-    "f8",  "f9",  "f10", "f11", "f12", "f13", "f14", "f15",
-    "f16", "f17", "f18", "f19", "f20", "f21", "f22", "f23",
-    "f24", "f25", "f26", "f27", "f28", "f29", "f30", "f31",
-];
-
-#[rustfmt::skip]
-const F_ABI_NAME: [&str; 32] = [
-    "ft0",  "ft1", "ft2",  "ft3",   "ft4",  "ft5", "ft6",  "ft7",
-    "fs0",  "fs1", "fa0",  "fa1",   "fa2",  "fa3", "fa4",  "fa5",
-    "fa6",  "fa7", "fs2",  "fs3",   "fs4",  "fs5", "fs6",  "fs7",
-    "fs8",  "fs9", "fs10", "fs11",  "ft8",  "ft9", "ft10", "ft11",
-];
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Xlen {
@@ -106,17 +73,17 @@ pub struct Options {
     pub ext: Extensions,
 }
 
-pub(crate) struct Decoder {
+struct Decoder {
     opts: crate::Options,
-    rv_opts: Options,
+    opts_arch: Options,
     address: u64,
 }
 
 impl Decoder {
-    pub(crate) fn new(opts: crate::Options, rv_opts: Options) -> Self {
+    fn new(opts: crate::Options, opts_arch: Options) -> Self {
         Self {
             opts,
-            rv_opts,
+            opts_arch,
             address: 0,
         }
     }
@@ -133,7 +100,7 @@ impl super::Decoder for Decoder {
             .map(|i| if i & 3 == 3 { 4 } else { 2 })
             .ok_or(2_usize)?;
 
-        if bytes.len() < len || (len == 2 && !self.rv_opts.ext.c) {
+        if bytes.len() < len || (len == 2 && !self.opts_arch.ext.c) {
             return Err(len);
         }
         out.clear();
@@ -150,6 +117,18 @@ impl super::Decoder for Decoder {
         }
     }
 
+    fn insn_size_min(&self) -> u16 {
+        if self.opts_arch.ext.c {
+            2
+        } else {
+            4
+        }
+    }
+
+    fn insn_size_max(&self) -> u16 {
+        4
+    }
+
     #[cfg(feature = "mnemonic")]
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
         let m = self::generated::mnemonic(insn.opcode())?;
@@ -164,90 +143,6 @@ impl super::Decoder for Decoder {
     }
 }
 
-#[cfg(feature = "print")]
-pub(crate) struct Printer {
-    abi_regs: bool,
-}
-
-#[cfg(feature = "print")]
-impl Printer {
-    pub(crate) fn new(opts: crate::Options, _: Options) -> Self {
-        Self {
-            abi_regs: opts.abi_regs,
-        }
-    }
-}
-
-#[cfg(feature = "print")]
-impl super::Printer for Printer {
-    fn register_name(&self, reg: Reg) -> Cow<'static, str> {
-        let index = reg.index() as usize;
-        match reg.class() {
-            RegClass::INT => {
-                let names = if self.abi_regs { X_ABI_NAME } else { X_NAME };
-                names[index].into()
-            }
-            RegClass::FLOAT => {
-                let names = if self.abi_regs { F_ABI_NAME } else { F_NAME };
-                names[index].into()
-            }
-            REG_CLASS_CSR => match index {
-                0x001 => "fflags",
-                0x002 => "frm",
-                0x003 => "fcsr",
-                _ => return format!("csr:{index}").into(),
-            }
-            .into(),
-            _ => todo!(),
-        }
-    }
-
-    #[allow(unused_variables)]
-    fn print_operand_check(&self, operand: &Operand) -> bool {
-        if let OperandKind::ArchSpec(ty, value) = operand.kind() {
-            !matches!(*ty, OPERAND_RM if *value == 7)
-        } else {
-            true
-        }
-    }
-
-    fn print_operand(
-        &self,
-        fmt: &mut fmt::Formatter,
-        operand: &Operand,
-    ) -> Result<bool, fmt::Error> {
-        if let &OperandKind::ArchSpec(ty, value) = operand.kind() {
-            match ty {
-                OPERAND_FENCE => {
-                    let fence = ['w', 'r', 'o', 'i'];
-                    for i in (0..4).rev() {
-                        if value & (1 << i) != 0 {
-                            write!(fmt, "{}", fence[i])?;
-                        }
-                    }
-                    Ok(true)
-                }
-                OPERAND_RM => {
-                    let s = match value as u8 {
-                        RM_RNE => "rne",
-                        RM_RTZ => "rtz",
-                        RM_RDN => "rdn",
-                        RM_RUP => "rup",
-                        RM_RMM => "rmm",
-                        RM_DYN => "dyn",
-                        _ => todo!(),
-                    };
-                    fmt.write_str(s)?;
-                    Ok(true)
-                }
-                _ => todo!(),
-            }
-        } else {
-            Ok(false)
-        }
-    }
-}
-
 macro_rules! impl_ex_shift {
     ($($name:ident = $shift:expr),+ $(,)?) => {
         $(fn $name(&self, value: i32) -> i32 {
@@ -259,7 +154,7 @@ macro_rules! impl_ex_shift {
 macro_rules! impl_cond_ext {
     ($($func:ident = $name:ident),+$(,)?) => {
         $(fn $func(&self) -> bool {
-            self.rv_opts.ext.$name
+            self.opts_arch.ext.$name
         })+
     }
 }
@@ -270,11 +165,11 @@ impl RiscvDecode for Decoder {
     }
 
     fn cond_rv64i(&self) -> bool {
-        self.rv_opts.xlen == Xlen::X64
+        self.opts_arch.xlen == Xlen::X64
     }
 
     fn cond_rv128i(&self) -> bool {
-        self.rv_opts.xlen == Xlen::X128
+        self.opts_arch.xlen == Xlen::X128
     }
 
     impl_cond_ext! {
@@ -367,7 +262,9 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_rm(&mut self, out: &mut Insn, value: i32) {
-        out.push_arch_spec(OPERAND_RM, value as u64);
+        out.push_operand(
+            Operand::arch(OPERAND_RM, value as u64).non_printable(value as u8 == RM_DYN),
+        )
     }
 
     fn set_vm(&mut self, _: &mut Insn, _: i32) {
@@ -494,4 +391,8 @@ fn csr(index: i32) -> Reg {
 
 fn rel_addr(address: u64, offset: i32) -> u64 {
     (address as i64).wrapping_add(offset as i64) as u64
+}
+
+pub(crate) fn decoder(opts: crate::Options, opts_arch: Options) -> Box<dyn crate::Decoder> {
+    Box::new(Decoder::new(opts, opts_arch))
 }

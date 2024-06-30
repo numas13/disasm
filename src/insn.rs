@@ -5,12 +5,12 @@ use core::ops::Deref;
 use alloc::vec::Vec;
 
 #[cfg(feature = "print")]
-use crate::PrinterInfo;
+use crate::printer::PrinterInfo;
 use crate::{Operand, OperandKind, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
 
-#[derive(Copy, Clone, Default, PartialEq, Eq)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, Eq)]
 pub struct Opcode(pub(crate) u32);
 
 #[derive(Clone, Default)]
@@ -118,36 +118,7 @@ where
 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         let Printer(insn, disasm, info) = self;
-        let (mnemonic, sub) = insn.mnemonic(disasm).unwrap_or(("<invalid>", ""));
-        write!(fmt, "{mnemonic}")?;
-        if !sub.is_empty() {
-            write!(fmt, ".{sub}")?;
-        }
-        if !insn.operands().is_empty() {
-            write!(fmt, "\t")?;
-            for (i, operand) in insn
-                .operands()
-                .iter()
-                .filter(|i| i.is_printable() && disasm.printer.print_operand_check(i))
-                .enumerate()
-            {
-                if i != 0 {
-                    write!(fmt, ",")?;
-                }
-                operand.printer(disasm).fmt(fmt)?;
-                if let OperandKind::Address(addr) = operand.kind() {
-                    if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
-                        write!(fmt, " <{sym_name}")?;
-                        let diff = addr - sym_addr;
-                        if diff != 0 {
-                            write!(fmt, "+{diff:#x}")?;
-                        }
-                        write!(fmt, ">")?;
-                    }
-                }
-            }
-        }
-        Ok(())
+        disasm.printer.print_insn(fmt, disasm, info, insn)
     }
 }
 

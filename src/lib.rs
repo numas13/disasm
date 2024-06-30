@@ -5,16 +5,23 @@ extern crate alloc;
 pub mod arch;
 mod insn;
 mod operand;
+#[cfg(feature = "print")]
+mod printer;
 mod utils;
 
 use core::fmt;
 
 use alloc::boxed::Box;
 
-use crate::arch::{Decoder, Printer};
+use crate::arch::Decoder;
+#[cfg(feature = "print")]
+use crate::printer::Printer;
 
 pub use crate::insn::{Bundle, Insn, Opcode};
 pub use crate::operand::{Operand, OperandKind, Reg, RegClass};
+
+#[cfg(feature = "print")]
+pub use crate::printer::PrinterInfo;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -38,6 +45,29 @@ pub enum Arch {
     Riscv(crate::arch::riscv::Options),
 }
 
+impl Arch {
+    pub fn bytes_per_line(&self) -> usize {
+        match self {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(..) => 8,
+        }
+    }
+
+    pub fn bytes_per_chunk(&self, len: usize) -> usize {
+        match self {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(..) => len,
+        }
+    }
+
+    pub fn skip_zeroes(&self) -> usize {
+        match self {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(..) => 2,
+        }
+    }
+}
+
 #[derive(Copy, Clone)]
 pub struct Options {
     pub alias: bool,
@@ -55,6 +85,9 @@ impl Default for Options {
 
 pub struct Disasm {
     address: u64,
+    insn_alignment: u16,
+    insn_size_min: u16,
+    insn_size_max: u16,
     decoder: Box<dyn Decoder>,
     #[cfg(feature = "print")]
     printer: Box<dyn Printer>,
@@ -62,24 +95,34 @@ pub struct Disasm {
 
 impl Disasm {
     fn new_decoder(arch: Arch, opts: Options) -> Box<dyn Decoder> {
+        use crate::arch::*;
         match arch {
             #[cfg(feature = "riscv")]
-            Arch::Riscv(rv_opts) => Box::new(crate::arch::riscv::Decoder::new(opts, rv_opts)),
+            Arch::Riscv(arch_opts) => riscv::decoder(opts, arch_opts),
         }
     }
 
+    #[cfg(feature = "print")]
     fn new_printer(arch: Arch, opts: Options) -> Box<dyn Printer> {
+        use crate::arch::*;
         match arch {
             #[cfg(feature = "riscv")]
-            Arch::Riscv(rv_opts) => Box::new(crate::arch::riscv::Printer::new(opts, rv_opts)),
+            Arch::Riscv(arch_opts) => riscv::printer(opts, arch_opts),
         }
     }
 
     pub fn new(arch: Arch, address: u64, opts: Options) -> Self {
+        let decoder = Self::new_decoder(arch, opts);
+        #[cfg(feature = "print")]
+        let printer = Self::new_printer(arch, opts);
         Self {
             address,
-            decoder: Self::new_decoder(arch, opts),
-            printer: Self::new_printer(arch, opts),
+            insn_alignment: decoder.insn_alignment(),
+            insn_size_min: decoder.insn_size_min(),
+            insn_size_max: decoder.insn_size_max(),
+            decoder,
+            #[cfg(feature = "print")]
+            printer,
         }
     }
 
@@ -106,14 +149,16 @@ impl Disasm {
     pub fn skip(&mut self, size: usize) {
         self.address += size as u64;
     }
-}
 
-#[cfg(feature = "print")]
-pub trait PrinterInfo {
-    fn get_symbol(&self, _address: u64) -> Option<(u64, &str)> {
-        None
+    pub fn insn_alignemt(&self) -> usize {
+        self.insn_alignment as usize
+    }
+
+    pub fn insn_size_min(&self) -> usize {
+        self.insn_size_min as usize
+    }
+
+    pub fn insn_size_max(&self) -> usize {
+        self.insn_size_max as usize
     }
 }
-
-#[cfg(feature = "print")]
-impl PrinterInfo for () {}
