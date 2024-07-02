@@ -25,13 +25,17 @@ pub use crate::printer::PrinterInfo;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
-    Unsupported,
+    /// Need more bits to decode an instruction.
+    More(usize),
+    /// Failed to decode an instruction.
+    Failed(usize),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Unsupported => write!(fmt, "Unsupported achitecture"),
+            Self::More(_) => fmt.write_str("Need more data"),
+            Self::Failed(_) => fmt.write_str("Failed to decode"),
         }
     }
 }
@@ -131,16 +135,19 @@ impl Disasm {
         self.address
     }
 
-    pub fn decode(&mut self, bytes: &[u8], out: &mut Bundle) -> Result<usize, usize> {
+    pub fn decode(&mut self, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error> {
         out.clear();
         match self.decoder.decode(self.address, bytes, out) {
-            Ok(len) => {
+            Ok(bits) => {
+                assert!(bits & 7 == 0);
+                let len = bits / 8;
                 self.address += len as u64;
                 Ok(len)
             }
-            Err(len) => {
-                self.address += len as u64;
-                Err(len)
+            Err(Error::More(bits)) => Err(Error::More((bits + 7) / 8)),
+            Err(Error::Failed(bits)) => {
+                assert!(bits & 7 == 0);
+                Err(Error::Failed(bits / 8))
             }
         }
     }

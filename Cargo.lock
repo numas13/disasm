@@ -10,9 +10,9 @@ checksum = "5ce89b21cab1437276d2650d57e971f9d548a2d9037cc231abdc0562b97498ce"
 
 [[package]]
 name = "decodetree"
-version = "0.4.4"
+version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55af32b1db051c93dff9bbabdf8acb3cc22f2a22d1cb19a23f7efdaba83b9e00"
+checksum = "0881a3adeb1f3f943ace98abbbe86bf5c3c79af1623b362339bebf01c4407ad1"
 dependencies = [
  "nom",
  "nom_locate",
