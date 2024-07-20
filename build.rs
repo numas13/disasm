@@ -86,23 +86,28 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
 
     fn trait_body<W: Write>(&mut self, out: &mut W, mut pad: Pad) -> io::Result<()> {
         let set_args = &self.set_args_def;
+        let ret = if self.generate.set_error {
+            " -> Result<(), Self::Error>"
+        } else {
+            ""
+        };
+        let ty = &self.value_type;
 
         if !self.args.is_empty() {
             writeln!(out)?;
         }
         for i in &self.args {
-            writeln!(
-                out,
-                "{pad}fn set_{i}({set_args}, {i}: {});",
-                self.value_type
-            )?;
+            writeln!(out, "{pad}fn set_{i}({set_args}, {i}: {ty}){ret};")?;
         }
 
         if !self.sets.is_empty() {
             writeln!(out)?;
         }
         for i in &self.sets {
-            writeln!(out, "{pad}fn set_args_{i}({set_args}, args: args_{i});")?;
+            writeln!(
+                out,
+                "{pad}fn set_args_{i}({set_args}, args: args_{i}){ret};"
+            )?;
         }
 
         for (name, args) in &self.formats {
@@ -111,18 +116,21 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
             for (arg, ty) in args {
                 write!(out, ", {arg}: {ty}")?;
             }
-            writeln!(out, ") {{")?;
+            writeln!(out, "){ret} {{")?;
             pad.right();
 
             writeln!(out, "{pad}out.set_opcode(opcode);")?;
 
             for (arg, ty) in args {
                 let prefix = if ty.starts_with("args_") { "args_" } else { "" };
-                writeln!(
-                    out,
-                    "{pad}self.set_{prefix}{arg}({}, {arg});",
-                    self.set_args
-                )?;
+                write!(out, "{pad}self.set_{prefix}{arg}({}, {arg})", self.set_args)?;
+                if self.generate.set_error {
+                    write!(out, "?")?;
+                }
+                writeln!(out, ";")?;
+            }
+            if self.generate.set_error {
+                writeln!(out, "{pad}Ok(())")?;
             }
             pad.left();
             writeln!(out, "{pad}}}")?;
@@ -165,7 +173,11 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         for value in pattern.values() {
             write!(out, ", {}", value.name())?;
         }
-        writeln!(out, ");")?;
+        if self.generate.set_error {
+            writeln!(out, ")?;")?;
+        } else {
+            writeln!(out, ");")?;
+        }
 
         if let Entry::Vacant(e) = self.formats.entry(format) {
             let mut args = Vec::new();
@@ -252,6 +264,7 @@ struct Generate<'a> {
     optimize: bool,
     stubs: bool,
     variable_size: bool,
+    set_error: bool,
 }
 
 impl Default for Generate<'_> {
@@ -265,6 +278,7 @@ impl Default for Generate<'_> {
             optimize: true,
             stubs: false,
             variable_size: false,
+            set_error: false,
         }
     }
 }
