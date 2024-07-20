@@ -44,31 +44,31 @@ pub fn sextract<S, T: SExtract<S>>(value: T, pos: u32, len: u32) -> S {
     value.sextract(pos, len)
 }
 
-// pub trait Deposit: Sized {
-//     fn deposit<F: Into<Self>>(&self, pos: u32, len: u32, field: F) -> Self;
-// }
-//
-// macro_rules! impl_deposit {
-//     ($($uint:ty = $sint:ty),+ $(,)?) => {
-//         $(
-//             impl Deposit for $uint {
-//                 fn deposit<F: Into<Self>>(&self, pos: u32, len: u32, field: F) -> Self {
-//                     let mask = (1 as $uint << len).wrapping_sub(1) << pos;
-//                     (*self & !mask) | ((field.into() << pos) & mask)
-//                 }
-//             }
-//          )+
-//     };
-// }
-//
-// impl_deposit! {
-//     u8 = i8,
-//     u16 = i16,
-//     u32 = i32,
-//     u64 = i64,
-//     u128 = i128,
-// }
-//
-// pub fn deposit<T: Deposit, F: Into<T>>(value: T, pos: u32, len: u32, field: F) -> T {
-//     value.deposit(pos, len, field)
-// }
+pub trait Deposit: Sized {
+    fn deposit<F: Into<Self>>(&self, pos: u32, len: u32, field: F) -> Self;
+}
+
+macro_rules! impl_deposit {
+    ($($uint:ty = $sint:ty),+ $(,)?) => {
+        $(
+            impl Deposit for $uint {
+                fn deposit<F: Into<Self>>(&self, pos: u32, len: u32, field: F) -> Self {
+                    let mask = (1 as $uint << len).wrapping_sub(1) << pos;
+                    (*self & !mask) | ((field.into() << pos) & mask)
+                }
+            }
+         )+
+    };
+}
+
+impl_deposit! {
+    u8 = i8,
+    u16 = i16,
+    u32 = i32,
+    u64 = i64,
+    u128 = i128,
+}
+
+pub fn deposit<T: Deposit, F: Into<T>>(value: T, pos: u32, len: u32, field: F) -> T {
+    value.deposit(pos, len, field)
+}

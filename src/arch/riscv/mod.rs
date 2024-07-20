@@ -136,7 +136,7 @@ impl super::Decoder for Decoder {
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
         let m = self::generated::mnemonic(insn.opcode())?;
         let flags = insn.flags();
-        let s = match (flags & INSN_AQ != 0, flags & INSN_RL != 0) {
+        let s = match (flags.any(INSN_AQ), flags.any(INSN_RL)) {
             (true, true) => "aqrl",
             (true, false) => "aq",
             (false, true) => "rl",
@@ -287,11 +287,11 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_aq(&mut self, out: &mut Insn, aq: i32) {
-        out.insert_flags(aq != 0, INSN_AQ);
+        out.flags_mut().set_if(INSN_AQ, aq != 0);
     }
 
     fn set_rl(&mut self, out: &mut Insn, rl: i32) {
-        out.insert_flags(rl != 0, INSN_RL);
+        out.flags_mut().set_if(INSN_RL, rl != 0);
     }
 
     fn set_csr(&mut self, out: &mut Insn, value: i32) {

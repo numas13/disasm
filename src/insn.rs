@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 #[cfg(feature = "print")]
 use crate::printer::PrinterInfo;
-use crate::{Operand, OperandKind, Reg};
+use crate::{flags::Flags, Operand, OperandKind, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
 
@@ -16,7 +16,7 @@ pub struct Opcode(pub(crate) u32);
 #[derive(Clone, Default)]
 pub struct Insn {
     opcode: Opcode,
-    flags: u32,
+    flags: Flags,
     operands: Vec<Operand>,
     slot: u16,
 }
@@ -24,27 +24,25 @@ pub struct Insn {
 impl Insn {
     pub(crate) fn clear(&mut self) {
         self.opcode = Opcode(0);
-        self.flags = 0;
+        self.flags = Flags::empty();
         self.operands.clear();
         self.slot = 0;
     }
 
-    pub(crate) fn flags(&self) -> u32 {
-        self.flags
+    pub(crate) fn flags(&self) -> &Flags {
+        &self.flags
     }
 
-    pub(crate) fn insert_flags(&mut self, cond: bool, flags: u32) {
-        if cond {
-            self.flags |= flags;
-        }
+    pub(crate) fn flags_mut(&mut self) -> &mut Flags {
+        &mut self.flags
     }
 
     pub fn is_alias(&self) -> bool {
-        self.flags & INSN_ALIAS != 0
+        self.flags.any(INSN_ALIAS)
     }
 
     pub(crate) fn set_alias(&mut self) {
-        self.insert_flags(true, INSN_ALIAS);
+        self.flags.set(INSN_ALIAS);
     }
 
     pub fn opcode(&self) -> Opcode {

@@ -1,7 +1,25 @@
 use core::fmt;
 
+use crate::flags::Flags;
 #[cfg(feature = "print")]
 use crate::{Disasm, Insn, PrinterInfo};
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Access {
+    Read,
+    Write,
+    ReadWrite,
+}
+
+impl Access {
+    pub const fn is_read(&self) -> bool {
+        !matches!(*self, Self::Write)
+    }
+
+    pub const fn is_write(&self) -> bool {
+        !matches!(*self, Self::Read)
+    }
+}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct RegClass(pub(crate) u16);
@@ -85,6 +103,10 @@ impl Reg {
         self
     }
 
+    pub(crate) const fn access(self, access: Access) -> Self {
+        self.read_if(access.is_read()).write_if(access.is_write())
+    }
+
     pub(crate) const fn implicit(mut self) -> Self {
         self.raw |= Self::IMPLICIT_BIT;
         self
@@ -148,14 +170,16 @@ pub enum OperandKind {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Operand {
     kind: OperandKind,
-    printable: bool,
+    flags: Flags,
 }
 
 impl Operand {
+    const NO_PRINT: u32 = 1;
+
     pub(crate) fn new(kind: OperandKind) -> Self {
         Self {
             kind,
-            printable: true,
+            flags: Flags::empty(),
         }
     }
 
@@ -168,7 +192,7 @@ impl Operand {
     }
 
     pub(crate) fn non_printable(mut self, non_printable: bool) -> Self {
-        self.printable = !non_printable;
+        self.flags.set_if(Self::NO_PRINT, non_printable);
         self
     }
 
@@ -177,7 +201,15 @@ impl Operand {
     }
 
     pub fn is_printable(&self) -> bool {
-        self.printable
+        !self.flags.any(Self::NO_PRINT)
+    }
+
+    pub(crate) fn flags(&self) -> &Flags {
+        &self.flags
+    }
+
+    pub(crate) fn flags_mut(&mut self) -> &mut Flags {
+        &mut self.flags
     }
 
     #[cfg(feature = "print")]
