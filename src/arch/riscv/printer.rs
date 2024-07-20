@@ -2,7 +2,7 @@ use core::fmt;
 
 use alloc::borrow::Cow;
 
-use crate::{Disasm, Operand, OperandKind, Reg, RegClass};
+use crate::{Disasm, Insn, Operand, OperandKind, PrinterInfo, Reg, RegClass};
 
 use super::Options;
 
@@ -77,6 +77,8 @@ impl crate::printer::Printer for Printer {
         &self,
         fmt: &mut fmt::Formatter,
         disasm: &Disasm,
+        info: &dyn PrinterInfo,
+        insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
         if let &OperandKind::ArchSpec(ty, value) = operand.kind() {
@@ -105,7 +107,7 @@ impl crate::printer::Printer for Printer {
             }
             Ok(())
         } else {
-            self.print_operand_default(fmt, disasm, operand)
+            self.print_operand_default(fmt, disasm, info, insn, operand)
         }
     }
 }

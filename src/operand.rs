@@ -1,7 +1,7 @@
 use core::fmt;
 
 #[cfg(feature = "print")]
-use crate::Disasm;
+use crate::{Disasm, Insn, PrinterInfo};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct RegClass(pub(crate) u16);
@@ -118,7 +118,7 @@ pub enum OperandKind {
     /// address in reg
     AddressReg(Reg),
     /// base + index * scale + offset
-    Indexed(Reg, Reg, u8, i32),
+    Indexed(Reg, Reg, u8, Option<i32>),
     /// architecture specific operand
     ArchSpec(u64, u64),
 }
@@ -159,8 +159,13 @@ impl Operand {
     }
 
     #[cfg(feature = "print")]
-    pub fn printer<'a>(&'a self, disasm: &'a Disasm) -> Printer<'a> {
-        Printer(disasm, self)
+    pub fn printer<'a>(
+        &'a self,
+        disasm: &'a Disasm,
+        info: &'a dyn PrinterInfo,
+        insn: &'a Insn,
+    ) -> Printer<'a> {
+        Printer(disasm, info, insn, self)
     }
 }
 
@@ -171,12 +176,14 @@ impl From<OperandKind> for Operand {
 }
 
 #[cfg(feature = "print")]
-pub struct Printer<'a>(&'a Disasm, &'a Operand);
+pub struct Printer<'a>(&'a Disasm, &'a dyn PrinterInfo, &'a Insn, &'a Operand);
 
 #[cfg(feature = "print")]
 impl fmt::Display for Printer<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let Self(disasm, operand) = self;
-        disasm.printer.print_operand(fmt, disasm, operand)
+        let Self(disasm, info, insn, operand) = self;
+        disasm
+            .printer
+            .print_operand(fmt, disasm, *info, insn, operand)
     }
 }

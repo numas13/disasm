@@ -54,6 +54,8 @@ pub trait Printer {
         &self,
         fmt: &mut fmt::Formatter,
         disasm: &Disasm,
+        info: &dyn PrinterInfo,
+        _insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
         match operand.kind() {
@@ -73,6 +75,15 @@ pub trait Printer {
             }
             OperandKind::Address(addr) => {
                 write!(fmt, "{addr:x}")?;
+
+                if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
+                    write!(fmt, " <{sym_name}")?;
+                    let diff = addr - sym_addr;
+                    if diff != 0 {
+                        write!(fmt, "+{diff:#x}")?;
+                    }
+                    fmt.write_char('>')?;
+                }
             }
             OperandKind::AddressReg(reg) => {
                 let reg_name = disasm.printer.register_name(*reg);
@@ -81,7 +92,7 @@ pub trait Printer {
             OperandKind::Indexed(base, index, scale, offset) => {
                 let base = disasm.printer.register_name(*base);
                 let index = disasm.printer.register_name(*index);
-                if *offset != 0 {
+                if let Some(offset) = offset {
                     write!(fmt, "{offset:#x}")?;
                 }
                 write!(fmt, "({base},{index},{scale})")?;
@@ -99,9 +110,45 @@ pub trait Printer {
         &self,
         fmt: &mut fmt::Formatter,
         disasm: &Disasm,
+        info: &dyn PrinterInfo,
+        insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
-        self.print_operand_default(fmt, disasm, operand)
+        self.print_operand_default(fmt, disasm, info, insn, operand)
+    }
+
+    fn need_operand_separator(&self, i: usize, _operand: &Operand) -> bool {
+        i != 0
+    }
+
+    fn reverse_operands(&self) -> bool {
+        false
+    }
+
+    fn print_operands_default(
+        &self,
+        fmt: &mut fmt::Formatter,
+        disasm: &Disasm,
+        info: &dyn PrinterInfo,
+        insn: &Insn,
+    ) -> fmt::Result {
+        let operands = insn.operands().iter().filter(|i| i.is_printable());
+        let mut print = |i: usize, operand: &Operand| {
+            if self.need_operand_separator(i, operand) {
+                self.operand_separator().print(fmt, 0)?;
+            }
+            self.print_operand(fmt, disasm, info, insn, operand)
+        };
+        if self.reverse_operands() {
+            for (i, operand) in operands.rev().enumerate() {
+                print(i, operand)?;
+            }
+        } else {
+            for (i, operand) in operands.enumerate() {
+                print(i, operand)?;
+            }
+        }
+        Ok(())
     }
 
     fn print_operands(
@@ -111,30 +158,7 @@ pub trait Printer {
         info: &dyn PrinterInfo,
         insn: &Insn,
     ) -> fmt::Result {
-        for (i, operand) in insn
-            .operands()
-            .iter()
-            .filter(|i| i.is_printable())
-            .enumerate()
-        {
-            if i != 0 {
-                self.operand_separator().print(fmt, 0)?;
-            }
-
-            self.print_operand(fmt, disasm, operand)?;
-
-            if let OperandKind::Address(addr) = operand.kind() {
-                if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
-                    write!(fmt, " <{sym_name}")?;
-                    let diff = addr - sym_addr;
-                    if diff != 0 {
-                        write!(fmt, "+{diff:#x}")?;
-                    }
-                    fmt.write_char('>')?;
-                }
-            }
-        }
-        Ok(())
+        self.print_operands_default(fmt, disasm, info, insn)
     }
 
     fn print_insn(
