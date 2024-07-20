@@ -66,8 +66,22 @@ impl Reg {
         self
     }
 
+    pub(crate) const fn read_if(mut self, cond: bool) -> Self {
+        if cond {
+            self.raw |= Self::READ_BIT;
+        }
+        self
+    }
+
     pub(crate) const fn write(mut self) -> Self {
         self.raw |= Self::WRITE_BIT;
+        self
+    }
+
+    pub(crate) const fn write_if(mut self, cond: bool) -> Self {
+        if cond {
+            self.raw |= Self::WRITE_BIT;
+        }
         self
     }
 
