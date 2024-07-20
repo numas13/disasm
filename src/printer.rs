@@ -7,13 +7,18 @@ use crate::{Disasm, Insn, Operand, OperandKind, Reg};
 pub enum Separator {
     Tab,
     Char(char),
+    Width(usize),
 }
 
 impl Separator {
-    pub fn print(&self, fmt: &mut fmt::Formatter, _mnemonic_len: usize) -> fmt::Result {
+    pub fn print(&self, fmt: &mut fmt::Formatter, mnemonic_len: usize) -> fmt::Result {
         match self {
             Separator::Tab => fmt.write_char('\t'),
             Separator::Char(c) => fmt.write_char(*c),
+            Separator::Width(w) => {
+                let w = w - std::cmp::min(*w, mnemonic_len);
+                write!(fmt, "{:w$}", ' ')
+            }
         }
     }
 }
