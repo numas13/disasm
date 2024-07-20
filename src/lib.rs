@@ -3,6 +3,7 @@
 extern crate alloc;
 
 pub mod arch;
+mod bytes;
 mod insn;
 mod operand;
 #[cfg(feature = "print")]

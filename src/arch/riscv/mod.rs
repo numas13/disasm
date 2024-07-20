@@ -2,7 +2,7 @@ mod generated;
 #[cfg(feature = "print")]
 mod printer;
 
-use crate::{Bundle, Error, Insn, Operand, Reg, RegClass};
+use crate::{bytes::Bytes, Bundle, Error, Insn, Operand, Reg, RegClass};
 
 use self::generated::RiscvDecode;
 
@@ -95,23 +95,24 @@ impl Decoder {
 
 impl super::Decoder for Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error> {
+        let mut bytes = Bytes::new(bytes);
         let len = bytes
-            .first()
+            .peek_u8()
             .map(|i| if i & 3 == 3 { 32 } else { 16 })
             .ok_or(Error::More(2))?;
 
-        if bytes.len() < len / 8 {
-            return Err(Error::More(len));
-        }
+        let insn = if len == 16 {
+            if !self.opts_arch.ext.c {
+                return Err(Error::Failed(len));
+            }
+            bytes.read_u16()? as u32
+        } else {
+            bytes.read_u32()?
+        };
 
-        if len == 16 && !self.opts_arch.ext.c {
-            return Err(Error::Failed(len));
-        }
         out.clear();
-        let mut raw = [0; 4];
-        raw[..len / 8].copy_from_slice(&bytes[..len / 8]);
         self.address = address;
-        if RiscvDecode::decode(self, u32::from_le_bytes(raw), out.peek()).is_ok() {
+        if RiscvDecode::decode(self, insn, out.peek()).is_ok() {
             out.next();
             Ok(len)
         } else {
