@@ -270,7 +270,7 @@ impl RiscvDecode for Decoder {
 
     fn set_rm(&mut self, out: &mut Insn, value: i32) {
         out.push_operand(
-            Operand::arch(OPERAND_RM, value as u64).non_printable(value as u8 == RM_DYN),
+            Operand::arch(OPERAND_RM, value as u64, 0).non_printable(value as u8 == RM_DYN),
         )
     }
 
@@ -279,11 +279,11 @@ impl RiscvDecode for Decoder {
     }
 
     fn set_addr_reg(&mut self, out: &mut Insn, value: i32) {
-        out.push_addr_reg(x(value).read());
+        out.push_indirect(x(value).read());
     }
 
     fn set_rel(&mut self, out: &mut Insn, rel: i32) {
-        out.push_addr(rel_addr(self.address, rel));
+        out.push_absolute(rel_addr(self.address, rel));
     }
 
     fn set_aq(&mut self, out: &mut Insn, aq: i32) {
@@ -323,7 +323,7 @@ impl RiscvDecode for Decoder {
         insn.push_operand(
             Operand::reg(x(args.rd).write()).non_printable(self.alias() && args.rd == 1),
         );
-        insn.push_addr(rel_addr(self.address, args.imm));
+        insn.push_absolute(rel_addr(self.address, args.imm));
     }
 
     fn set_args_jr(&mut self, insn: &mut Insn, args: generated::args_jr) {
@@ -350,8 +350,8 @@ impl RiscvDecode for Decoder {
     fn set_args_fence(&mut self, insn: &mut Insn, args: generated::args_fence) {
         // TODO: non_printable
         if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
-            insn.push_arch_spec(OPERAND_FENCE, args.pred as u64);
-            insn.push_arch_spec(OPERAND_FENCE, args.succ as u64);
+            insn.push_arch_spec(OPERAND_FENCE, args.pred as u64, 0);
+            insn.push_arch_spec(OPERAND_FENCE, args.succ as u64, 0);
         }
     }
 

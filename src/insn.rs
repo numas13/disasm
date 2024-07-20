@@ -76,7 +76,7 @@ impl Insn {
     }
 
     pub(crate) fn push_offset(&mut self, reg: Reg, offset: i64) {
-        self.push_operand(OperandKind::Offset(reg, offset));
+        self.push_operand(OperandKind::Relative(reg, offset));
     }
 
     pub(crate) fn push_imm(&mut self, value: i64) {
@@ -87,16 +87,16 @@ impl Insn {
         self.push_operand(OperandKind::Uimm(value));
     }
 
-    pub(crate) fn push_addr(&mut self, addr: u64) {
-        self.push_operand(OperandKind::Address(addr));
+    pub(crate) fn push_absolute(&mut self, addr: u64) {
+        self.push_operand(OperandKind::Absolute(addr));
     }
 
-    pub(crate) fn push_addr_reg(&mut self, reg: Reg) {
-        self.push_operand(OperandKind::AddressReg(reg));
+    pub(crate) fn push_indirect(&mut self, reg: Reg) {
+        self.push_operand(OperandKind::Indirect(reg));
     }
 
-    pub(crate) fn push_arch_spec(&mut self, val0: u64, val1: u64) {
-        self.push_operand(OperandKind::ArchSpec(val0, val1));
+    pub(crate) fn push_arch_spec(&mut self, a: u64, b: u64, c: u64) {
+        self.push_operand(OperandKind::ArchSpec(a, b, c));
     }
 
     #[cfg(feature = "print")]

@@ -68,17 +68,41 @@ pub trait Printer {
                 let reg_name = disasm.printer.register_name(*reg);
                 fmt.write_str(&reg_name)?;
             }
-            OperandKind::Offset(reg, imm) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                write!(fmt, "{imm}({reg_name})")?;
-            }
             OperandKind::Imm(imm) => {
                 write!(fmt, "{imm}")?;
             }
             OperandKind::Uimm(imm) => {
                 write!(fmt, "{imm:#x}")?;
             }
-            OperandKind::Address(addr) => {
+            OperandKind::Indirect(reg) => {
+                let reg_name = disasm.printer.register_name(*reg);
+                write!(fmt, "({reg_name})")?;
+            }
+            OperandKind::Relative(reg, offset) => {
+                let reg_name = disasm.printer.register_name(*reg);
+                write!(fmt, "{offset}({reg_name})")?;
+            }
+            OperandKind::Indexed(base, index) => {
+                let base = disasm.printer.register_name(*base);
+                let index = disasm.printer.register_name(*index);
+                write!(fmt, "({base},{index})")?;
+            }
+            OperandKind::IndexedRelative(base, index, offset) => {
+                let base = disasm.printer.register_name(*base);
+                let index = disasm.printer.register_name(*index);
+                write!(fmt, "{offset:#x}({base},{index})")?;
+            }
+            OperandKind::ScaledIndex(base, index, scale) => {
+                let base = disasm.printer.register_name(*base);
+                let index = disasm.printer.register_name(*index);
+                write!(fmt, "({base},{index},{scale})")?;
+            }
+            OperandKind::ScaledIndexRelative(base, index, scale, offset) => {
+                let base = disasm.printer.register_name(*base);
+                let index = disasm.printer.register_name(*index);
+                write!(fmt, "{offset:#x}({base},{index},{scale})")?;
+            }
+            OperandKind::Absolute(addr) => {
                 write!(fmt, "{addr:x}")?;
 
                 if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
@@ -90,21 +114,12 @@ pub trait Printer {
                     fmt.write_char('>')?;
                 }
             }
-            OperandKind::AddressReg(reg) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                write!(fmt, "({reg_name})")?;
+            OperandKind::PcRelative(_) => {
+                todo!()
             }
-            OperandKind::Indexed(base, index, scale, offset) => {
-                let base = disasm.printer.register_name(*base);
-                let index = disasm.printer.register_name(*index);
-                if let Some(offset) = offset {
-                    write!(fmt, "{offset:#x}")?;
-                }
-                write!(fmt, "({base},{index},{scale})")?;
-            }
-            OperandKind::ArchSpec(a, b) => {
+            OperandKind::ArchSpec(a, b, c) => {
                 unreachable!(
-                    "arch-specific operand({a:#x}, {b:#x}) must be handle by arch-printer"
+                    "arch-specific operand({a:#x}, {b:#x}, {c:#x}) must be handle by arch-printer"
                 );
             }
         }

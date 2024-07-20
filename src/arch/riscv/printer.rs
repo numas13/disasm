@@ -81,7 +81,7 @@ impl crate::printer::Printer for Printer {
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
-        if let &OperandKind::ArchSpec(ty, value) = operand.kind() {
+        if let &OperandKind::ArchSpec(ty, value, _) = operand.kind() {
             match ty {
                 super::OPERAND_FENCE => {
                     let fence = ['w', 'r', 'o', 'i'];

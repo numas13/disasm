@@ -121,20 +121,28 @@ impl fmt::Debug for Reg {
 pub enum OperandKind {
     /// reg
     Reg(Reg),
-    /// reg + offset
-    Offset(Reg, i64),
     /// sign-extended immediate
     Imm(i64),
     /// zero-extended immediate
     Uimm(u64),
-    /// address
-    Address(u64),
-    /// address in reg
-    AddressReg(Reg),
+    /// base
+    Indirect(Reg),
+    /// base + offset
+    Relative(Reg, i64),
+    /// base + index
+    Indexed(Reg, Reg),
+    /// base + index + offset
+    IndexedRelative(Reg, Reg, i32),
+    /// base + index * scale
+    ScaledIndex(Reg, Reg, u8),
     /// base + index * scale + offset
-    Indexed(Reg, Reg, u8, Option<i32>),
+    ScaledIndexRelative(Reg, Reg, u8, i32),
+    /// absolute address
+    Absolute(u64),
+    /// pc-relative address
+    PcRelative(i64),
     /// architecture specific operand
-    ArchSpec(u64, u64),
+    ArchSpec(u64, u64, u64),
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -155,8 +163,8 @@ impl Operand {
         Self::new(OperandKind::Reg(reg))
     }
 
-    pub(crate) fn arch(a: u64, b: u64) -> Self {
-        Self::new(OperandKind::ArchSpec(a, b))
+    pub(crate) fn arch(a: u64, b: u64, c: u64) -> Self {
+        Self::new(OperandKind::ArchSpec(a, b, c))
     }
 
     pub(crate) fn non_printable(mut self, non_printable: bool) -> Self {
