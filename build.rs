@@ -93,6 +93,10 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         };
         let ty = &self.value_type;
 
+        if self.generate.variable_size {
+            writeln!(out, "{pad}fn advance(&mut self, size: usize);")?;
+        }
+
         if !self.args.is_empty() {
             writeln!(out)?;
         }
@@ -150,6 +154,10 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
             if !cond.invert() {
                 writeln!(out, "{pad}out.set_alias();")?;
             }
+        }
+
+        if self.generate.variable_size {
+            writeln!(out, "{pad}self.advance({});", pattern.size())?;
         }
 
         let mut format = String::from("format");
