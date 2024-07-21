@@ -2,6 +2,7 @@
 mod tests {
     use disasm::{arch::riscv, Arch, Bundle, Disasm, Options};
 
+    #[track_caller]
     fn print_test(alias: bool, address: u64, raw: u32, expect: &str) {
         let mut bundle = Bundle::empty();
         let mut disasm = Disasm::new(
@@ -25,6 +26,7 @@ mod tests {
 
     #[test]
     fn riscv_print() {
+        #[track_caller]
         fn test(address: u64, raw: u32, expect: &str) {
             print_test(false, address, raw, expect);
         }
@@ -118,6 +120,7 @@ mod tests {
 
     #[test]
     fn riscv_print_alias() {
+        #[track_caller]
         fn test(alias: u8, address: u64, raw: u32, expect: &str) {
             print_test(alias != 0, address, raw, expect);
         }
