@@ -5,7 +5,7 @@ use core::ops::Deref;
 use alloc::vec::Vec;
 
 #[cfg(feature = "print")]
-use crate::printer::PrinterInfo;
+use crate::printer::{PrinterInfo, FormatterFn};
 use crate::{flags::Flags, Operand, OperandKind, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
@@ -108,6 +108,23 @@ impl Insn {
 
 #[cfg(feature = "print")]
 pub struct Printer<'a, I: PrinterInfo>(&'a Insn, &'a crate::Disasm, I);
+
+#[cfg(feature = "print")]
+impl<'a, I: PrinterInfo> Printer<'a, I> {
+    pub fn mnemonic(&self) -> impl fmt::Display + '_ {
+        FormatterFn(|fmt| {
+            let Printer(insn, disasm, _) = self;
+            disasm.printer.print_mnemonic(fmt, disasm, insn, false)
+        })
+    }
+
+    pub fn operands(&self) -> impl fmt::Display + '_ {
+        FormatterFn(|fmt| {
+            let Printer(insn, disasm, info) = self;
+            disasm.printer.print_operands(fmt, disasm, info, insn)
+        })
+    }
+}
 
 #[cfg(feature = "print")]
 impl<I> fmt::Display for Printer<'_, I>

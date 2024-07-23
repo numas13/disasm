@@ -4,6 +4,19 @@ use alloc::borrow::Cow;
 
 use crate::{Disasm, Insn, Operand, OperandKind, Reg};
 
+pub struct FormatterFn<F>(pub F)
+where
+    F: Fn(&mut fmt::Formatter) -> fmt::Result;
+
+impl<F> fmt::Display for FormatterFn<F>
+where
+    F: Fn(&mut fmt::Formatter) -> fmt::Result
+{
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        self.0(fmt)
+    }
+}
+
 pub enum Separator {
     Tab,
     Char(char),
@@ -39,6 +52,7 @@ pub trait Printer {
         fmt: &mut fmt::Formatter,
         disasm: &Disasm,
         insn: &Insn,
+        separator: bool,
     ) -> fmt::Result {
         let (mnemonic, sub) = insn.mnemonic(disasm).unwrap_or(("<invalid>", ""));
         fmt.write_str(mnemonic)?;
@@ -49,7 +63,7 @@ pub trait Printer {
             fmt.write_str(sub)?;
             len += sub.len();
         }
-        if !insn.operands().is_empty() {
+        if separator && !insn.operands().is_empty() {
             self.insn_separator().print(fmt, len)?;
         }
         Ok(())
@@ -188,7 +202,7 @@ pub trait Printer {
         info: &dyn PrinterInfo,
         insn: &Insn,
     ) -> fmt::Result {
-        self.print_mnemonic(fmt, disasm, insn)?;
+        self.print_mnemonic(fmt, disasm, insn, true)?;
         self.print_operands(fmt, disasm, info, insn)
     }
 }

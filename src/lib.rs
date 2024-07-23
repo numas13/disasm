@@ -20,7 +20,7 @@ use crate::arch::Decoder;
 use crate::printer::Printer;
 
 pub use crate::insn::{Bundle, Insn, Opcode};
-pub use crate::operand::{Operand, OperandKind, Reg, RegClass};
+pub use crate::operand::{Access, Operand, OperandKind, Reg, RegClass};
 
 #[cfg(feature = "print")]
 pub use crate::printer::PrinterInfo;
