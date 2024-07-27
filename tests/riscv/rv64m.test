@@ -1,0 +1,5 @@
+        0295053b    mulw        a0,a0,s1
+        0295453b    divw        a0,a0,s1
+        0295553b    divuw       a0,a0,s1
+        0295653b    remw        a0,a0,s1
+        0295753b    remuw       a0,a0,s1

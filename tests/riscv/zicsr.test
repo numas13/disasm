@@ -1,0 +1,6 @@
+        00151573    csrrw       a0,fflags,a0
+        00152573    csrrs       a0,fflags,a0
+        00153573    csrrc       a0,fflags,a0
+        00155573    csrrwi      a0,fflags,10
+        00156573    csrrsi      a0,fflags,10
+        00157573    csrrci      a0,fflags,10
