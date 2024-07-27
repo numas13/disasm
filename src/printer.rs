@@ -10,7 +10,7 @@ where
 
 impl<F> fmt::Display for FormatterFn<F>
 where
-    F: Fn(&mut fmt::Formatter) -> fmt::Result
+    F: Fn(&mut fmt::Formatter) -> fmt::Result,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         self.0(fmt)

@@ -5,7 +5,7 @@ use core::ops::Deref;
 use alloc::vec::Vec;
 
 #[cfg(feature = "print")]
-use crate::printer::{PrinterInfo, FormatterFn};
+use crate::printer::{FormatterFn, PrinterInfo};
 use crate::{flags::Flags, Operand, OperandKind, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
