@@ -134,7 +134,7 @@ impl super::Decoder for Decoder {
 
     #[cfg(feature = "mnemonic")]
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
-        let m = self::generated::mnemonic(insn.opcode())?;
+        let m = self::generated::opcode::mnemonic(insn.opcode())?;
         let flags = insn.flags();
         let s = match (flags.any(INSN_AQ), flags.any(INSN_RL)) {
             (true, true) => "aqrl",

@@ -3,23 +3,71 @@ use std::{
         hash_map::{Entry, HashMap},
         HashSet,
     },
+    fmt::{self, Write as _},
     fs::{self, File},
     io::{self, BufWriter, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process,
 };
 
 use decodetree::{
     gen::{Gen, Pad},
-    Insn, Parser, Pattern,
+    Parser, Pattern,
 };
 
 #[cfg(not(any(feature = "riscv")))]
 compile_error!("enable at least one arch");
 
-#[derive(Default)]
-struct UserGen<'src> {
-    generate: Generate<'src>,
+#[derive(Debug)]
+enum ErrorKind {
+    SourceFile(io::Error),
+    OutputDir(io::Error),
+    OutputFile(io::Error),
+    Parse(String),
+    Generate(io::Error),
+}
+
+#[derive(Debug)]
+struct Error {
+    path: PathBuf,
+    kind: ErrorKind,
+}
+
+impl Error {
+    fn new<S: Into<PathBuf>>(path: S, kind: ErrorKind) -> Self {
+        Self {
+            path: path.into(),
+            kind,
+        }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        use ErrorKind as E;
+
+        let path = self.path.display();
+        match &self.kind {
+            E::SourceFile(error) => {
+                write!(fmt, "failed to read source file \"{path}\", {error}")
+            }
+            E::OutputDir(error) => {
+                write!(fmt, "failed to create output directory \"{path}\", {error}")
+            }
+            E::OutputFile(error) => {
+                write!(fmt, "failed to create output file \"{path}\", {error}")
+            }
+            E::Parse(errors) => errors.fmt(fmt),
+            E::Generate(error) => {
+                write!(fmt, "failed to generate output file \"{path}\", {error}")
+            }
+        }
+    }
+}
+
+struct UserGen<'a> {
+    generate: &'a Generate,
+    opcodes: &'a mut HashSet<String>,
 
     args: HashSet<String>,
     sets: HashSet<String>,
@@ -27,12 +75,10 @@ struct UserGen<'src> {
 
     set_args: String,
     set_args_def: String,
-
-    value_type: String,
 }
 
-impl<'src> UserGen<'src> {
-    fn new(generate: Generate<'src>) -> Self {
+impl<'a> UserGen<'a> {
+    fn new(generate: &'a Generate, opcodes: &'a mut HashSet<String>) -> Self {
         let mut set_args = String::from("");
         let mut set_args_def = String::from("&mut self");
 
@@ -50,10 +96,12 @@ impl<'src> UserGen<'src> {
 
         Self {
             generate,
+            opcodes,
             set_args,
             set_args_def,
-            value_type: generate.value_type.into(),
-            ..Self::default()
+            args: Default::default(),
+            sets: Default::default(),
+            formats: Default::default(),
         }
     }
 
@@ -91,7 +139,7 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         } else {
             ""
         };
-        let ty = &self.value_type;
+        let ty = &self.generate.value_type;
 
         if self.generate.variable_size {
             writeln!(out, "{pad}fn advance(&mut self, size: usize);")?;
@@ -194,7 +242,7 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
                 let ty = if value.is_set() {
                     format!("args_{name}")
                 } else {
-                    self.value_type.clone()
+                    self.generate.value_type.to_owned()
                 };
                 args.push((name, ty));
             }
@@ -204,78 +252,89 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         Ok(())
     }
 
-    fn end<W: Write>(
-        &mut self,
-        out: &mut W,
-        mut pad: Pad,
-        opcodes: &HashSet<&str>,
-    ) -> io::Result<()> {
-        writeln!(out, "type RawInsn = {};", self.generate.insn_type)?;
-
-        let opcodes = {
-            let mut vec: Vec<_> = opcodes.iter().collect();
-            vec.sort();
-            vec
-        };
-
-        writeln!(out)?;
-        writeln!(out, "{pad}pub mod opcode_generated {{")?;
-        pad.right();
-        writeln!(out, "{pad}use super::opcode::{{Opcode, BASE_OPCODE}};")?;
-        for (i, s) in opcodes.iter().enumerate() {
-            write!(out, "{pad}pub const {}: Opcode = Opcode(", s.to_uppercase())?;
-            write!(out, "BASE_OPCODE")?;
-            if i > 0 {
-                write!(out, " + {i}")?;
-            }
-            writeln!(out, ");")?;
-        }
-        pad.left();
-        writeln!(out, "{pad}}}")?; // pub mod opcode
-
-        writeln!(out)?;
-        writeln!(out, "{pad}#[cfg(feature = \"mnemonic\")]")?;
-        writeln!(
-            out,
-            "{pad}pub fn mnemonic(opcode: Opcode) -> Option<&'static str> {{"
-        )?;
-        pad.right();
-        writeln!(out, "{pad}Some(match opcode {{")?;
-        pad.right();
-        for i in opcodes {
-            write!(out, "{pad}opcode::{} => \"", i.to_uppercase())?;
-            for c in i.chars() {
-                match c {
-                    '_' => write!(out, ".")?,
-                    _ => write!(out, "{}", c)?,
-                }
-            }
-            writeln!(out, "\",")?;
-        }
-        writeln!(out, "{pad}_ => return None,")?;
-        pad.left();
-        writeln!(out, "{pad}}})")?; // match
-        pad.left();
-        writeln!(out, "{pad}}}")?; // fn mnemonic
-
+    fn end<W: Write>(&mut self, out: &mut W, pad: Pad, opcodes: &HashSet<&str>) -> io::Result<()> {
+        self.opcodes.extend(opcodes.iter().map(|i| i.to_string()));
+        writeln!(out, "{pad}type RawInsn = {};", self.generate.insn_type)?;
         Ok(())
     }
 }
 
-#[derive(Copy, Clone)]
-struct Generate<'a> {
-    source: &'a str,
-    trait_name: &'a str,
-    insn_type: &'a str,
-    insn_size: &'a [u32],
-    value_type: &'a str,
+fn create_file(path: &Path) -> Result<File, Error> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| Error::new(parent, ErrorKind::OutputDir(error)))?;
+    }
+    File::create(path).map_err(|error| Error::new(path, ErrorKind::OutputFile(error)))
+}
+
+fn gen_opcodes_write<W: Write>(mut out: W, opcodes: HashSet<String>) -> io::Result<()> {
+    let out = &mut out;
+    let opcodes = {
+        let mut vec: Vec<_> = opcodes.iter().collect();
+        vec.sort();
+        vec
+    };
+
+    writeln!(out)?;
+    for (i, s) in opcodes.iter().enumerate() {
+        write!(
+            out,
+            "pub const {}: Opcode = Opcode(BASE_OPCODE",
+            s.to_uppercase()
+        )?;
+        if i > 0 {
+            write!(out, " + {i}")?;
+        }
+        writeln!(out, ");")?;
+    }
+
+    writeln!(out)?;
+    writeln!(out, "#[cfg(feature = \"mnemonic\")]")?;
+    writeln!(
+        out,
+        "pub(crate) fn mnemonic(opcode: Opcode) -> Option<&'static str> {{"
+    )?;
+    let mut pad = Pad::default().right();
+    writeln!(out, "{pad}Some(match opcode {{")?;
+    pad.right();
+    for i in opcodes {
+        write!(out, "{pad}{} => \"", i.to_uppercase())?;
+        for c in i.chars() {
+            match c {
+                '_' => write!(out, ".")?,
+                _ => write!(out, "{}", c)?,
+            }
+        }
+        writeln!(out, "\",")?;
+    }
+    writeln!(out, "{pad}_ => return None,")?;
+    pad.left();
+    writeln!(out, "{pad}}})")?; // match
+    writeln!(out, "}}")?; // fn mnemonic
+
+    Ok(())
+}
+
+fn gen_opcodes(path: impl AsRef<Path>, opcodes: HashSet<String>) -> Result<(), Error> {
+    let path = path.as_ref();
+    let out = create_file(path).map(BufWriter::new)?;
+    gen_opcodes_write(out, opcodes).map_err(|error| Error::new(path, ErrorKind::Generate(error)))
+}
+
+#[derive(Clone)]
+struct Generate {
+    source: &'static str,
+    trait_name: &'static str,
+    insn_type: &'static str,
+    insn_size: &'static [u32],
+    value_type: &'static str,
     optimize: bool,
     stubs: bool,
     variable_size: bool,
     set_error: bool,
 }
 
-impl Default for Generate<'_> {
+impl Default for Generate {
     fn default() -> Self {
         Self {
             source: "",
@@ -291,53 +350,72 @@ impl Default for Generate<'_> {
     }
 }
 
-impl<'a> Generate<'a> {
-    fn gen<T: Insn>(self, out: impl AsRef<Path>) {
+impl Generate {
+    fn gen(self, path: impl AsRef<Path>, opcodes: &mut HashSet<String>) -> Result<(), Error> {
         println!("cargo:rerun-if-changed={}", self.source);
 
-        let src = fs::read_to_string(self.source).unwrap();
-        let parser = Parser::<T, &str>::new(&src).set_insn_size(self.insn_size);
+        let path = path.as_ref();
+        let src = fs::read_to_string(self.source)
+            .map_err(|error| Error::new(self.source, ErrorKind::SourceFile(error)))?;
+        let parser = Parser::<u64, &str>::new(&src).set_insn_size(self.insn_size);
         let mut tree = match parser.parse() {
             Ok(tree) => tree,
             Err(errors) => {
-                for err in errors.iter(self.source) {
-                    eprintln!("{err}");
+                let mut buffer = String::new();
+                for (i, err) in errors.iter(self.source).enumerate() {
+                    if i > 0 {
+                        buffer.push('\n');
+                    }
+                    write!(&mut buffer, "{err}").unwrap();
                 }
-                process::exit(1);
+                return Err(Error::new("", ErrorKind::Parse(buffer)));
             }
         };
+
         if self.optimize {
             tree.optimize();
         }
 
-        if let Some(parent) = out.as_ref().parent() {
-            fs::create_dir_all(parent).unwrap();
-        }
-        let mut out = BufWriter::new(File::create(&out).unwrap());
-
+        let mut out = create_file(path).map(BufWriter::new)?;
         decodetree::Generator::builder()
             .trait_name(self.trait_name)
             .insn_type(self.insn_type)
             .value_type(self.value_type)
             .stubs(self.stubs)
             .variable_size(self.variable_size)
-            .build(&tree, UserGen::new(self))
+            .build(&tree, UserGen::new(&self, opcodes))
             .generate(&mut out)
-            .unwrap();
+            .map_err(|error| Error::new(path, ErrorKind::Generate(error)))
     }
 }
 
-fn main() {
-    let out_dir = std::env::var("OUT_DIR").unwrap();
+fn generate() -> Result<(), Error> {
+    let out_dir = PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     #[cfg(feature = "riscv")]
-    Generate {
-        source: "src/arch/riscv/insn.decode",
-        trait_name: "RiscvDecode",
-        insn_size: &[16, 32],
-        insn_type: "u32",
-        value_type: "i32",
-        ..Generate::default()
+    {
+        let out_dir = out_dir.join("arch/riscv");
+        let mut opcodes = Default::default();
+
+        Generate {
+            source: "src/arch/riscv/insn.decode",
+            trait_name: "RiscvDecode",
+            insn_size: &[16, 32],
+            insn_type: "u32",
+            value_type: "i32",
+            ..Generate::default()
+        }
+        .gen(out_dir.join("generated.rs"), &mut opcodes)?;
+
+        gen_opcodes(out_dir.join("generated_opcodes.rs"), opcodes)?;
     }
-    .gen::<u32>(format!("{out_dir}/arch/riscv/generated.rs"));
+
+    Ok(())
+}
+
+fn main() {
+    if let Err(err) = generate() {
+        eprintln!("error: {err}");
+        process::exit(1);
+    }
 }
