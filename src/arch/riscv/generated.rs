@@ -16,4 +16,14 @@ pub mod opcode {
     include!(concat!(env!("OUT_DIR"), "/arch/riscv/generated_opcodes.rs"));
 }
 
-include!(concat!(env!("OUT_DIR"), "/arch/riscv/generated.rs"));
+include!(concat!(env!("OUT_DIR"), "/arch/riscv/generated_set.rs"));
+
+include!(concat!(
+    env!("OUT_DIR"),
+    "/arch/riscv/generated_decode16.rs"
+));
+
+include!(concat!(
+    env!("OUT_DIR"),
+    "/arch/riscv/generated_decode32.rs"
+));

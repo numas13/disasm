@@ -26,4 +26,4 @@ all-arch = [
 ]
 
 [build-dependencies]
-decodetree = { version = "0.4.5", features = ["gen"] }
+decodetree = { version = "0.4.6", features = ["gen"] }

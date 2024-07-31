@@ -37,16 +37,6 @@
 %pred     24:4
 %succ     20:4
 
-%rs1_3    7:3               !function=ex_rvc_register
-%rs2_3    2:3               !function=ex_rvc_register
-%rs2_5    2:5
-%r1s      7:3               !function=ex_sreg_register
-%r2s      2:3               !function=ex_sreg_register
-
-%fs1_3    7:3               !function=ex_rvc_register
-%fs2_3    2:3               !function=ex_rvc_register
-%fs2_5    2:5
-
 %vm       25:1
 
 # immediates:
@@ -61,35 +51,12 @@
 %imm_z10  20:10
 %imm_z11  20:11
 
-%imm_ci        12:s1 2:5
-%nzuimm_ciw    7:4 11:2 5:1 6:1   !function=ex_shift_2
-%uimm_cl_q     10:1 5:2 11:2      !function=ex_shift_4
-%uimm_cl_d     5:2 10:3           !function=ex_shift_3
-%uimm_cl_w     5:1 10:3 6:1       !function=ex_shift_2
-%imm_cb        12:s1 5:2 2:1 10:2 3:2 !function=ex_shift_1
-%imm_cj        12:s1 8:1 9:2 6:1 7:1 2:1 11:1 3:3 !function=ex_shift_1
-
-%shlimm_6bit  12:1 2:5               !function=ex_rvc_shiftli
-%shrimm_6bit  12:1 2:5               !function=ex_rvc_shiftri
-%uimm_6bit_lq 2:4 12:1 6:1           !function=ex_shift_4
-%uimm_6bit_ld 2:3 12:1 5:2           !function=ex_shift_3
-%uimm_6bit_lw 2:2 12:1 4:3           !function=ex_shift_2
-%uimm_6bit_sq 7:4 11:2               !function=ex_shift_4
-%uimm_6bit_sd 7:3 10:3               !function=ex_shift_3
-%uimm_6bit_sw 7:2 9:4                !function=ex_shift_2
-
-%imm_addi16sp  12:s1 3:2 5:1 2:1 6:1 !function=ex_shift_4
-%imm_lui       12:s1 2:5             !function=ex_shift_12
-
-%uimm_cl_b  5:1 6:1
-%uimm_cl_h  5:1                      !function=ex_shift_1
 %spimm      2:2                      !function=ex_shift_4
 %urlist     4:4
 %index      2:8
 
 # Argument sets:
 &offset   imm rs1
-&offset_implicit imm rs1
 &j        rd  imm
 &jr       rs1 imm
 &jalr     rd  rs1 imm
@@ -99,73 +66,6 @@
 &r2nfvm   vm rd rs1 nf
 &rnfvm    vm rd rs1 rs2 nf
 &k_aes    shamt rs2 rs1 rd
-
-&cmpp     urlist spimm
-&cmjt     index
-
-# Formats 16:
-@cr           ....  ..... .....  .. %rd rs2=%rs2_5
-@cr3          ....  ..... .....  .. %rd rs1=%rd rs2=%rs2_5
-@ci_c         ... . ..... .....  .. rds=%rd          imm=%imm_ci
-@ci           ... . ..... .....  .. %rd   rs1=%rd    imm=%imm_ci
-@cs_2         ... ... ... .. ... .. rd=%rs1_3 rs2=%rs2_3
-@cs_3         ... ... ... .. ... .. rd=%rs1_3 rs1=%rs1_3 rs2=%rs2_3
-
-@cl_q         ... . .....  ..... .. rd=%rs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
-@cl_d         ... ... ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
-@cl_w         ... ... ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
-@cs_q         ... ... ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
-@cs_d         ... ... ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
-@cs_w         ... ... ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
-
-@cfl_q        ... . .....  ..... .. fd=%fs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
-@cfl_d        ... ... ... .. ... .. fd=%fs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
-@cfl_w        ... ... ... .. ... .. fd=%fs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
-@cfs_q        ... ... ... .. ... .. fs2=%fs2_3 &offset imm=%uimm_cl_q rs1=%rs1_3
-@cfs_d        ... ... ... .. ... .. fs2=%fs2_3 &offset imm=%uimm_cl_d rs1=%rs1_3
-@cfs_w        ... ... ... .. ... .. fs2=%fs2_3 &offset imm=%uimm_cl_w rs1=%rs1_3
-
-@cj           ...    ........... .. rel=%imm_cj
-@cb_z         ... ... ... .. ... .. rs1=%rs1_3 rel=%imm_cb
-
-@c_lqsp       ... . .....  ..... .. %rd &offset_implicit imm=%uimm_6bit_lq rs1=2
-@c_ldsp       ... . .....  ..... .. %rd &offset_implicit imm=%uimm_6bit_ld rs1=2
-@c_lwsp       ... . .....  ..... .. %rd &offset_implicit imm=%uimm_6bit_lw rs1=2
-@c_sqsp       ... . .....  ..... .. rs2=%rs2_5 &offset_implicit imm=%uimm_6bit_sq rs1=2
-@c_sdsp       ... . .....  ..... .. rs2=%rs2_5 &offset_implicit imm=%uimm_6bit_sd rs1=2
-@c_swsp       ... . .....  ..... .. rs2=%rs2_5 &offset_implicit imm=%uimm_6bit_sw rs1=2
-
-@c_flqsp      ... . .....  ..... .. %fd &offset_implicit imm=%uimm_6bit_lq rs1=2
-@c_fldsp      ... . .....  ..... .. %fd &offset_implicit imm=%uimm_6bit_ld rs1=2
-@c_flwsp      ... . .....  ..... .. %fd &offset_implicit imm=%uimm_6bit_lw rs1=2
-@c_fsqsp      ... . .....  ..... .. fs2=%fs2_5 &offset_implicit imm=%uimm_6bit_sq rs1=2
-@c_fsdsp      ... . .....  ..... .. fs2=%fs2_5 &offset_implicit imm=%uimm_6bit_sd rs1=2
-@c_fswsp      ... . .....  ..... .. fs2=%fs2_5 &offset_implicit imm=%uimm_6bit_sw rs1=2
-
-@c_li         ... . .....  ..... .. %rd imm=%imm_ci
-@c_lui        ... . .....  ..... .. %rd imm_u=%imm_lui
-@c_jr         ... . .....  ..... .. rs1=%rd
-@c_jalr       ... . .....  ..... .. &jalr imm=0 rs1=%rd
-@c_mv         ... . .....  ..... .. %rd rs1=%rs2_5
-
-@c_addi4spn   ... .  ..... ..... .. rd=%rs2_3 rs1_implicit=2 imm=%nzuimm_ciw
-@c_addi16sp   ... .  ..... ..... .. rd=2 imm=%imm_addi16sp
-
-@c_shift      ... . .. ... ..... .. rds=%rs1_3 uimm=%shrimm_6bit
-@c_shift_sh   ... . .. ... ..... .. rd=%rs1_3 rs1=%rs1_3 uimm=%shrimm_6bit
-@c_shift2     ... . .. ... ..... .. rds=%rd uimm=%shlimm_6bit
-@c_shift2_sh  ... . .. ... ..... .. rd=%rd rs1=%rd uimm=%shlimm_6bit
-
-@c_andi       ... . .. ... ..... .. rds=%rs1_3 imm=%imm_ci
-
-@cu           ... ...  ... .. ... .. rd=%rs1_3 rs1=%rs1_3
-@cl_b         ... . .. ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_b rs1=%rs1_3
-@cl_h         ... . .. ... .. ... .. rd=%rs2_3 &offset imm=%uimm_cl_h rs1=%rs1_3
-@cs_b         ... . .. ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_b rs1=%rs1_3
-@cs_h         ... . .. ... .. ... .. rs2=%rs2_3 &offset imm=%uimm_cl_h rs1=%rs1_3
-@cm_pp        ... ...  ........   ..  &cmpp  %urlist      %spimm
-@cm_mv        ... ...  ... .. ... ..         rs2=%r2s     rs1=%r1s
-@cm_jt        ... ...  ........   ..  &cmjt  %index
 
 # Formats 32:
 @r2      .......   ..... ..... ... ..... .......        %rd %rs1
@@ -245,205 +145,6 @@ mret        0011000    00010 00000 000 00000 1110011
 wfi         0001000    00101 00000 000 00000 1110011
 sfence_vma  0001001    ..... ..... 000 00000 1110011 @sfence_vma
 sfence_vm   0001000    00100 ..... 000 00000 1110011 @sfence_vm
-
-# *** RV32/64C Standard Extension (Quadrant 0) ***
-{
-  # Opcode of all zeros is illegal; rd != 0, nzuimm == 0 is reserved.
-  unimp           000  000 000 00 --- 00 ? alias
-  c_unimp         000  000 000 00 --- 00
-  addi            000  ... ... .. ... 00 @c_addi4spn ? alias
-  c_addi4spn      000  ... ... .. ... 00 @c_addi4spn
-}
-{
-  c_lq            001  ... ... .. ... 00 @cl_q ? rv128i
-  fld             001  ... ... .. ... 00 @cfl_d ? d alias
-  c_fld           001  ... ... .. ... 00 @cfl_d ? d
-}
-{
-  lw              010  ... ... .. ... 00 @cl_w ? alias
-  c_lw            010  ... ... .. ... 00 @cl_w
-}
-{
-  c_sq            101  ... ... .. ... 00 @cs_q ? rv128i
-  fsd             101  ... ... .. ... 00 @cfs_d ? d alias
-  c_fsd           101  ... ... .. ... 00 @cfs_d ? d
-}
-{
-  sw              110  ... ... .. ... 00 @cs_w ? alias
-  c_sw            110  ... ... .. ... 00 @cs_w
-}
-
-# *** RV32C and RV64C specific Standard Extension (Quadrant 0) ***
-{
-  ld              011  ... ... .. ... 00 @cl_d ? rv64i alias
-  c_ld            011  ... ... .. ... 00 @cl_d ? rv64i
-  flw             011  ... ... .. ... 00 @cfl_w ? f alias
-  c_flw           011  ... ... .. ... 00 @cfl_w ? f
-}
-{
-  sd              111  ... ... .. ... 00 @cs_d ? rv64i alias
-  c_sd            111  ... ... .. ... 00 @cs_d ? rv64i
-  fsw             111  ... ... .. ... 00 @cfs_w ? f alias
-  c_fsw           111  ... ... .. ... 00 @cfs_w ? f
-}
-
-# *** RV32/64C Standard Extension (Quadrant 1) ***
-{
-  nop             000 0  00000  00000 01 ? alias
-  addi            000 .  .....  ..... 01 @ci ? alias
-  c_addi          000 .  .....  ..... 01 @ci_c
-}
-{
-  li              010 .  .....  ..... 01 @c_li ? alias
-  c_li            010 .  .....  ..... 01 @c_li
-}
-{
-  illegal         011 0  -----  00000 01 # c.addi16sp and c.lui, RES nzimm=0
-  addi            011 .  00010  ..... 01 rd_implicit=2 rs1_implicit=2 imm=%imm_addi16sp ? alias
-  c_addi16sp      011 .  00010  ..... 01 @c_addi16sp
-  lui             011 .  .....  ..... 01 @c_lui ? alias
-  c_lui           011 .  .....  ..... 01 @c_lui
-}
-{
-  srli            100 . 00 ...  ..... 01 @c_shift_sh ? alias
-  c_srli          100 . 00 ...  ..... 01 @c_shift
-}
-{
-  srai            100 . 01 ...  ..... 01 @c_shift_sh ? alias
-  c_srai          100 . 01 ...  ..... 01 @c_shift
-}
-{
-  andi            100 . 10 ...  ..... 01 @i rd=%rs1_3 rs1=%rs1_3 imm=%imm_ci ? alias
-  c_andi          100 . 10 ...  ..... 01 @c_andi
-}
-{
-  sub             100 0 11 ... 00 ... 01 @cs_3 ? alias
-  c_sub           100 0 11 ... 00 ... 01 @cs_2
-}
-{
-  xor             100 0 11 ... 01 ... 01 @cs_3 ? alias
-  c_xor           100 0 11 ... 01 ... 01 @cs_2
-}
-{
-  or              100 0 11 ... 10 ... 01 @cs_3 ? alias
-  c_or            100 0 11 ... 10 ... 01 @cs_2
-}
-{
-  and             100 0 11 ... 11 ... 01 @cs_3 ? alias
-  c_and           100 0 11 ... 11 ... 01 @cs_2
-}
-{
-  j               101     ........... 01 @j2 rel=%imm_cj ? alias
-  c_j             101     ........... 01 @cj
-}
-{
-  beqz            110  ... ...  ..... 01 @b1 rs1=%rs1_3 rel=%imm_cb ? alias
-  c_beqz          110  ... ...  ..... 01 @cb_z
-}
-{
-  bnez            111  ... ...  ..... 01 @b1 rs1=%rs1_3 rel=%imm_cb ? alias
-  c_bnez          111  ... ...  ..... 01 @cb_z
-}
-
-# *** RV64C and RV32C specific Standard Extension (Quadrant 1) ***
-{
-  c64_illegal     001 -  00000  ----- 01 # c.addiw, RES rd=0
-  sext_w          001 0  .....  00000 01 @r2 rs1=%rd ? rv64i alias
-  addiw           001 .  .....  ..... 01 @ci ? rv64i alias
-  c_addiw         001 .  .....  ..... 01 @ci_c ? rv64i
-  c_jal           001     ........... 01 @cj rd=1
-}
-{
-  subw            100 1 11 ... 00 ... 01 @cs_3 ? alias
-  c_subw          100 1 11 ... 00 ... 01 @cs_2
-}
-{
-  addw            100 1 11 ... 01 ... 01 @cs_3 ? alias
-  c_addw          100 1 11 ... 01 ... 01 @cs_2
-}
-
-# *** RV32/64C Standard Extension (Quadrant 2) ***
-{
-  slli            000 .  .....  ..... 10 @c_shift2_sh ? alias
-  c_slli          000 .  .....  ..... 10 @c_shift2
-}
-{
-  c_lqsp          001  ... ... .. ... 10 @c_lqsp ? rv128i
-  fld             001 .  .....  ..... 10 @c_fldsp ? d alias
-  c_fldsp         001 .  .....  ..... 10 @c_fldsp ? d
-}
-{
-  illegal         010 -  00000  ----- 10 # c.lwsp, RES rd=0
-  lw              010 .  .....  ..... 10 @c_lwsp ? alias
-  c_lwsp          010 .  .....  ..... 10 @c_lwsp
-}
-{
-  illegal         100 0  00000  00000 10 # c.jr, RES rs1=0
-  ret             100 0  00001  00000 10 ? alias
-  jr              100 0  .....  00000 10 @jr rs1=%rd imm=0 ? alias
-  c_jr            100 0  .....  00000 10 @c_jr
-  mv              100 0  .....  ..... 10 @r2 rs1=%rs2_5 ? alias
-  c_mv            100 0  .....  ..... 10 @c_mv
-}
-{
-  ebreak          100 1  00000  00000 10 ? alias
-  c_ebreak        100 1  00000  00000 10
-  jalr            100 1  .....  00000 10 @jalr rd=1 rs1=%rd imm=0 ? alias
-  c_jalr          100 1  .....  00000 10 @c_jr # TODO: implicit ra
-  add             100 1  .....  ..... 10 @cr3 ? alias
-  c_add           100 1  .....  ..... 10 @cr
-}
-{
-  c_sqsp          101  ... ... .. ... 10 @c_sqsp ? rv128i
-  fsd             101   ......  ..... 10 @c_fsdsp ? d alias
-  c_fsdsp         101   ......  ..... 10 @c_fsdsp ? d
-
-# TODO:
-#  # *** RV64 and RV32 Zcmp/Zcmt Extension ***
-#  [
-#    cm_push       101  11000  .... .. 10 @cm_pp
-#    cm_pop        101  11010  .... .. 10 @cm_pp
-#    cm_popret     101  11110  .... .. 10 @cm_pp
-#    cm_popretz    101  11100  .... .. 10 @cm_pp
-#    cm_mva01s     101  011 ... 11 ... 10 @cm_mv
-#    cm_mvsa01     101  011 ... 01 ... 10 @cm_mv
-#
-#    cm_jalt       101  000   ........ 10 @cm_jt
-#  ]
-}
-{
-  sw              110 .  .....  ..... 10 @c_swsp ? alias
-  c_swsp          110 .  .....  ..... 10 @c_swsp
-}
-
-# *** RV32C and RV64C specific Standard Extension (Quadrant 2) ***
-{
-  c64_illegal     011 -  00000  ----- 10 # c.ldsp, RES rd=0
-  ld              011 .  .....  ..... 10 @c_ldsp ? rv64i alias
-  c_ldsp          011 .  .....  ..... 10 @c_ldsp ? rv64i
-  flw             011 .  .....  ..... 10 @c_flwsp ? f alias
-  c_flwsp         011 .  .....  ..... 10 @c_flwsp ? f
-}
-{
-  sd              111 .  .....  ..... 10 @c_sdsp ? rv64i alias
-  c_sdsp          111 .  .....  ..... 10 @c_sdsp ? rv64i
-  fsw             111 .  .....  ..... 10 @c_fswsp ? f alias
-  c_fswsp         111 .  .....  ..... 10 @c_fswsp ? f
-}
-
-# *** RV64 and RV32 Zcb Extension ***
-c_zext_b    100 111  ... 11 000 01 @cu       ? zcb
-c_sext_b    100 111  ... 11 001 01 @cu       ? zcb
-c_zext_h    100 111  ... 11 010 01 @cu       ? zcb
-c_sext_h    100 111  ... 11 011 01 @cu       ? zcb
-c_zext_w    100 111  ... 11 100 01 @cu       ? zcb
-c_not       100 111  ... 11 101 01 @cu       ? zcb
-c_mul       100 111  ... 10 ... 01 @cs_2     ? zcb
-c_lbu       100 000  ... .. ... 00 @cl_b     ? zcb
-c_lhu       100 001  ... 0. ... 00 @cl_h     ? zcb
-c_lh        100 001  ... 1. ... 00 @cl_h     ? zcb
-c_sb        100 010  ... .. ... 00 @cs_b     ? zcb
-c_sh        100 011  ... 0. ... 00 @cs_h     ? zcb
 
 # *** RV32I Base Instruction Set ***
 lui         ....................       ..... 0110111 @u

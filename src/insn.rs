@@ -13,6 +13,14 @@ const INSN_ALIAS: u32 = 1 << 0;
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq)]
 pub struct Opcode(pub(crate) u32);
 
+impl std::ops::Add<u32> for Opcode {
+    type Output = Self;
+
+    fn add(self, rhs: u32) -> Self {
+        Self(self.0 + rhs)
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct Insn {
     opcode: Opcode,

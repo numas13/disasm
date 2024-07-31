@@ -67,13 +67,15 @@ impl<'a> Parser<'a> {
             output.address = 0;
             if let Some(pos) = cur.find(':') {
                 let (head, tail) = cur.split_at(pos);
-                match u64::from_str_radix(head, 16) {
-                    Ok(i) => output.address = i,
-                    Err(_) => {
-                        return self.error(format!("invalid address \"{head}\""));
+                if head.chars().count() < 17 {
+                    match u64::from_str_radix(head, 16) {
+                        Ok(i) => output.address = i,
+                        Err(_) => {
+                            return self.error(format!("invalid address \"{head}\""));
+                        }
                     }
+                    cur = tail[1..].trim_start();
                 }
-                cur = tail[1..].trim_start();
             }
 
             // parse bytes

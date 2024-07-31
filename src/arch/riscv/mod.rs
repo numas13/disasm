@@ -4,7 +4,7 @@ mod printer;
 
 use crate::{bytes::Bytes, Bundle, Error, Insn, Operand, Reg, RegClass};
 
-use self::generated::RiscvDecode;
+use self::generated::{RiscvDecode16, RiscvDecode32, SetValue};
 
 pub use self::generated::opcode;
 
@@ -101,18 +101,19 @@ impl super::Decoder for Decoder {
             .map(|i| if i & 3 == 3 { 32 } else { 16 })
             .ok_or(Error::More(2))?;
 
-        let insn = if len == 16 {
+        out.clear();
+        self.address = address;
+
+        let result = if len == 16 {
             if !self.opts_arch.ext.c {
                 return Err(Error::Failed(len));
             }
-            bytes.read_u16()? as u32
+            RiscvDecode16::decode(self, bytes.read_u16()?, out.peek())
         } else {
-            bytes.read_u32()?
+            RiscvDecode32::decode(self, bytes.read_u32()?, out.peek())
         };
 
-        out.clear();
-        self.address = address;
-        if RiscvDecode::decode(self, insn, out.peek()).is_ok() {
+        if result.is_ok() {
             out.next();
             Ok(len)
         } else {
@@ -162,70 +163,8 @@ macro_rules! impl_cond_ext {
     }
 }
 
-impl RiscvDecode for Decoder {
+impl SetValue for Decoder {
     type Error = ();
-
-    fn fail(&self) {}
-
-    fn cond_alias(&self) -> bool {
-        self.alias()
-    }
-
-    fn cond_rv64i(&self) -> bool {
-        self.opts_arch.xlen == Xlen::X64
-    }
-
-    fn cond_rv128i(&self) -> bool {
-        self.opts_arch.xlen == Xlen::X128
-    }
-
-    impl_cond_ext! {
-        cond_a = a,
-        cond_d = d,
-        cond_f = f,
-        cond_m = m,
-        cond_zcb = zcb,
-        cond_zfh = zfh,
-        cond_zicsr = zicsr,
-    }
-
-    fn cond_is_same_rs1_rs2(&self, insn: u32) -> bool {
-        self.extract_rs1(insn) == self.extract_rs2(insn)
-    }
-
-    impl_ex_shift! {
-        ex_shift_1 = 1,
-        ex_shift_2 = 2,
-        ex_shift_3 = 3,
-        ex_shift_4 = 4,
-        ex_shift_12 = 12,
-    }
-
-    fn ex_plus_1(&self, value: i32) -> i32 {
-        value + 1
-    }
-
-    fn ex_sreg_register(&self, value: i32) -> i32 {
-        if value < 2 {
-            value + 8
-        } else {
-            value + 16
-        }
-    }
-
-    fn ex_rvc_register(&self, value: i32) -> i32 {
-        value + 8
-    }
-
-    fn ex_rvc_shiftli(&self, value: i32) -> i32 {
-        // TODO: rv128c
-        value
-    }
-
-    fn ex_rvc_shiftri(&self, value: i32) -> i32 {
-        // TODO: rv128c
-        value
-    }
 
     fn set_rd(&mut self, out: &mut Insn, value: i32) {
         out.push_reg(x(value).write());
@@ -268,6 +207,18 @@ impl RiscvDecode for Decoder {
         out.push_reg(f(value).read());
     }
 
+    fn set_imm(&mut self, out: &mut Insn, value: i32) {
+        out.push_imm(value as i64);
+    }
+
+    fn set_uimm(&mut self, out: &mut Insn, value: i32) {
+        out.push_uimm(value as u64);
+    }
+
+    fn set_imm_u(&mut self, out: &mut Insn, value: i32) {
+        out.push_uimm((value as u64 >> 12) & 0xfffff);
+    }
+
     fn set_rm(&mut self, out: &mut Insn, value: i32) {
         out.push_operand(
             Operand::arch(OPERAND_RM, value as u64, 0).non_printable(value as u8 == RM_DYN),
@@ -297,18 +248,6 @@ impl RiscvDecode for Decoder {
     fn set_csr(&mut self, out: &mut Insn, value: i32) {
         // TODO: csr read/write
         out.push_reg(csr(value));
-    }
-
-    fn set_imm(&mut self, out: &mut Insn, value: i32) {
-        out.push_imm(value as i64);
-    }
-
-    fn set_uimm(&mut self, out: &mut Insn, value: i32) {
-        out.push_uimm(value as u64);
-    }
-
-    fn set_imm_u(&mut self, out: &mut Insn, value: i32) {
-        out.push_uimm((value as u64 >> 12) & 0xfffff);
     }
 
     fn set_args_offset(&mut self, insn: &mut Insn, args: generated::args_offset) {
@@ -382,6 +321,98 @@ impl RiscvDecode for Decoder {
     // fn set_args_cmjt(&mut self, _: &mut Insn, _: generated::args_cmjt) {
     //     // TODO:
     // }
+}
+
+impl RiscvDecode16 for Decoder {
+    fn fail(&self) {}
+
+    fn cond_alias(&self) -> bool {
+        self.alias()
+    }
+
+    fn cond_rv64i(&self) -> bool {
+        self.opts_arch.xlen == Xlen::X64
+    }
+
+    fn cond_rv128i(&self) -> bool {
+        self.opts_arch.xlen == Xlen::X128
+    }
+
+    impl_cond_ext! {
+        cond_d = d,
+        cond_f = f,
+        cond_zcb = zcb,
+    }
+
+    impl_ex_shift! {
+        ex_shift_1 = 1,
+        ex_shift_2 = 2,
+        ex_shift_3 = 3,
+        ex_shift_4 = 4,
+        ex_shift_12 = 12,
+    }
+
+    fn ex_sreg_register(&self, value: i32) -> i32 {
+        if value < 2 {
+            value + 8
+        } else {
+            value + 16
+        }
+    }
+
+    fn ex_rvc_register(&self, value: i32) -> i32 {
+        value + 8
+    }
+
+    fn ex_rvc_shiftli(&self, value: i32) -> i32 {
+        // TODO: rv128c
+        value
+    }
+
+    fn ex_rvc_shiftri(&self, value: i32) -> i32 {
+        // TODO: rv128c
+        value
+    }
+}
+
+impl RiscvDecode32 for Decoder {
+    fn fail(&self) {}
+
+    fn cond_alias(&self) -> bool {
+        self.alias()
+    }
+
+    fn cond_rv64i(&self) -> bool {
+        self.opts_arch.xlen == Xlen::X64
+    }
+
+    fn cond_rv128i(&self) -> bool {
+        self.opts_arch.xlen == Xlen::X128
+    }
+
+    impl_cond_ext! {
+        cond_a = a,
+        cond_d = d,
+        cond_f = f,
+        cond_m = m,
+        cond_zfh = zfh,
+        cond_zicsr = zicsr,
+    }
+
+    fn cond_is_same_rs1_rs2(&self, insn: u32) -> bool {
+        self.extract_rs1(insn) == self.extract_rs2(insn)
+    }
+
+    impl_ex_shift! {
+        ex_shift_1 = 1,
+        ex_shift_3 = 3,
+        ex_shift_4 = 4,
+        ex_shift_12 = 12,
+    }
+
+    fn ex_plus_1(&self, value: i32) -> i32 {
+        value + 1
+    }
 }
 
 fn x(index: i32) -> Reg {
