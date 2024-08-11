@@ -3,6 +3,18 @@ mod common;
 use common::test::{Parser, Test};
 
 #[test]
+fn parse_flags() {
+    let src = " +a\t+b  -abc-foo -foo  +bar+foo";
+    let mut flags = common::test::parse_flags(src);
+    assert_eq!(flags.next(), Some((true, "a")));
+    assert_eq!(flags.next(), Some((true, "b")));
+    assert_eq!(flags.next(), Some((false, "abc-foo")));
+    assert_eq!(flags.next(), Some((false, "foo")));
+    assert_eq!(flags.next(), Some((true, "bar+foo")));
+    assert_eq!(flags.next(), None);
+}
+
+#[test]
 fn parse() -> Result<(), String> {
     let src = r#"# comment
         1000: 00 00     ud # comment
