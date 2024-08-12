@@ -215,3 +215,9 @@ pub trait PrinterInfo {
 }
 
 impl PrinterInfo for () {}
+
+impl<'a, T: PrinterInfo> PrinterInfo for &'a T {
+    fn get_symbol(&self, address: u64) -> Option<(u64, &str)> {
+        (*self).get_symbol(address)
+    }
+}

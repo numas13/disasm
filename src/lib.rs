@@ -13,6 +13,9 @@ mod utils;
 
 use core::fmt;
 
+#[cfg(all(feature = "std", feature = "print"))]
+use std::io::{self, Write};
+
 use alloc::boxed::Box;
 
 use crate::arch::Decoder;
@@ -27,7 +30,7 @@ pub use crate::printer::PrinterInfo;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
-    /// Need more bits to decode an instruction.
+    /// Need more bytes to decode an instruction.
     More(usize),
     /// Failed to decode an instruction.
     Failed(usize),
@@ -44,6 +47,35 @@ impl fmt::Display for Error {
 
 #[cfg(feature = "std")]
 impl std::error::Error for Error {}
+
+#[cfg(all(feature = "std", feature = "print"))]
+#[derive(Debug)]
+pub enum PrintError {
+    /// Need more bytes to decode an instruction.
+    More(usize),
+    /// Failed to decode an instruction.
+    Io(io::Error),
+}
+
+#[cfg(all(feature = "std", feature = "print"))]
+impl fmt::Display for PrintError {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::More(_) => fmt.write_str("Need more data"),
+            Self::Io(err) => err.fmt(fmt),
+        }
+    }
+}
+
+#[cfg(all(feature = "std", feature = "print"))]
+impl std::error::Error for PrintError {}
+
+#[cfg(all(feature = "std", feature = "print"))]
+impl From<io::Error> for PrintError {
+    fn from(value: io::Error) -> Self {
+        Self::Io(value)
+    }
+}
 
 #[derive(Copy, Clone)]
 pub enum Arch {
@@ -94,6 +126,7 @@ pub struct Disasm {
     insn_alignment: u16,
     insn_size_min: u16,
     insn_size_max: u16,
+    arch: Arch,
     decoder: Box<dyn Decoder>,
     #[cfg(feature = "print")]
     printer: Box<dyn Printer>,
@@ -126,6 +159,7 @@ impl Disasm {
             insn_alignment: decoder.insn_alignment(),
             insn_size_min: decoder.insn_size_min(),
             insn_size_max: decoder.insn_size_max(),
+            arch,
             decoder,
             #[cfg(feature = "print")]
             printer,
@@ -169,5 +203,152 @@ impl Disasm {
 
     pub fn insn_size_max(&self) -> usize {
         self.insn_size_max as usize
+    }
+
+    #[cfg(all(feature = "std", feature = "print"))]
+    fn print_impl<W, I>(
+        &mut self,
+        out: &mut W,
+        data: &[u8],
+        section_name: &str,
+        info: &I,
+        streaming: bool,
+    ) -> Result<usize, PrintError>
+    where
+        W: Write,
+        I: PrinterInfo,
+    {
+        let mut bundle = Bundle::empty();
+        let mut symbol = None;
+
+        let bytes_per_line = self.arch.bytes_per_line();
+        let min_len = self.insn_size_min();
+        let skip_zeroes = self.arch.skip_zeroes();
+
+        let mut cur = data;
+        while cur.len() >= min_len {
+            let address = self.address();
+            let new_symbol = info.get_symbol(address);
+            if new_symbol != symbol {
+                symbol = new_symbol;
+                if let Some((_, name)) = symbol {
+                    writeln!(out)?;
+                    writeln!(out, "{address:016x} <{name}>:")?;
+                } else {
+                    writeln!(out, "{:016x} <{section_name}>:", self.address())?;
+                }
+            }
+
+            if cur.len() >= skip_zeroes && cur.iter().take(skip_zeroes).all(|i| *i == 0) {
+                let zeroes = cur.iter().position(|i| *i != 0).unwrap_or(cur.len());
+                let sym = info.get_symbol(address + zeroes as u64);
+                if sym != new_symbol || zeroes >= (skip_zeroes * 2 - 1) {
+                    writeln!(out, "\t...")?;
+                    let skip = zeroes & !(skip_zeroes - 1);
+                    self.skip(skip);
+                    cur = &cur[skip..];
+                    continue;
+                }
+            }
+
+            let (len, is_ok, mut err_msg) = match self.decode(cur, &mut bundle) {
+                Ok(len) => (len, true, None),
+                Err(err) => {
+                    let len = match err {
+                        Error::More(bits) => {
+                            if streaming {
+                                // ask user for more input
+                                return Err(PrintError::More((bits + 7) / 8));
+                            } else {
+                                // or just print as fail
+                                cur.len()
+                            }
+                        }
+                        Error::Failed(len) => len,
+                    };
+                    (len, false, Some("failed to decode"))
+                }
+            };
+
+            let addr_width = if address >= 0x1000 { 8 } else { 4 };
+            let bytes_per_chunk = self.arch.bytes_per_chunk(len);
+            let mut insns = bundle.iter();
+            let mut chunks = cur[..len].chunks(bytes_per_chunk);
+            let mut l = 0;
+            loop {
+                let insn = if is_ok { insns.next() } else { None };
+                if l >= len && insn.is_none() {
+                    break;
+                }
+                write!(out, "{:addr_width$x}:\t", address + l as u64)?;
+
+                let mut p = 0;
+                let mut c = 0;
+                if l < len {
+                    for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
+                        c += 1;
+                        if let Some(chunk) = chunks.next() {
+                            for i in chunk.iter().rev() {
+                                write!(out, "{i:02x}")?;
+                            }
+                            out.write_all(b" ")?;
+                            p += chunk.len();
+                            l += chunk.len();
+                            c -= 1;
+                        }
+                    }
+                }
+
+                let width = (bytes_per_line - p) * 2 + c;
+
+                if let Some(insn) = insn {
+                    write!(out, "{:width$}\t{}", "", insn.printer(self, info))?;
+                }
+
+                if let Some(err) = err_msg.take() {
+                    write!(out, "{:width$}\t{err}", "")?;
+                }
+
+                writeln!(out)?;
+            }
+            cur = &cur[len..];
+        }
+
+        Ok(data.len() - cur.len())
+    }
+
+    #[cfg(all(feature = "std", feature = "print"))]
+    pub fn print<W, I>(
+        &mut self,
+        out: &mut W,
+        data: &[u8],
+        section_name: &str,
+        info: &I,
+    ) -> Result<(), io::Error>
+    where
+        W: Write,
+        I: PrinterInfo,
+    {
+        // do not bother the user with an error wrapper
+        match self.print_impl(out, data, section_name, info, false) {
+            Ok(_) => Ok(()),
+            Err(PrintError::Io(err)) => Err(err),
+            _ => unreachable!(),
+        }
+    }
+
+    #[cfg(all(feature = "std", feature = "print"))]
+    pub fn print_streaming<W, I>(
+        &mut self,
+        out: &mut W,
+        data: &[u8],
+        section_name: &str,
+        info: &I,
+    ) -> Result<usize, PrintError>
+    where
+        W: Write,
+        I: PrinterInfo,
+    {
+        self.print_impl(out, data, section_name, info, true)
     }
 }

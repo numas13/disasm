@@ -149,7 +149,7 @@ where
         let (arch, opts) = init(&test);
         let mut disasm = Disasm::new(arch, test.address, opts);
         if let Ok(len) = disasm.decode(&test.bytes, &mut bundle) {
-            let printer = bundle[0].printer(&disasm, ());
+            let printer = bundle[0].printer(&disasm, &());
             let mnemonic = printer.mnemonic().to_string();
             let operands = printer.operands().to_string();
             let result = (mnemonic.as_str(), operands.as_str());

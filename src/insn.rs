@@ -106,7 +106,7 @@ impl Insn {
     }
 
     #[cfg(feature = "print")]
-    pub fn printer<'a, I>(&'a self, disasm: &'a crate::Disasm, info: I) -> Printer<'a, I>
+    pub fn printer<'a, I>(&'a self, disasm: &'a crate::Disasm, info: &'a I) -> Printer<'a, I>
     where
         I: PrinterInfo,
     {
@@ -115,7 +115,7 @@ impl Insn {
 }
 
 #[cfg(feature = "print")]
-pub struct Printer<'a, I: PrinterInfo>(&'a Insn, &'a crate::Disasm, I);
+pub struct Printer<'a, I: PrinterInfo>(&'a Insn, &'a crate::Disasm, &'a I);
 
 #[cfg(feature = "print")]
 impl<'a, I: PrinterInfo> Printer<'a, I> {
