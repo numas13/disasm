@@ -190,6 +190,7 @@ impl Disasm {
 
     /// Do not decode `size` bytes.
     pub fn skip(&mut self, size: usize) {
+        // TODO: skip: u64
         self.address += size as u64;
     }
 
@@ -212,6 +213,7 @@ impl Disasm {
         data: &[u8],
         section_name: &str,
         info: &I,
+        first: bool,
         streaming: bool,
     ) -> Result<usize, PrintError>
     where
@@ -219,7 +221,7 @@ impl Disasm {
         I: PrinterInfo,
     {
         let mut bundle = Bundle::empty();
-        let mut symbol = None;
+        let mut symbol = None::<(u64, &str)>;
 
         let bytes_per_line = self.arch.bytes_per_line();
         let min_len = self.insn_size_min();
@@ -229,13 +231,18 @@ impl Disasm {
         while cur.len() >= min_len {
             let address = self.address();
             let new_symbol = info.get_symbol(address);
-            if new_symbol != symbol {
+            if new_symbol.map(|i| i.0) != symbol.map(|i| i.0) {
                 symbol = new_symbol;
-                if let Some((_, name)) = symbol {
-                    writeln!(out)?;
-                    writeln!(out, "{address:016x} <{name}>:")?;
-                } else {
-                    writeln!(out, "{:016x} <{section_name}>:", self.address())?;
+                match symbol {
+                    Some((addr, name)) if addr == address => {
+                        writeln!(out)?;
+                        writeln!(out, "{address:016x} <{name}>:")?;
+                    }
+                    _ if first => {
+                        writeln!(out)?;
+                        writeln!(out, "{:016x} <{section_name}>:", self.address())?;
+                    }
+                    _ => {}
                 }
             }
 
@@ -324,13 +331,14 @@ impl Disasm {
         data: &[u8],
         section_name: &str,
         info: &I,
+        first: bool,
     ) -> Result<(), io::Error>
     where
         W: Write,
         I: PrinterInfo,
     {
         // do not bother the user with an error wrapper
-        match self.print_impl(out, data, section_name, info, false) {
+        match self.print_impl(out, data, section_name, info, first, false) {
             Ok(_) => Ok(()),
             Err(PrintError::Io(err)) => Err(err),
             _ => unreachable!(),
@@ -344,11 +352,12 @@ impl Disasm {
         data: &[u8],
         section_name: &str,
         info: &I,
+        first: bool,
     ) -> Result<usize, PrintError>
     where
         W: Write,
         I: PrinterInfo,
     {
-        self.print_impl(out, data, section_name, info, true)
+        self.print_impl(out, data, section_name, info, first, true)
     }
 }
