@@ -136,6 +136,59 @@ impl<'a> Parser<'a> {
     }
 }
 
+struct ErrorReport<'a> {
+    file: &'a str,
+    test: &'a Test<'a>,
+    msg: &'a str,
+    result: Option<(&'a str, &'a str, usize)>,
+}
+
+impl<'a> ErrorReport<'a> {
+    fn new(file: &'a str, test: &'a Test) -> Self {
+        Self {
+            file,
+            test,
+            msg: "unspecified fail",
+            result: None,
+        }
+    }
+
+    fn result(self, mnemonic: &'a str, operands: &'a str, len: usize) -> Self {
+        Self {
+            result: Some((mnemonic, operands, len)),
+            ..self
+        }
+    }
+
+    fn msg(self, msg: &'a str) -> Self {
+        Self { msg, ..self }
+    }
+}
+
+impl fmt::Display for ErrorReport<'_> {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        let raw = Bytes(&self.test.bytes);
+        let (m, o) = self.test.asm[0];
+        let l1 = self.test.bytes.len();
+        let match_len = self.result.map(|(_, _, l2)| l1 == l2).unwrap_or(true);
+        writeln!(fmt, "error: {}, {}:{}", self.msg, self.file, self.test.line)?;
+        writeln!(fmt, "    raw: {raw}")?;
+        write!(fmt, "    expect: {m:?} {o:?}")?;
+        if !match_len {
+            write!(fmt, " ({l1} bytes)")?;
+        }
+        writeln!(fmt)?;
+        if let Some((m, o, l2)) = self.result {
+            write!(fmt, "    result: {m:?} {o:?}")?;
+            if !match_len {
+                write!(fmt, " ({l2} bytes)")?;
+            }
+            writeln!(fmt)?;
+        }
+        fmt.write_str("\n")
+    }
+}
+
 pub fn run<F>(file: &str, tests: &str, init: F) -> Result<(), String>
 where
     F: Fn(&Test) -> (Arch, Options),
@@ -143,29 +196,37 @@ where
     let mut bundle = Bundle::empty();
     let mut test = Test::default();
     let mut parser = Parser::new(file, tests);
+    let mut failed = 0;
     while parser.parse(&mut test)? {
         let expect = test.asm[0];
-        let expect_len = test.bytes.len();
         let (arch, opts) = init(&test);
         let mut disasm = Disasm::new(arch, test.address, opts);
+        let report = ErrorReport::new(file, &test);
         if let Ok(len) = disasm.decode(&test.bytes, &mut bundle) {
             let printer = bundle[0].printer(&disasm, &());
             let mnemonic = printer.mnemonic().to_string();
             let operands = printer.operands().to_string();
-            let result = (mnemonic.as_str(), operands.as_str());
-            assert_eq!(
-                len, expect_len,
-                "decoded {len} bytes, expected {expect_len} bytes, {file}:{}",
-                test.line
-            );
-            assert_eq!(result, expect, "invalid result, {file}:{}", test.line);
+            let report = report.result(&mnemonic, &operands, len);
+            if mnemonic != expect.0 {
+                eprint!("{}", report.msg("invalid mnemonic"));
+                failed += 1;
+            } else if operands != expect.1 {
+                eprint!("{}", report.msg("invalid operands"));
+                failed += 1;
+            } else if len != test.bytes.len() {
+                eprint!("{}", report.msg("invalid length"));
+                failed += 1;
+            }
         } else {
-            let raw = Bytes(&test.bytes);
-            panic!("failed to decode {raw}, expected {expect:?}");
+            eprint!("{}", report.msg("failed to decode"));
+            failed += 1;
         }
     }
-
-    Ok(())
+    if failed == 0 {
+        Ok(())
+    } else {
+        Err(format!("failed {failed} tests"))
+    }
 }
 
 pub fn parse_flags(s: &str) -> impl Iterator<Item = (bool, &str)> {
