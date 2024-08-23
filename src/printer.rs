@@ -69,6 +69,23 @@ pub trait Printer {
         Ok(())
     }
 
+    fn print_symbol(
+        &self,
+        fmt: &mut fmt::Formatter,
+        info: &dyn PrinterInfo,
+        addr: u64,
+    ) -> fmt::Result {
+        if let Some((sym_addr, sym_name)) = info.get_symbol(addr) {
+            write!(fmt, " <{sym_name}")?;
+            let diff = addr - sym_addr;
+            if diff != 0 {
+                write!(fmt, "+{diff:#x}")?;
+            }
+            fmt.write_char('>')?;
+        }
+        Ok(())
+    }
+
     fn print_operand_default(
         &self,
         fmt: &mut fmt::Formatter,
@@ -118,15 +135,7 @@ pub trait Printer {
             }
             OperandKind::Absolute(addr) => {
                 write!(fmt, "{addr:x}")?;
-
-                if let Some((sym_addr, sym_name)) = info.get_symbol(*addr) {
-                    write!(fmt, " <{sym_name}")?;
-                    let diff = addr - sym_addr;
-                    if diff != 0 {
-                        write!(fmt, "+{diff:#x}")?;
-                    }
-                    fmt.write_char('>')?;
-                }
+                self.print_symbol(fmt, info, *addr)?;
             }
             OperandKind::PcRelative(_) => {
                 todo!()

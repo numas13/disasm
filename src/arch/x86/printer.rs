@@ -604,16 +604,6 @@ impl crate::printer::Printer for Printer {
                 3 => "{rz-sae}",
                 _ => unreachable!("unexpected rounding mode {rm}"),
             }),
-            OperandKind::Absolute(addr) if self.is_intel() => {
-                self.print_mem_access_intel(fmt, insn, operand)?;
-                let only_addr = operand.flags().any(super::OP_NO_PTR);
-                self.print_segment(fmt, operand, !only_addr)?;
-                if only_addr {
-                    write!(fmt, "{addr:x}")
-                } else {
-                    write!(fmt, "{addr:#x}")
-                }
-            }
             OperandKind::Indirect(base) if self.is_intel() => {
                 self.print_mem_intel(fmt, disasm, insn, operand, base, None, None)
             }
@@ -642,12 +632,18 @@ impl crate::printer::Printer for Printer {
                 ),
             OperandKind::Absolute(addr) => {
                 let only_addr = operand.flags().any(super::OP_NO_PTR);
-                self.print_segment(fmt, operand, false)?;
-                if only_addr {
-                    write!(fmt, "{addr:x}")
+                if self.is_intel() {
+                    self.print_mem_access_intel(fmt, insn, operand)?;
+                    self.print_segment(fmt, operand, !only_addr)?;
                 } else {
-                    write!(fmt, "{addr:#x}")
+                    self.print_segment(fmt, operand, false)?;
                 }
+                if only_addr {
+                    write!(fmt, "{addr:x}")?;
+                } else {
+                    write!(fmt, "{addr:#x}")?;
+                }
+                self.print_symbol(fmt, info, *addr)
             }
             OperandKind::Indirect(base) => {
                 self.print_mem_att(fmt, disasm, insn, operand, base, None, None)
