@@ -77,6 +77,7 @@ impl From<io::Error> for PrintError {
     }
 }
 
+#[non_exhaustive]
 #[derive(Copy, Clone)]
 pub enum Arch {
     #[cfg(feature = "riscv")]
