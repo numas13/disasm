@@ -13,7 +13,7 @@ use std::{
 
 use decodetree::{
     gen::{Gen, Pad},
-    Parser, Pattern,
+    Parser, Pattern, ValueKind,
 };
 
 #[cfg(not(any(feature = "riscv")))]
@@ -180,13 +180,17 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         let mut format = String::from("format");
         for value in pattern.values() {
             let name = value.name();
-            let hash_set = if value.is_set() {
-                &mut self.arch.sets
-            } else {
-                &mut self.arch.args
-            };
-            if !hash_set.contains(*name) {
-                hash_set.insert(name.to_string());
+            match value.kind() {
+                ValueKind::Set(ty, ..) => {
+                    if !self.arch.sets.contains_key(*name) {
+                        self.arch.sets.insert(name.to_string(), ty.to_string());
+                    }
+                }
+                _ => {
+                    if !self.arch.args.contains(*name) {
+                        self.arch.args.insert(name.to_string());
+                    }
+                }
             }
             format.push('_');
             format.push_str(name);
@@ -208,10 +212,9 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
             let mut args = Vec::new();
             for value in pattern.values() {
                 let name = String::from(*value.name());
-                let ty = if value.is_set() {
-                    format!("args_{name}")
-                } else {
-                    self.arch.value_type.to_owned()
+                let ty = match value.kind() {
+                    ValueKind::Set(ty, ..) => format!("args_{ty}"),
+                    _ => self.arch.value_type.to_owned(),
                 };
                 args.push((name, ty));
             }
@@ -331,7 +334,7 @@ struct Arch {
     decode: Vec<DecodeGen>,
     opcodes: HashSet<String>,
     args: HashSet<String>,
-    sets: HashSet<String>,
+    sets: HashMap<String, String>,
 }
 
 impl Arch {
@@ -379,6 +382,16 @@ impl Arch {
         self
     }
 
+    fn set_return_error(mut self, b: bool) -> Self {
+        self.set_return_error = b;
+        self
+    }
+
+    fn mnemonic_dot(mut self, b: bool) -> Self {
+        self.mnemonic_dot = b;
+        self
+    }
+
     fn decode(
         mut self,
         source: impl AsRef<Path>,
@@ -412,8 +425,11 @@ impl Arch {
         if !self.sets.is_empty() {
             writeln!(out)?;
         }
-        for i in &self.sets {
-            writeln!(out, "    fn set_args_{i}({shared}, args: args_{i}){ret};")?;
+        for (name, ty) in &self.sets {
+            writeln!(
+                out,
+                "    fn set_args_{name}({shared}, args: args_{ty}){ret};"
+            )?;
         }
         writeln!(out, "}}")?;
         Ok(())
