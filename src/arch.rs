@@ -1,6 +1,7 @@
 #[cfg(feature = "riscv")]
 pub mod riscv;
-
+#[cfg(feature = "x86")]
+pub mod x86;
 #[cfg(feature = "mnemonic")]
 use crate::Insn;
 use crate::{Bundle, Error};

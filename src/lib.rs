@@ -81,6 +81,8 @@ impl From<io::Error> for PrintError {
 pub enum Arch {
     #[cfg(feature = "riscv")]
     Riscv(crate::arch::riscv::Options),
+    #[cfg(feature = "x86")]
+    X86(crate::arch::x86::Options),
 }
 
 impl Arch {
@@ -88,13 +90,18 @@ impl Arch {
         match self {
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => 8,
+            #[cfg(feature = "x86")]
+            Arch::X86(..) => 7,
         }
     }
 
+    #[allow(unused_variables)]
     pub fn bytes_per_chunk(&self, len: usize) -> usize {
         match self {
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => len,
+            #[cfg(feature = "x86")]
+            Arch::X86(..) => 1,
         }
     }
 
@@ -102,6 +109,8 @@ impl Arch {
         match self {
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => 2,
+            #[cfg(feature = "x86")]
+            Arch::X86(..) => 8,
         }
     }
 }
@@ -138,6 +147,8 @@ impl Disasm {
         match arch {
             #[cfg(feature = "riscv")]
             Arch::Riscv(arch_opts) => riscv::decoder(opts, arch_opts),
+            #[cfg(feature = "x86")]
+            Arch::X86(arch_opts) => x86::decoder(opts, arch_opts),
         }
     }
 
@@ -147,6 +158,8 @@ impl Disasm {
         match arch {
             #[cfg(feature = "riscv")]
             Arch::Riscv(arch_opts) => riscv::printer(opts, arch_opts),
+            #[cfg(feature = "x86")]
+            Arch::X86(arch_opts) => x86::printer(opts, arch_opts),
         }
     }
 

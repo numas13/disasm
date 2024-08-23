@@ -66,4 +66,11 @@ impl Flags {
         self.raw = deposit(self.raw, field.start(), field.len(), value);
         self
     }
+
+    pub fn field_set_if(&mut self, field: Field, value: u32, cond: bool) -> &mut Self {
+        if cond {
+            self.raw = deposit(self.raw, field.start(), field.len(), value);
+        }
+        self
+    }
 }

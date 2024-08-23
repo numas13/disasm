@@ -1,0 +1,96 @@
+         62 f1 ed 18 c2 cb 00            vcmpeqpd k1,zmm2,zmm3{sae}
+         62 f1 ed 18 c2 cb 80            vcmppd k1,zmm2,zmm3{sae},0x80
+         62 f1 6c 18 c2 cb 00            vcmpeqps k1,zmm2,zmm3{sae}
+         62 f1 6c 18 c2 cb 80            vcmpps k1,zmm2,zmm3{sae},0x80
+         62 f1 ef 18 c2 cb 00            vcmpeqsd k1,xmm2,xmm3{sae}
+         62 f1 ef 18 c2 cb 80            vcmpsd k1,xmm2,xmm3{sae},0x80
+         62 f1 6e 18 c2 cb 00            vcmpeqss k1,xmm2,xmm3{sae}
+         62 f1 6e 18 c2 cb 80            vcmpss k1,xmm2,xmm3{sae},0x80
+         62 f1 fd 18 2f ca               vcomisd xmm1,xmm2{sae}
+         62 f1 7c 18 2f ca               vcomiss xmm1,xmm2{sae}
+         62 f1 7c 18 5a ca               vcvtps2pd zmm1,ymm2{sae}
+         62 f1 6e 18 5a cb               vcvtss2sd xmm1,xmm2,xmm3{sae}
+         62 f1 fd 18 e6 ca               vcvttpd2dq ymm1,zmm2{sae}
+         62 f1 7e 18 5b ca               vcvttps2dq zmm1,zmm2{sae}
+         62 f1 7f 18 2c ca               vcvttsd2si ecx,xmm2{sae}
+         62 f1 ff 18 2c ca               vcvttsd2si rcx,xmm2{sae}
+         62 f1 7e 18 2c ca               vcvttss2si ecx,xmm2{sae}
+         62 f1 fe 18 2c ca               vcvttss2si rcx,xmm2{sae}
+         62 f1 ed 18 5f cb               vmaxpd zmm1,zmm2,zmm3{sae}
+         62 f1 6c 18 5f cb               vmaxps zmm1,zmm2,zmm3{sae}
+         62 f1 ef 18 5f cb               vmaxsd xmm1,xmm2,xmm3{sae}
+         62 f1 6e 18 5f cb               vmaxss xmm1,xmm2,xmm3{sae}
+         62 f1 ed 18 5d cb               vminpd zmm1,zmm2,zmm3{sae}
+         62 f1 6c 18 5d cb               vminps zmm1,zmm2,zmm3{sae}
+         62 f1 ef 18 5d cb               vminsd xmm1,xmm2,xmm3{sae}
+         62 f1 6e 18 5d cb               vminss xmm1,xmm2,xmm3{sae}
+         62 f1 fd 18 2e ca               vucomisd xmm1,xmm2{sae}
+         62 f1 7c 18 2e ca               vucomiss xmm1,xmm2{sae}
+         62 f3 6c 18 c2 cb 00            vcmpeqph k1,zmm2,zmm3{sae}
+         62 f3 6c 18 c2 cb 80            vcmpph k1,zmm2,zmm3{sae},0x80
+         62 f3 6e 18 c2 cb 00            vcmpeqsh k1,xmm2,xmm3{sae}
+         62 f3 6e 18 c2 cb 80            vcmpsh k1,xmm2,xmm3{sae},0x80
+         62 f5 7c 18 2f ca               vcomish xmm1,xmm2{sae}
+         62 f5 7c 18 5a ca               vcvtph2pd zmm1,xmm2{sae}
+         62 f2 7d 18 13 ca               vcvtph2ps zmm1,ymm2{sae}
+         62 f6 7d 18 13 ca               vcvtph2psx zmm1,ymm2{sae}
+         62 f3 7d 18 1d d1 80            vcvtps2ph ymm1,zmm2{sae},0x80
+         62 f5 6e 18 5a cb               vcvtsh2sd xmm1,xmm2,xmm3{sae}
+         62 f6 6c 18 13 cb               vcvtsh2ss xmm1,xmm2,xmm3{sae}
+         62 f1 fd 18 7a ca               vcvttpd2qq zmm1,zmm2{sae}
+         62 f1 fc 18 78 ca               vcvttpd2udq ymm1,zmm2{sae}
+         62 f1 fd 18 78 ca               vcvttpd2uqq zmm1,zmm2{sae}
+         62 f5 7e 18 5b ca               vcvttph2dq zmm1,ymm2{sae}
+         62 f5 7d 18 7a ca               vcvttph2qq zmm1,xmm2{sae}
+         62 f5 7c 18 78 ca               vcvttph2udq zmm1,ymm2{sae}
+         62 f5 7d 18 78 ca               vcvttph2uqq zmm1,xmm2{sae}
+         62 f5 7c 18 7c ca               vcvttph2uw zmm1,zmm2{sae}
+         62 f5 7d 18 7c ca               vcvttph2w zmm1,zmm2{sae}
+         62 f1 7d 18 7a ca               vcvttps2qq zmm1,ymm2{sae}
+         62 f1 7c 18 78 ca               vcvttps2udq zmm1,zmm2{sae}
+         62 f1 7d 18 78 ca               vcvttps2uqq zmm1,ymm2{sae}
+         62 f1 7f 18 78 ca               vcvttsd2usi ecx,xmm2{sae}
+         62 f1 ff 18 78 ca               vcvttsd2usi rcx,xmm2{sae}
+         62 f5 7e 18 2c ca               vcvttsh2si ecx,xmm2{sae}
+         62 f5 fe 18 2c ca               vcvttsh2si rcx,xmm2{sae}
+         62 f5 7e 18 78 ca               vcvttsh2usi ecx,xmm2{sae}
+         62 f5 fe 18 78 ca               vcvttsh2usi rcx,xmm2{sae}
+         62 f1 7e 18 78 ca               vcvttss2usi ecx,xmm2{sae}
+         62 f1 fe 18 78 ca               vcvttss2usi rcx,xmm2{sae}
+         62 f3 ed 18 54 cb 80            vfixupimmpd zmm1,zmm2,zmm3{sae},0x80
+         62 f3 6d 18 54 cb 80            vfixupimmps zmm1,zmm2,zmm3{sae},0x80
+         62 f3 ed 18 55 cb 80            vfixupimmsd xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6d 18 55 cb 80            vfixupimmss xmm1,xmm2,xmm3{sae},0x80
+         62 f2 fd 18 42 ca               vgetexppd zmm1,zmm2{sae}
+         62 f6 7d 18 42 ca               vgetexpph zmm1,zmm2{sae}
+         62 f2 7d 18 42 ca               vgetexpps zmm1,zmm2{sae}
+         62 f2 ed 18 43 cb               vgetexpsd xmm1,xmm2,xmm3{sae}
+         62 f6 6d 18 43 cb               vgetexpsh xmm1,xmm2,xmm3{sae}
+         62 f2 6d 18 43 cb               vgetexpss xmm1,xmm2,xmm3{sae}
+         62 f3 fd 18 26 ca 80            vgetmantpd zmm1,zmm2{sae},0x80
+         62 f3 7c 18 26 ca 80            vgetmantph zmm1,zmm2{sae},0x80
+         62 f3 7d 18 26 ca 80            vgetmantps zmm1,zmm2{sae},0x80
+         62 f3 ed 18 27 cb 80            vgetmantsd xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6c 18 27 cb 80            vgetmantsh xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6d 18 27 cb 80            vgetmantss xmm1,xmm2,xmm3{sae},0x80
+         62 f5 6c 18 5f cb               vmaxph zmm1,zmm2,zmm3{sae}
+         62 f5 6e 18 5f cb               vmaxsh xmm1,xmm2,xmm3{sae}
+         62 f5 6c 18 5d cb               vminph zmm1,zmm2,zmm3{sae}
+         62 f5 6e 18 5d cb               vminsh xmm1,xmm2,xmm3{sae}
+         62 f3 ed 18 50 cb 80            vrangepd zmm1,zmm2,zmm3{sae},0x80
+         62 f3 6d 18 50 cb 80            vrangeps zmm1,zmm2,zmm3{sae},0x80
+         62 f3 ed 18 51 cb 80            vrangesd xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6d 18 51 cb 80            vrangess xmm1,xmm2,xmm3{sae},0x80
+         62 f3 fd 18 56 ca 80            vreducepd zmm1,zmm2{sae},0x80
+         62 f3 7d 18 56 ca 80            vreduceps zmm1,zmm2{sae},0x80
+         62 f3 7c 18 56 ca 80            vreduceph zmm1,zmm2{sae},0x80
+         62 f3 ed 18 57 cb 80            vreducesd xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6d 18 57 cb 80            vreducess xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6c 18 57 cb 80            vreducesh xmm1,xmm2,xmm3{sae},0x80
+         62 f3 fd 18 09 ca 80            vrndscalepd zmm1,zmm2{sae},0x80
+         62 f3 7c 18 08 ca 80            vrndscaleph zmm1,zmm2{sae},0x80
+         62 f3 7d 18 08 ca 80            vrndscaleps zmm1,zmm2{sae},0x80
+         62 f3 ed 18 0b cb 80            vrndscalesd xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6c 18 0a cb 80            vrndscalesh xmm1,xmm2,xmm3{sae},0x80
+         62 f3 6d 18 0a cb 80            vrndscaless xmm1,xmm2,xmm3{sae},0x80
+         62 f5 7c 18 2e ca               vucomish xmm1,xmm2{sae}

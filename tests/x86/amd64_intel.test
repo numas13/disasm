@@ -1,0 +1,1062 @@
+        e8 00 00 00 00                  call            5
+        66 ff 17                        call            WORD PTR [rdi]
+        ff 17                           call            QWORD PTR [rdi]
+        66 ff 1f                        call            DWORD PTR [rdi]
+        ff 1f                           call            FWORD PTR [rdi]
+        48 ff 1f                        "rex.W call"    FWORD PTR [rdi]
+
+        c3                              ret
+        f3 c3                           "repz ret"
+        cb                              retf
+        c2 01 00                        ret    0x1
+        ca 01 00                        retf   0x1
+
+        cf                              iret
+        48 cf                           iretq
+
+        66 ff 20                        jmp             WORD PTR [rax]
+        ff 20                           jmp             QWORD PTR [rax]
+
+        eb 00                           jmp    2
+        e9 00 00 00 00                  jmp    5
+        ff e7                           jmp    rdi
+        ff 27                           jmp    QWORD PTR [rdi]
+        48 ff 2f                        "rex.W jmp" FWORD PTR [rdi]
+        66 ff 2f                        jmp    DWORD PTR [rdi]
+        ff 27                           jmp    QWORD PTR [rdi]
+
+        6a 01                           push   0x1
+        66 6a 7f                        pushw  0x7f
+        66 68 ff 7f                     pushw  0x7fff
+        68 ff ff ff 7f                  push   0x7fffffff
+        66 50                           push   ax
+        50                              push   rax
+        66 ff f0                        push   ax
+        ff f0                           push   rax
+        66 ff 34 24                     push   WORD PTR [rsp]
+        ff 34 24                        push   QWORD PTR [rsp]
+        0f a0                           push   fs
+        0f a8                           push   gs
+
+        66 58                           pop    ax
+        58                              pop    rax
+        66 8f c0                        pop    ax
+        8f c0                           pop    rax
+        66 8f 07                        pop    WORD PTR [rdi]
+        8f 07                           pop    QWORD PTR [rdi]
+        0f a1                           pop    fs
+        0f a9                           pop    gs
+
+        66 9c                           pushfw
+        9c                              pushf
+
+        66 9d                           popfw
+        9d                              popf
+
+        88 c1                           mov    cl,al
+        66 88 c1                        mov    cl,al
+        66 89 c1                        mov    cx,ax
+        89 c1                           mov    ecx,eax
+        40 89 c1                        mov    ecx,eax
+        48 89 c1                        mov    rcx,rax
+        66 48 89 c1                     mov    rcx,rax
+        48 89 08                        mov    QWORD PTR [rax],rcx
+        67 48 89 08                     mov    QWORD PTR [eax],rcx
+        48 89 0c 08                     mov    QWORD PTR [rax+rcx*1],rcx
+        48 89 4c c8 20                  mov    QWORD PTR [rax+rcx*8+0x20],rcx
+        48 89 8c c8 80 7f aa 00         mov    QWORD PTR [rax+rcx*8+0xaa7f80],rcx
+        8a c1                           mov    al,cl
+        66 8a c1                        mov    al,cl
+        66 8b c1                        mov    ax,cx
+        8b c1                           mov    eax,ecx
+        40 8b c1                        mov    eax,ecx
+        48 8b c1                        mov    rax,rcx
+        66 48 8b c1                     mov    rax,rcx
+        48 8b 08                        mov    rcx,QWORD PTR [rax]
+        67 48 8b 08                     mov    rcx,QWORD PTR [eax]
+        48 8b 0c 08                     mov    rcx,QWORD PTR [rax+rcx*1]
+        48 8b 4c c8 20                  mov    rcx,QWORD PTR [rax+rcx*8+0x20]
+        48 8b 8c c8 80 7f aa 00         mov    rcx,QWORD PTR [rax+rcx*8+0xaa7f80]
+        b0 ff                           mov    al,0xff
+        41 b0 ff                        mov    r8b,0xff
+        66 b8 ef be                     mov    ax,0xbeef
+        b8 ef be ad de                  mov    eax,0xdeadbeef
+        49 b8 00 00 00 00 ef be ad de   movabs r8,0xdeadbeef00000000
+        67 c6 00 ef                     mov    BYTE PTR [eax],0xef
+        c6 00 ef                        mov    BYTE PTR [rax],0xef
+        67 66 c7 00 ef be               mov    WORD PTR [eax],0xbeef
+        66 c7 00 ef be                  mov    WORD PTR [rax],0xbeef
+        c7 00 ef be ad de               mov    DWORD PTR [rax],0xdeadbeef
+        67 c7 00 ef be ad de            mov    DWORD PTR [eax],0xdeadbeef
+        49 c7 00 ef be ad de            mov    QWORD PTR [r8],0xffffffffdeadbeef
+        67 49 c7 00 ef be ad de         mov    QWORD PTR [r8d],0xffffffffdeadbeef
+
+# TODO:        0f 20 d1                        mov    rcx,cr2
+# TODO:        0f 22 d1                        mov    cr2,rcx
+# TODO:        44 0f 22 c1                     mov    cr8,rcx
+# TODO:        44 0f 22 c1                     mov    cr8,rcx
+# TODO:        0f 21 d1                        mov    rcx,dr2
+# TODO:        0f 23 d1                        mov    dr2,rcx
+
+        fe c2                           inc    dl
+        66 ff c7                        inc    di
+        ff c7                           inc    edi
+        48 ff c7                        inc    rdi
+        fe 07                           inc    BYTE PTR [rdi]
+        66 ff 07                        inc    WORD PTR [rdi]
+        ff 07                           inc    DWORD PTR [rdi]
+        48 ff 07                        inc    QWORD PTR [rdi]
+
+        fe c9                           dec    cl
+        66 ff c9                        dec    cx
+        ff c9                           dec    ecx
+        48 ff c9                        dec    rcx
+        fe 0f                           dec    BYTE PTR [rdi]
+        66 ff 0f                        dec    WORD PTR [rdi]
+        ff 0f                           dec    DWORD PTR [rdi]
+        48 ff 0f                        dec    QWORD PTR [rdi]
+
+        f6 d9                           neg    cl
+        66 f7 d9                        neg    cx
+        f7 d9                           neg    ecx
+        48 f7 d9                        neg    rcx
+        f6 1f                           neg    BYTE PTR [rdi]
+        66 f7 1f                        neg    WORD PTR [rdi]
+        f7 1f                           neg    DWORD PTR [rdi]
+        48 f7 1f                        neg    QWORD PTR [rdi]
+
+        f6 d1                           not    cl
+        66 f7 d1                        not    cx
+        f7 d1                           not    ecx
+        48 f7 d1                        not    rcx
+        f6 17                           not    BYTE PTR [rdi]
+        66 f7 17                        not    WORD PTR [rdi]
+        f7 17                           not    DWORD PTR [rdi]
+        48 f7 17                        not    QWORD PTR [rdi]
+
+        10 c8                           adc    al,cl
+        10 08                           adc    BYTE PTR [rax],cl
+        66 11 c8                        adc    ax,cx
+        11 c8                           adc    eax,ecx
+        48 11 c8                        adc    rax,rcx
+        66 11 08                        adc    WORD PTR [rax],cx
+        11 08                           adc    DWORD PTR [rax],ecx
+        48 11 08                        adc    QWORD PTR [rax],rcx
+        10 c1                           adc    cl,al
+        12 08                           adc    cl,BYTE PTR [rax]
+        66 11 c1                        adc    cx,ax
+        11 c1                           adc    ecx,eax
+        48 11 c1                        adc    rcx,rax
+        66 13 08                        adc    cx,WORD PTR [rax]
+        13 08                           adc    ecx,DWORD PTR [rax]
+        48 13 08                        adc    rcx,QWORD PTR [rax]
+        14 ef                           adc    al,0xef
+        66 15 ef be                     adc    ax,0xbeef
+        15 ef be ad de                  adc    eax,0xdeadbeef
+        15 ef be ad de                  adc    eax,0xdeadbeef
+        48 15 ef be ad de               adc    rax,0xffffffffdeadbeef
+        14 ef                           adc    al,0xef
+        80 10 ef                        adc    BYTE PTR [rax],0xef
+        66 15 ef be                     adc    ax,0xbeef
+        15 ef be ad de                  adc    eax,0xdeadbeef
+        48 15 ef be ad de               adc    rax,0xffffffffdeadbeef
+        66 81 10 ef be                  adc    WORD PTR [rax],0xbeef
+        81 10 ef be ad de               adc    DWORD PTR [rax],0xdeadbeef
+        48 81 10 ef be ad de            adc    QWORD PTR [rax],0xffffffffdeadbeef
+        66 83 d0 7f                     adc    ax,0x7f
+        83 d0 7f                        adc    eax,0x7f
+        48 83 d0 7f                     adc    rax,0x7f
+        66 83 d0 ef                     adc    ax,0xffef
+        83 d0 ef                        adc    eax,0xffffffef
+        48 83 d0 ef                     adc    rax,0xffffffffffffffef
+
+        1c 01                           sbb    al,0x1
+        66 83 d8 01                     sbb    ax,0x1
+        83 d8 01                        sbb    eax,0x1
+        48 83 d8 01                     sbb    rax,0x1
+        80 d9 01                        sbb    cl,0x1
+        66 83 d9 01                     sbb    cx,0x1
+        83 d9 01                        sbb    ecx,0x1
+        48 83 d9 01                     sbb    rcx,0x1
+        80 1f 01                        sbb    BYTE PTR [rdi],0x1
+        66 83 1f 01                     sbb    WORD PTR [rdi],0x1
+        83 1f 01                        sbb    DWORD PTR [rdi],0x1
+        48 83 1f 01                     sbb    QWORD PTR [rdi],0x1
+        80 d9 7f                        sbb    cl,0x7f
+        66 81 d9 ff 7f                  sbb    cx,0x7fff
+        81 d9 ff ff ff 7f               sbb    ecx,0x7fffffff
+        48 81 d9 ff ff ff 7f            sbb    rcx,0x7fffffff
+        80 1f 7f                        sbb    BYTE PTR [rdi],0x7f
+        66 81 1f ff 7f                  sbb    WORD PTR [rdi],0x7fff
+        81 1f ff ff ff 7f               sbb    DWORD PTR [rdi],0x7fffffff
+        48 81 1f ff ff ff 7f            sbb    QWORD PTR [rdi],0x7fffffff
+        18 d1                           sbb    cl,dl
+        66 19 d1                        sbb    cx,dx
+        19 d1                           sbb    ecx,edx
+        48 19 d1                        sbb    rcx,rdx
+        18 17                           sbb    BYTE PTR [rdi],dl
+        66 19 17                        sbb    WORD PTR [rdi],dx
+        19 17                           sbb    DWORD PTR [rdi],edx
+        48 19 17                        sbb    QWORD PTR [rdi],rdx
+        1a 0f                           sbb    cl,BYTE PTR [rdi]
+        66 1b 0f                        sbb    cx,WORD PTR [rdi]
+        1b 0f                           sbb    ecx,DWORD PTR [rdi]
+        48 1b 0f                        sbb    rcx,QWORD PTR [rdi]
+
+        00 c8                           add    al,cl
+        00 08                           add    BYTE PTR [rax],cl
+        66 01 c8                        add    ax,cx
+        01 c8                           add    eax,ecx
+        48 01 c8                        add    rax,rcx
+        66 01 08                        add    WORD PTR [rax],cx
+        01 08                           add    DWORD PTR [rax],ecx
+        48 01 08                        add    QWORD PTR [rax],rcx
+        02 c8                           add    cl,al
+        02 08                           add    cl,BYTE PTR [rax]
+        66 03 c8                        add    cx,ax
+        03 c8                           add    ecx,eax
+        48 03 c8                        add    rcx,rax
+        66 03 08                        add    cx,WORD PTR [rax]
+        03 08                           add    ecx,DWORD PTR [rax]
+        48 03 08                        add    rcx,QWORD PTR [rax]
+        04 ef                           add    al,0xef
+        66 05 ef be                     add    ax,0xbeef
+        05 ef be ad de                  add    eax,0xdeadbeef
+        40 05 ef be ad de               add    eax,0xdeadbeef
+        48 05 ef be ad de               add    rax,0xffffffffdeadbeef
+        80 c0 ef                        add    al,0xef
+        80 00 ef                        add    BYTE PTR [rax],0xef
+        66 81 c0 ef be                  add    ax,0xbeef
+        81 c0 ef be ad de               add    eax,0xdeadbeef
+        48 81 c0 ef be ad de            add    rax,0xffffffffdeadbeef
+        66 81 00 ef be                  add    WORD PTR [rax],0xbeef
+        81 00 ef be ad de               add    DWORD PTR [rax],0xdeadbeef
+        48 81 00 ef be ad de            add    QWORD PTR [rax],0xffffffffdeadbeef
+        66 83 c0 7f                     add    ax,0x7f
+        83 c0 7f                        add    eax,0x7f
+        48 83 c0 7f                     add    rax,0x7f
+        66 83 c0 ef                     add    ax,0xffef
+        83 c0 ef                        add    eax,0xffffffef
+        48 83 c0 ef                     add    rax,0xffffffffffffffef
+
+        28 c8                           sub    al,cl
+        28 08                           sub    BYTE PTR [rax],cl
+        66 29 c8                        sub    ax,cx
+        29 c8                           sub    eax,ecx
+        48 29 c8                        sub    rax,rcx
+        66 29 08                        sub    WORD PTR [rax],cx
+        29 08                           sub    DWORD PTR [rax],ecx
+        48 29 08                        sub    QWORD PTR [rax],rcx
+        28 c1                           sub    cl,al
+        2a 08                           sub    cl,BYTE PTR [rax]
+        66 29 c1                        sub    cx,ax
+        29 c1                           sub    ecx,eax
+        48 29 c1                        sub    rcx,rax
+        66 2b 08                        sub    cx,WORD PTR [rax]
+        2b 08                           sub    ecx,DWORD PTR [rax]
+        48 2b 08                        sub    rcx,QWORD PTR [rax]
+        2c ef                           sub    al,0xef
+        66 2d ef be                     sub    ax,0xbeef
+        2d ef be ad de                  sub    eax,0xdeadbeef
+        2d ef be ad de                  sub    eax,0xdeadbeef
+        48 2d ef be ad de               sub    rax,0xffffffffdeadbeef
+        2c ef                           sub    al,0xef
+        80 28 ef                        sub    BYTE PTR [rax],0xef
+        66 2d ef be                     sub    ax,0xbeef
+        2d ef be ad de                  sub    eax,0xdeadbeef
+        48 2d ef be ad de               sub    rax,0xffffffffdeadbeef
+        66 81 28 ef be                  sub    WORD PTR [rax],0xbeef
+        81 28 ef be ad de               sub    DWORD PTR [rax],0xdeadbeef
+        48 81 28 ef be ad de            sub    QWORD PTR [rax],0xffffffffdeadbeef
+        66 83 e8 7f                     sub    ax,0x7f
+        83 e8 7f                        sub    eax,0x7f
+        48 83 e8 7f                     sub    rax,0x7f
+        66 83 e8 ef                     sub    ax,0xffef
+        83 e8 ef                        sub    eax,0xffffffef
+        48 83 e8 ef                     sub    rax,0xffffffffffffffef
+
+        20 0f                           and    BYTE PTR [rdi],cl
+        66 21 0f                        and    WORD PTR [rdi],cx
+        21 0f                           and    DWORD PTR [rdi],ecx
+        48 21 0f                        and    QWORD PTR [rdi],rcx
+        22 0f                           and    cl,BYTE PTR [rdi]
+        66 23 0f                        and    cx,WORD PTR [rdi]
+        23 0f                           and    ecx,DWORD PTR [rdi]
+        48 23 0f                        and    rcx,QWORD PTR [rdi]
+        24 13                           and    al,0x13
+        66 25 00 13                     and    ax,0x1300
+        25 00 00 00 13                  and    eax,0x13000000
+        48 25 00 00 00 13               and    rax,0x13000000
+        80 e1 13                        and    cl,0x13
+        66 83 e1 13                     and    cx,0x13
+        83 e1 13                        and    ecx,0x13
+        48 83 e1 13                     and    rcx,0x13
+
+        08 c8                           or     al,cl
+        08 08                           or     BYTE PTR [rax],cl
+        66 09 c8                        or     ax,cx
+        09 c8                           or     eax,ecx
+        48 09 c8                        or     rax,rcx
+        66 09 08                        or     WORD PTR [rax],cx
+        09 08                           or     DWORD PTR [rax],ecx
+        48 09 08                        or     QWORD PTR [rax],rcx
+        08 c1                           or     cl,al
+        0a 08                           or     cl,BYTE PTR [rax]
+        66 09 c1                        or     cx,ax
+        09 c1                           or     ecx,eax
+        48 09 c1                        or     rcx,rax
+        66 0b 08                        or     cx,WORD PTR [rax]
+        0b 08                           or     ecx,DWORD PTR [rax]
+        48 0b 08                        or     rcx,QWORD PTR [rax]
+        0c ef                           or     al,0xef
+        66 0d ef be                     or     ax,0xbeef
+        0d ef be ad de                  or     eax,0xdeadbeef
+        0d ef be ad de                  or     eax,0xdeadbeef
+        48 0d ef be ad de               or     rax,0xffffffffdeadbeef
+        0c ef                           or     al,0xef
+        80 08 ef                        or     BYTE PTR [rax],0xef
+        66 0d ef be                     or     ax,0xbeef
+        0d ef be ad de                  or     eax,0xdeadbeef
+        48 0d ef be ad de               or     rax,0xffffffffdeadbeef
+        66 81 08 ef be                  or     WORD PTR [rax],0xbeef
+        81 08 ef be ad de               or     DWORD PTR [rax],0xdeadbeef
+        48 81 08 ef be ad de            or     QWORD PTR [rax],0xffffffffdeadbeef
+        66 83 c8 7f                     or     ax,0x7f
+        83 c8 7f                        or     eax,0x7f
+        48 83 c8 7f                     or     rax,0x7f
+        66 83 c8 ef                     or     ax,0xffef
+        83 c8 ef                        or     eax,0xffffffef
+        48 83 c8 ef                     or     rax,0xffffffffffffffef
+
+        30 c8                           xor    al,cl
+        30 08                           xor    BYTE PTR [rax],cl
+        66 31 c8                        xor    ax,cx
+        31 c8                           xor    eax,ecx
+        48 31 c8                        xor    rax,rcx
+        66 31 08                        xor    WORD PTR [rax],cx
+        31 08                           xor    DWORD PTR [rax],ecx
+        48 31 08                        xor    QWORD PTR [rax],rcx
+        30 c1                           xor    cl,al
+        32 08                           xor    cl,BYTE PTR [rax]
+        66 31 c1                        xor    cx,ax
+        31 c1                           xor    ecx,eax
+        48 31 c1                        xor    rcx,rax
+        66 33 08                        xor    cx,WORD PTR [rax]
+        33 08                           xor    ecx,DWORD PTR [rax]
+        48 33 08                        xor    rcx,QWORD PTR [rax]
+        34 ef                           xor    al,0xef
+        66 35 ef be                     xor    ax,0xbeef
+        35 ef be ad de                  xor    eax,0xdeadbeef
+        35 ef be ad de                  xor    eax,0xdeadbeef
+        48 35 ef be ad de               xor    rax,0xffffffffdeadbeef
+        34 ef                           xor    al,0xef
+        80 30 ef                        xor    BYTE PTR [rax],0xef
+        66 35 ef be                     xor    ax,0xbeef
+        35 ef be ad de                  xor    eax,0xdeadbeef
+        48 35 ef be ad de               xor    rax,0xffffffffdeadbeef
+        66 81 30 ef be                  xor    WORD PTR [rax],0xbeef
+        81 30 ef be ad de               xor    DWORD PTR [rax],0xdeadbeef
+        48 81 30 ef be ad de            xor    QWORD PTR [rax],0xffffffffdeadbeef
+        66 83 f0 7f                     xor    ax,0x7f
+        83 f0 7f                        xor    eax,0x7f
+        48 83 f0 7f                     xor    rax,0x7f
+        66 83 f0 ef                     xor    ax,0xffef
+        83 f0 ef                        xor    eax,0xffffffef
+        48 83 f0 ef                     xor    rax,0xffffffffffffffef
+
+        3c 13                           cmp    al,0x13
+        66 3d 00 13                     cmp    ax,0x1300
+        3d 00 00 00 13                  cmp    eax,0x13000000
+        48 3d 00 00 00 13               cmp    rax,0x13000000
+        80 f9 13                        cmp    cl,0x13
+        66 81 f9 00 13                  cmp    cx,0x1300
+        81 f9 00 00 00 13               cmp    ecx,0x13000000
+        48 81 f9 00 00 00 13            cmp    rcx,0x13000000
+        80 3f 13                        cmp    BYTE PTR [rdi],0x13
+        66 81 3f 00 13                  cmp    WORD PTR [rdi],0x1300
+        81 3f 00 00 00 13               cmp    DWORD PTR [rdi],0x13000000
+        48 81 3f 00 00 00 13            cmp    QWORD PTR [rdi],0x13000000
+        66 83 f9 13                     cmp    cx,0x13
+        83 f9 13                        cmp    ecx,0x13
+        48 83 f9 13                     cmp    rcx,0x13
+        66 83 3f 13                     cmp    WORD PTR [rdi],0x13
+        83 3f 13                        cmp    DWORD PTR [rdi],0x13
+        48 83 3f 13                     cmp    QWORD PTR [rdi],0x13
+        38 d9                           cmp    cl,bl
+        66 39 d9                        cmp    cx,bx
+        39 d9                           cmp    ecx,ebx
+        48 39 d9                        cmp    rcx,rbx
+        38 1f                           cmp    BYTE PTR [rdi],bl
+        66 39 1f                        cmp    WORD PTR [rdi],bx
+        39 1f                           cmp    DWORD PTR [rdi],ebx
+        48 39 1f                        cmp    QWORD PTR [rdi],rbx
+        3a 0f                           cmp    cl,BYTE PTR [rdi]
+        66 3b 0f                        cmp    cx,WORD PTR [rdi]
+        3b 0f                           cmp    ecx,DWORD PTR [rdi]
+        48 3b 0f                        cmp    rcx,QWORD PTR [rdi]
+
+        a8 01                           test   al,0x1
+        66 a9 01 00                     test   ax,0x1
+        a9 01 00 00 00                  test   eax,0x1
+        48 a9 01 00 00 00               test   rax,0x1
+        f6 c1 01                        test   cl,0x1
+        66 f7 c1 01 00                  test   cx,0x1
+        f7 c1 01 00 00 00               test   ecx,0x1
+        48 f7 c1 01 00 00 00            test   rcx,0x1
+        f6 07 01                        test   BYTE PTR [rdi],0x1
+        66 f7 07 01 00                  test   WORD PTR [rdi],0x1
+        f7 07 01 00 00 00               test   DWORD PTR [rdi],0x1
+        48 f7 07 01 00 00 00            test   QWORD PTR [rdi],0x1
+        84 1f                           test   BYTE PTR [rdi],bl
+        66 85 1f                        test   WORD PTR [rdi],bx
+        85 1f                           test   DWORD PTR [rdi],ebx
+        48 85 1f                        test   QWORD PTR [rdi],rbx
+
+        f6 e1                           mul    cl
+        66 f7 e1                        mul    cx
+        f7 e1                           mul    ecx
+        48 f7 e1                        mul    rcx
+        f6 27                           mul    BYTE PTR [rdi]
+        66 f7 27                        mul    WORD PTR [rdi]
+        f7 27                           mul    DWORD PTR [rdi]
+        48 f7 27                        mul    QWORD PTR [rdi]
+
+        f6 e9                           imul   cl
+        66 f7 e9                        imul   cx
+        f7 e9                           imul   ecx
+        48 f7 e9                        imul   rcx
+        f6 2f                           imul   BYTE PTR [rdi]
+        66 f7 2f                        imul   WORD PTR [rdi]
+        f7 2f                           imul   DWORD PTR [rdi]
+        48 f7 2f                        imul   QWORD PTR [rdi]
+        66 0f af ca                     imul   cx,dx
+        0f af ca                        imul   ecx,edx
+        48 0f af ca                     imul   rcx,rdx
+        66 0f af 0f                     imul   cx,WORD PTR [rdi]
+        0f af 0f                        imul   ecx,DWORD PTR [rdi]
+        48 0f af 0f                     imul   rcx,QWORD PTR [rdi]
+        66 6b ca 13                     imul   cx,dx,0x13
+        6b ca 13                        imul   ecx,edx,0x13
+        48 6b ca 13                     imul   rcx,rdx,0x13
+        66 6b 0f 13                     imul   cx,WORD PTR [rdi],0x13
+        6b 0f 13                        imul   ecx,DWORD PTR [rdi],0x13
+        48 6b 0f 13                     imul   rcx,QWORD PTR [rdi],0x13
+        66 69 ca 00 13                  imul   cx,dx,0x1300
+        69 ca 00 00 00 13               imul   ecx,edx,0x13000000
+        48 69 ca 00 00 00 13            imul   rcx,rdx,0x13000000
+        66 69 0f 00 13                  imul   cx,WORD PTR [rdi],0x1300
+        69 0f 00 00 00 13               imul   ecx,DWORD PTR [rdi],0x13000000
+        48 69 0f 00 00 00 13            imul   rcx,QWORD PTR [rdi],0x13000000
+
+        f6 f1                           div    cl
+        66 f7 f1                        div    cx
+        f7 f1                           div    ecx
+        48 f7 f1                        div    rcx
+        f6 37                           div    BYTE PTR [rdi]
+        66 f7 37                        div    WORD PTR [rdi]
+        f7 37                           div    DWORD PTR [rdi]
+        48 f7 37                        div    QWORD PTR [rdi]
+
+        f6 f9                           idiv   cl
+        66 f7 f9                        idiv   cx
+        f7 f9                           idiv   ecx
+        48 f7 f9                        idiv   rcx
+        f6 3f                           idiv   BYTE PTR [rdi]
+        66 f7 3f                        idiv   WORD PTR [rdi]
+        f7 3f                           idiv   DWORD PTR [rdi]
+        48 f7 3f                        idiv   QWORD PTR [rdi]
+
+        d0 e2                           shl    dl,1
+        d0 27                           shl    BYTE PTR [rdi],1
+        d2 e2                           shl    dl,cl
+        d2 27                           shl    BYTE PTR [rdi],cl
+        c0 e2 02                        shl    dl,0x2
+        c0 27 02                        shl    BYTE PTR [rdi],0x2
+        66 d1 e2                        shl    dx,1
+        66 d1 27                        shl    WORD PTR [rdi],1
+        66 d3 e2                        shl    dx,cl
+        66 d3 27                        shl    WORD PTR [rdi],cl
+        66 c1 e2 02                     shl    dx,0x2
+        66 c1 27 02                     shl    WORD PTR [rdi],0x2
+        d1 e2                           shl    edx,1
+        d1 27                           shl    DWORD PTR [rdi],1
+        d3 e2                           shl    edx,cl
+        d3 27                           shl    DWORD PTR [rdi],cl
+        c1 e2 02                        shl    edx,0x2
+        c1 27 02                        shl    DWORD PTR [rdi],0x2
+        48 d1 e2                        shl    rdx,1
+        48 d1 27                        shl    QWORD PTR [rdi],1
+        48 d3 e2                        shl    rdx,cl
+        48 d3 27                        shl    QWORD PTR [rdi],cl
+        48 c1 e2 02                     shl    rdx,0x2
+        48 c1 27 02                     shl    QWORD PTR [rdi],0x2
+
+        d0 ea                           shr    dl,1
+        d0 2f                           shr    BYTE PTR [rdi],1
+        d2 ea                           shr    dl,cl
+        d2 2f                           shr    BYTE PTR [rdi],cl
+        c0 ea 02                        shr    dl,0x2
+        c0 2f 02                        shr    BYTE PTR [rdi],0x2
+        66 d1 ea                        shr    dx,1
+        66 d1 2f                        shr    WORD PTR [rdi],1
+        66 d3 ea                        shr    dx,cl
+        66 d3 2f                        shr    WORD PTR [rdi],cl
+        66 c1 ea 02                     shr    dx,0x2
+        66 c1 2f 02                     shr    WORD PTR [rdi],0x2
+        d1 ea                           shr    edx,1
+        d1 2f                           shr    DWORD PTR [rdi],1
+        d3 ea                           shr    edx,cl
+        d3 2f                           shr    DWORD PTR [rdi],cl
+        c1 ea 02                        shr    edx,0x2
+        c1 2f 02                        shr    DWORD PTR [rdi],0x2
+        48 d1 ea                        shr    rdx,1
+        48 d1 2f                        shr    QWORD PTR [rdi],1
+        48 d3 ea                        shr    rdx,cl
+        48 d3 2f                        shr    QWORD PTR [rdi],cl
+        48 c1 ea 02                     shr    rdx,0x2
+        48 c1 2f 02                     shr    QWORD PTR [rdi],0x2
+
+        d0 fa                           sar    dl,1
+        d0 3f                           sar    BYTE PTR [rdi],1
+        d2 fa                           sar    dl,cl
+        d2 3f                           sar    BYTE PTR [rdi],cl
+        c0 fa 02                        sar    dl,0x2
+        c0 3f 02                        sar    BYTE PTR [rdi],0x2
+        66 d1 fa                        sar    dx,1
+        66 d1 3f                        sar    WORD PTR [rdi],1
+        66 d3 fa                        sar    dx,cl
+        66 d3 3f                        sar    WORD PTR [rdi],cl
+        66 c1 fa 02                     sar    dx,0x2
+        66 c1 3f 02                     sar    WORD PTR [rdi],0x2
+        d1 fa                           sar    edx,1
+        d1 3f                           sar    DWORD PTR [rdi],1
+        d3 fa                           sar    edx,cl
+        d3 3f                           sar    DWORD PTR [rdi],cl
+        c1 fa 02                        sar    edx,0x2
+        c1 3f 02                        sar    DWORD PTR [rdi],0x2
+        48 d1 fa                        sar    rdx,1
+        48 d1 3f                        sar    QWORD PTR [rdi],1
+        48 d3 fa                        sar    rdx,cl
+        48 d3 3f                        sar    QWORD PTR [rdi],cl
+        48 c1 fa 02                     sar    rdx,0x2
+        48 c1 3f 02                     sar    QWORD PTR [rdi],0x2
+
+        d0 d2                           rcl    dl,1
+        d0 17                           rcl    BYTE PTR [rdi],1
+        d2 d2                           rcl    dl,cl
+        d2 17                           rcl    BYTE PTR [rdi],cl
+        c0 d2 02                        rcl    dl,0x2
+        c0 17 02                        rcl    BYTE PTR [rdi],0x2
+        66 d1 d2                        rcl    dx,1
+        66 d1 17                        rcl    WORD PTR [rdi],1
+        66 d3 d2                        rcl    dx,cl
+        66 d3 17                        rcl    WORD PTR [rdi],cl
+        66 c1 d2 02                     rcl    dx,0x2
+        66 c1 17 02                     rcl    WORD PTR [rdi],0x2
+        d1 d2                           rcl    edx,1
+        d1 17                           rcl    DWORD PTR [rdi],1
+        d3 d2                           rcl    edx,cl
+        d3 17                           rcl    DWORD PTR [rdi],cl
+        c1 d2 02                        rcl    edx,0x2
+        c1 17 02                        rcl    DWORD PTR [rdi],0x2
+        48 d1 d2                        rcl    rdx,1
+        48 d1 17                        rcl    QWORD PTR [rdi],1
+        48 d3 d2                        rcl    rdx,cl
+        48 d3 17                        rcl    QWORD PTR [rdi],cl
+        48 c1 d2 02                     rcl    rdx,0x2
+        48 c1 17 02                     rcl    QWORD PTR [rdi],0x2
+
+        d0 da                           rcr    dl,1
+        d0 1f                           rcr    BYTE PTR [rdi],1
+        d2 da                           rcr    dl,cl
+        d2 1f                           rcr    BYTE PTR [rdi],cl
+        c0 da 02                        rcr    dl,0x2
+        c0 1f 02                        rcr    BYTE PTR [rdi],0x2
+        66 d1 da                        rcr    dx,1
+        66 d1 1f                        rcr    WORD PTR [rdi],1
+        66 d3 da                        rcr    dx,cl
+        66 d3 1f                        rcr    WORD PTR [rdi],cl
+        66 c1 da 02                     rcr    dx,0x2
+        66 c1 1f 02                     rcr    WORD PTR [rdi],0x2
+        d1 da                           rcr    edx,1
+        d1 1f                           rcr    DWORD PTR [rdi],1
+        d3 da                           rcr    edx,cl
+        d3 1f                           rcr    DWORD PTR [rdi],cl
+        c1 da 02                        rcr    edx,0x2
+        c1 1f 02                        rcr    DWORD PTR [rdi],0x2
+        48 d1 da                        rcr    rdx,1
+        48 d1 1f                        rcr    QWORD PTR [rdi],1
+        48 d3 da                        rcr    rdx,cl
+        48 d3 1f                        rcr    QWORD PTR [rdi],cl
+        48 c1 da 02                     rcr    rdx,0x2
+        48 c1 1f 02                     rcr    QWORD PTR [rdi],0x2
+
+        d0 c2                           rol    dl,1
+        d0 07                           rol    BYTE PTR [rdi],1
+        d2 c2                           rol    dl,cl
+        d2 07                           rol    BYTE PTR [rdi],cl
+        c0 c2 02                        rol    dl,0x2
+        c0 07 02                        rol    BYTE PTR [rdi],0x2
+        66 d1 c2                        rol    dx,1
+        66 d1 07                        rol    WORD PTR [rdi],1
+        66 d3 c2                        rol    dx,cl
+        66 d3 07                        rol    WORD PTR [rdi],cl
+        66 c1 c2 02                     rol    dx,0x2
+        66 c1 07 02                     rol    WORD PTR [rdi],0x2
+        d1 c2                           rol    edx,1
+        d1 07                           rol    DWORD PTR [rdi],1
+        d3 c2                           rol    edx,cl
+        d3 07                           rol    DWORD PTR [rdi],cl
+        c1 c2 02                        rol    edx,0x2
+        c1 07 02                        rol    DWORD PTR [rdi],0x2
+        48 d1 c2                        rol    rdx,1
+        48 d1 07                        rol    QWORD PTR [rdi],1
+        48 d3 c2                        rol    rdx,cl
+        48 d3 07                        rol    QWORD PTR [rdi],cl
+        48 c1 c2 02                     rol    rdx,0x2
+        48 c1 07 02                     rol    QWORD PTR [rdi],0x2
+
+        d0 ca                           ror    dl,1
+        d0 0f                           ror    BYTE PTR [rdi],1
+        d2 ca                           ror    dl,cl
+        d2 0f                           ror    BYTE PTR [rdi],cl
+        c0 ca 02                        ror    dl,0x2
+        c0 0f 02                        ror    BYTE PTR [rdi],0x2
+        66 d1 ca                        ror    dx,1
+        66 d1 0f                        ror    WORD PTR [rdi],1
+        66 d3 ca                        ror    dx,cl
+        66 d3 0f                        ror    WORD PTR [rdi],cl
+        66 c1 ca 02                     ror    dx,0x2
+        66 c1 0f 02                     ror    WORD PTR [rdi],0x2
+        d1 ca                           ror    edx,1
+        d1 0f                           ror    DWORD PTR [rdi],1
+        d3 ca                           ror    edx,cl
+        d3 0f                           ror    DWORD PTR [rdi],cl
+        c1 ca 02                        ror    edx,0x2
+        c1 0f 02                        ror    DWORD PTR [rdi],0x2
+        48 d1 ca                        ror    rdx,1
+        48 d1 0f                        ror    QWORD PTR [rdi],1
+        48 d3 ca                        ror    rdx,cl
+        48 d3 0f                        ror    QWORD PTR [rdi],cl
+        48 c1 ca 02                     ror    rdx,0x2
+        48 c1 0f 02                     ror    QWORD PTR [rdi],0x2
+
+        49 8d 04 f7                     lea    rax,[r15+rsi*8]
+        48 8d bd 30 fb ff ff            lea    rdi,[rbp-0x4d0]
+        48 8d 05 8a fe ff ff            lea    rax,[rip+0xfffffffffffffe8a]
+
+        66 91                           xchg   cx,ax
+        91                              xchg   ecx,eax
+        48 91                           xchg   rcx,rax
+        86 d1                           xchg   cl,dl
+        66 87 d1                        xchg   cx,dx
+        87 d1                           xchg   ecx,edx
+        48 87 d1                        xchg   rcx,rdx
+        86 17                           xchg   BYTE PTR [rdi],dl
+        66 87 17                        xchg   WORD PTR [rdi],dx
+        87 17                           xchg   DWORD PTR [rdi],edx
+        48 87 17                        xchg   QWORD PTR [rdi],rdx
+
+        0f b0 d9                        cmpxchg cl,bl
+        66 0f b1 d9                     cmpxchg cx,bx
+        0f b1 d9                        cmpxchg ecx,ebx
+        48 0f b1 d9                     cmpxchg rcx,rbx
+        0f b0 1f                        cmpxchg BYTE PTR [rdi],bl
+        66 0f b1 1f                     cmpxchg WORD PTR [rdi],bx
+        0f b1 1f                        cmpxchg DWORD PTR [rdi],ebx
+        48 0f b1 1f                     cmpxchg QWORD PTR [rdi],rbx
+
+        0f c7 0f                        cmpxchg8b QWORD PTR [rdi]
+        48 0f c7 0f                     cmpxchg16b OWORD PTR [rdi]
+
+        a4                              movs   BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
+        66 a5                           movs   WORD PTR es:[rdi],WORD PTR ds:[rsi]
+        a5                              movs   DWORD PTR es:[rdi],DWORD PTR ds:[rsi]
+        48 a5                           movs   QWORD PTR es:[rdi],QWORD PTR ds:[rsi]
+
+        a6                              cmps   BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
+        66 a7                           cmps   WORD PTR ds:[rsi],WORD PTR es:[rdi]
+        a7                              cmps   DWORD PTR ds:[rsi],DWORD PTR es:[rdi]
+        48 a7                           cmps   QWORD PTR ds:[rsi],QWORD PTR es:[rdi]
+
+        aa                              stos   BYTE PTR es:[rdi],al
+        66 ab                           stos   WORD PTR es:[rdi],ax
+        ab                              stos   DWORD PTR es:[rdi],eax
+        48 ab                           stos   QWORD PTR es:[rdi],rax
+
+        ac                              lods   al,BYTE PTR ds:[rsi]
+        66 ad                           lods   ax,WORD PTR ds:[rsi]
+        ad                              lods   eax,DWORD PTR ds:[rsi]
+        48 ad                           lods   rax,QWORD PTR ds:[rsi]
+
+        ae                              scas   al,BYTE PTR es:[rdi]
+        66 af                           scas   ax,WORD PTR es:[rdi]
+        af                              scas   eax,DWORD PTR es:[rdi]
+        48 af                           scas   rax,QWORD PTR es:[rdi]
+
+        e2 00                           loop   2
+        e1 00                           loope  2
+        e0 00                           loopne 2
+
+        f3 a4                           "rep movs" BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
+        f2 a4                           "repnz movs" BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
+        f3 a6                           "repz cmps" BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
+        f2 a6                           "repnz cmps" BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
+        f3 aa                           "rep stos" BYTE PTR es:[rdi],al
+        f2 aa                           "repnz stos" BYTE PTR es:[rdi],al
+        f3 ac                           "rep lods" al,BYTE PTR ds:[rsi]
+        f2 ac                           "repnz lods" al,BYTE PTR ds:[rsi]
+        f3 ae                           "repz scas" al,BYTE PTR es:[rdi]
+        f2 ae                           "repnz scas" al,BYTE PTR es:[rdi]
+
+        70 00                           jo     2
+        71 00                           jno    2
+        72 00                           jb     2
+        73 00                           jae    2
+        74 00                           je     2
+        75 00                           jne    2
+        76 00                           jbe    2
+        77 00                           ja     2
+        78 00                           js     2
+        79 00                           jns    2
+        7a 00                           jp     2
+        7b 00                           jnp    2
+        7c 00                           jl     2
+        7d 00                           jge    2
+        7e 00                           jle    2
+        7f 00                           jg     2
+
+        0f 90 c1                        seto   cl
+        0f 91 c1                        setno  cl
+        0f 92 c1                        setb   cl
+        0f 93 c1                        setae  cl
+        0f 94 c1                        sete   cl
+        0f 95 c1                        setne  cl
+        0f 96 c1                        setbe  cl
+        0f 97 c1                        seta   cl
+        0f 98 c1                        sets   cl
+        0f 99 c1                        setns  cl
+        0f 9a c1                        setp   cl
+        0f 9b c1                        setnp  cl
+        0f 9c c1                        setl   cl
+        0f 9d c1                        setge  cl
+        0f 9e c1                        setle  cl
+        0f 9f c1                        setg   cl
+
+        0f 90 07                        seto   BYTE PTR [rdi]
+        0f 91 07                        setno  BYTE PTR [rdi]
+        0f 92 07                        setb   BYTE PTR [rdi]
+        0f 93 07                        setae  BYTE PTR [rdi]
+        0f 94 07                        sete   BYTE PTR [rdi]
+        0f 95 07                        setne  BYTE PTR [rdi]
+        0f 96 07                        setbe  BYTE PTR [rdi]
+        0f 97 07                        seta   BYTE PTR [rdi]
+        0f 98 07                        sets   BYTE PTR [rdi]
+        0f 99 07                        setns  BYTE PTR [rdi]
+        0f 9a 07                        setp   BYTE PTR [rdi]
+        0f 9b 07                        setnp  BYTE PTR [rdi]
+        0f 9c 07                        setl   BYTE PTR [rdi]
+        0f 9d 07                        setge  BYTE PTR [rdi]
+        0f 9e 07                        setle  BYTE PTR [rdi]
+        0f 9f 07                        setg   BYTE PTR [rdi]
+
+        c8 40 00 00                     enter  0x40,0x0
+        c9                              leave
+
+        66 0f 03 ca                     lsl    cx,dx
+        0f 03 ca                        lsl    ecx,edx
+        48 0f 03 ca                     lsl    rcx,edx
+        66 0f 03 0f                     lsl    cx,WORD PTR [rdi]
+        0f 03 0f                        lsl    ecx,WORD PTR [rdi]
+        48 0f 03 0f                     lsl    rcx,WORD PTR [rdi]
+
+        0f 00 d9                        ltr    ecx
+        0f 00 1f                        ltr    WORD PTR [rdi]
+
+        66 98                           cbw
+        98                              cwde
+        48 98                           cdqe
+        66 99                           cwd
+        99                              cdq
+        48 99                           cqo
+
+        0f 06                           clts
+
+        f4                              hlt
+        f5                              cmc
+
+        cc                              int3
+        cd 10                           int    0x10
+        f1                              int1
+
+        f3 90                           pause
+
+        0f 01 17                        lgdt   [rdi]
+        0f 01 1f                        lidt   [rdi]
+        0f 00 d1                        lldt   ecx
+        0f 00 17                        lldt   WORD PTR [rdi]
+        0f 01 f1                        lmsw   cx
+        0f 01 37                        lmsw   WORD PTR [rdi]
+
+        9f                              lahf
+
+        f8                              clc
+        f9                              stc
+        fa                              cli
+        fb                              sti
+        fc                              cld
+        fd                              std
+
+        e4 13                           in     al,0x13
+        66 e5 13                        in     ax,0x13
+        e5 13                           in     eax,0x13
+        ec                              in     al,dx
+        66 ed                           in     ax,dx
+        ed                              in     eax,dx
+
+        e6 10                           out    0x10,al
+        66 e7 10                        out    0x10,ax
+        e7 10                           out    0x10,eax
+        ee                              out    dx,al
+        66 ef                           out    dx,ax
+        ef                              out    dx,eax
+
+        6c                              ins    BYTE PTR es:[rdi],dx
+        66 6d                           ins    WORD PTR es:[rdi],dx
+        6d                              ins    DWORD PTR es:[rdi],dx
+        f3 6c                           "rep ins" BYTE PTR es:[rdi],dx
+        66 f3 6d                        "rep ins" WORD PTR es:[rdi],dx
+        f3 6d                           "rep ins" DWORD PTR es:[rdi],dx
+        f2 6c                           "repnz ins" BYTE PTR es:[rdi],dx
+        66 f2 6d                        "repnz ins" WORD PTR es:[rdi],dx
+        f2 6d                           "repnz ins" DWORD PTR es:[rdi],dx
+
+        6e                              outs   dx,BYTE PTR ds:[rsi]
+        66 6f                           outs   dx,WORD PTR ds:[rsi]
+        6f                              outs   dx,DWORD PTR ds:[rsi]
+        f3 6e                           "rep outs" dx,BYTE PTR ds:[rsi]
+        66 f3 6f                        "rep outs" dx,WORD PTR ds:[rsi]
+        f3 6f                           "rep outs" dx,DWORD PTR ds:[rsi]
+        f2 6e                           "repnz outs" dx,BYTE PTR ds:[rsi]
+        66 f2 6f                        "repnz outs" dx,WORD PTR ds:[rsi]
+        f2 6f                           "repnz outs" dx,DWORD PTR ds:[rsi]
+
+        66 0f b2 0f                     lss    cx,DWORD PTR [rdi]
+        0f b2 0f                        lss    ecx,FWORD PTR [rdi]
+        48 0f b2 0f                     lss    rcx,FWORD PTR [rdi]
+        66 0f b2 0f                     lss    cx,DWORD PTR [rdi]
+        0f b2 0f                        lss    ecx,FWORD PTR [rdi]
+        48 0f b4 0f                     lfs    rcx,FWORD PTR [rdi]
+        66 0f b5 0f                     lgs    cx,DWORD PTR [rdi]
+        0f b5 0f                        lgs    ecx,FWORD PTR [rdi]
+        48 0f b5 0f                     lgs    rcx,FWORD PTR [rdi]
+
+        66 0f 02 ca                     lar    cx,dx
+        66 0f 02 0f                     lar    cx,WORD PTR [rdi]
+        0f 02 ca                        lar    ecx,edx
+        0f 02 0f                        lar    ecx,WORD PTR [rdi]
+
+        0f c9                           bswap           ecx
+        48 0f c9                        bswap           rcx
+
+        66 f3 0f b8 c7                  popcnt ax,di
+        f3 0f b8 c7                     popcnt eax,edi
+        f3 48 0f b8 c7                  popcnt rax,rdi
+        66 f3 0f b8 07                  popcnt ax,WORD PTR [rdi]
+        f3 0f b8 07                     popcnt eax,DWORD PTR [rdi]
+        f3 48 0f b8 07                  popcnt rax,QWORD PTR [rdi]
+
+        48 63 04 82                     movsxd          rax,DWORD PTR [rdx+rax*4]
+        66 0f b6 ca                     movzx  cx,dl
+        0f b6 ca                        movzx  ecx,dl
+        48 0f b6 ca                     movzx  rcx,dl
+        0f b7 ca                        movzx  ecx,dx
+        48 0f b7 ca                     movzx  rcx,dx
+        66 0f b6 0f                     movzx  cx,BYTE PTR [rdi]
+        0f b6 0f                        movzx  ecx,BYTE PTR [rdi]
+        48 0f b6 0f                     movzx  rcx,BYTE PTR [rdi]
+        0f b7 0f                        movzx  ecx,WORD PTR [rdi]
+        48 0f b7 0f                     movzx  rcx,WORD PTR [rdi]
+        66 0f b6 0c 25 00 00 00 00      movzx  cx,BYTE PTR ds:0x0
+        0f b6 0c 25 00 00 00 00         movzx  ecx,BYTE PTR ds:0x0
+        48 0f b6 0c 25 00 00 00 00      movzx  rcx,BYTE PTR ds:0x0
+        0f b7 0c 25 00 00 00 00         movzx  ecx,WORD PTR ds:0x0
+        48 0f b7 0c 25 00 00 00 00      movzx  rcx,WORD PTR ds:0x0
+        66 0f be ca                     movsx  cx,dl
+        0f be ca                        movsx  ecx,dl
+        48 0f be ca                     movsx  rcx,dl
+        0f bf ca                        movsx  ecx,dx
+        48 0f bf ca                     movsx  rcx,dx
+        66 0f be 0f                     movsx  cx,BYTE PTR [rdi]
+        0f be 0f                        movsx  ecx,BYTE PTR [rdi]
+        48 0f be 0f                     movsx  rcx,BYTE PTR [rdi]
+        0f bf 0f                        movsx  ecx,WORD PTR [rdi]
+        48 0f bf 0f                     movsx  rcx,WORD PTR [rdi]
+        66 0f be 0c 25 00 00 00 00      movsx  cx,BYTE PTR ds:0x0
+        0f be 0c 25 00 00 00 00         movsx  ecx,BYTE PTR ds:0x0
+        48 0f be 0c 25 00 00 00 00      movsx  rcx,BYTE PTR ds:0x0
+        0f bf 0c 25 00 00 00 00         movsx  ecx,WORD PTR ds:0x0
+        48 0f bf 0c 25 00 00 00 00      movsx  rcx,WORD PTR ds:0x0
+
+        66 0f bc cf                     bsf    cx,di
+        0f bc cf                        bsf    ecx,edi
+        48 0f bc cf                     bsf    rcx,rdi
+        66 0f bc 0f                     bsf    cx,WORD PTR [rdi]
+        0f bc 0f                        bsf    ecx,DWORD PTR [rdi]
+        48 0f bc 0f                     bsf    rcx,QWORD PTR [rdi]
+
+        66 0f bd cf                     bsr    cx,di
+        0f bd cf                        bsr    ecx,edi
+        48 0f bd cf                     bsr    rcx,rdi
+        66 0f bd 0f                     bsr    cx,WORD PTR [rdi]
+        0f bd 0f                        bsr    ecx,DWORD PTR [rdi]
+        48 0f bd 0f                     bsr    rcx,QWORD PTR [rdi]
+
+        66 0f a3 cf                     bt     di,cx
+        0f a3 cf                        bt     edi,ecx
+        48 0f a3 cf                     bt     rdi,rcx
+        66 0f a3 0f                     bt     WORD PTR [rdi],cx
+        0f a3 0f                        bt     DWORD PTR [rdi],ecx
+        48 0f a3 0f                     bt     QWORD PTR [rdi],rcx
+        66 0f ba e7 0d                  bt     di,0xd
+        0f ba e7 0d                     bt     edi,0xd
+        48 0f ba e7 0d                  bt     rdi,0xd
+        66 0f ba 27 0d                  bt     WORD PTR [rdi],0xd
+        0f ba 27 0d                     bt     DWORD PTR [rdi],0xd
+        48 0f ba 27 0d                  bt     QWORD PTR [rdi],0xd
+
+        66 0f bb cf                     btc    di,cx
+        0f bb cf                        btc    edi,ecx
+        48 0f bb cf                     btc    rdi,rcx
+        66 0f bb 0f                     btc    WORD PTR [rdi],cx
+        0f bb 0f                        btc    DWORD PTR [rdi],ecx
+        48 0f bb 0f                     btc    QWORD PTR [rdi],rcx
+        66 0f ba ff 0d                  btc    di,0xd
+        0f ba ff 0d                     btc    edi,0xd
+        48 0f ba ff 0d                  btc    rdi,0xd
+        66 0f ba 3f 0d                  btc    WORD PTR [rdi],0xd
+        0f ba 3f 0d                     btc    DWORD PTR [rdi],0xd
+        48 0f ba 3f 0d                  btc    QWORD PTR [rdi],0xd
+
+        66 0f b3 cf                     btr    di,cx
+        0f b3 cf                        btr    edi,ecx
+        48 0f b3 cf                     btr    rdi,rcx
+        66 0f b3 0f                     btr    WORD PTR [rdi],cx
+        0f b3 0f                        btr    DWORD PTR [rdi],ecx
+        48 0f b3 0f                     btr    QWORD PTR [rdi],rcx
+        66 0f ba f7 0d                  btr    di,0xd
+        0f ba f7 0d                     btr    edi,0xd
+        48 0f ba f7 0d                  btr    rdi,0xd
+        66 0f ba 37 0d                  btr    WORD PTR [rdi],0xd
+        0f ba 37 0d                     btr    DWORD PTR [rdi],0xd
+        48 0f ba 37 0d                  btr    QWORD PTR [rdi],0xd
+
+        66 0f ab cf                     bts    di,cx
+        0f ab cf                        bts    edi,ecx
+        48 0f ab cf                     bts    rdi,rcx
+        66 0f ab 0f                     bts    WORD PTR [rdi],cx
+        0f ab 0f                        bts    DWORD PTR [rdi],ecx
+        48 0f ab 0f                     bts    QWORD PTR [rdi],rcx
+        66 0f ba ef 0d                  bts    di,0xd
+        0f ba ef 0d                     bts    edi,0xd
+        48 0f ba ef 0d                  bts    rdi,0xd
+        66 0f ba 2f 0d                  bts    WORD PTR [rdi],0xd
+        0f ba 2f 0d                     bts    DWORD PTR [rdi],0xd
+        48 0f ba 2f 0d                  bts    QWORD PTR [rdi],0xd
+
+        0f ae 3f                        clflush BYTE PTR [rdi]
+        66 0f ae 3f                     clflushopt BYTE PTR [rdi]
+
+        0f 01 c8                        monitor
+        0f 01 c9                        mwait
+        0f 01 3f                        invlpg BYTE PTR [rdi]
+        0f 08                           invd
+        0f a2                           cpuid
+
+        66 0f 38 82 0f                  invpcid rcx,[rdi]
+
+        f2 0f 38 f0 ca                  crc32  ecx,dl
+        66 f2 0f 38 f1 ca               crc32  ecx,dx
+        f2 0f 38 f1 ca                  crc32  ecx,edx
+        f2 48 0f 38 f1 ca               crc32  rcx,rdx
+        f2 0f 38 f0 0f                  crc32  ecx,BYTE PTR [rdi]
+        66 f2 0f 38 f1 0f               crc32  ecx,WORD PTR [rdi]
+        f2 0f 38 f1 0f                  crc32  ecx,DWORD PTR [rdi]
+        f2 48 0f 38 f1 0f               crc32  rcx,QWORD PTR [rdi]
+
+        0f 31                           rdtsc
+        0f 01 f9                        rdtscp
+        0f 32                           rdmsr
+        0f aa                           rsm
+
+        66 0f 01 e1                     smsw   cx
+        0f 01 e1                        smsw   ecx
+        48 0f 01 e1                     smsw   rcx
+        0f 01 27                        smsw   WORD PTR [rdi]
+
+        0f 01 07                        sgdt   [rdi]
+        0f 01 0f                        sidt   [rdi]
+        0f 00 07                        sldt   WORD PTR [rdi]
+
+        66 0f a4 d3 0d                  shld   bx,dx,0xd
+        66 0f a5 d3                     shld   bx,dx,cl
+        66 0f a4 17 0d                  shld   WORD PTR [rdi],dx,0xd
+        66 0f a5 17                     shld   WORD PTR [rdi],dx,cl
+        0f a4 d3 0d                     shld   ebx,edx,0xd
+        0f a5 d3                        shld   ebx,edx,cl
+        0f a4 17 0d                     shld   DWORD PTR [rdi],edx,0xd
+        0f a5 17                        shld   DWORD PTR [rdi],edx,cl
+        48 0f a4 d3 0d                  shld   rbx,rdx,0xd
+        48 0f a5 d3                     shld   rbx,rdx,cl
+        48 0f a4 17 0d                  shld   QWORD PTR [rdi],rdx,0xd
+        48 0f a5 17                     shld   QWORD PTR [rdi],rdx,cl
+
+        66 0f ac d3 0d                  shrd   bx,dx,0xd
+        66 0f ad d3                     shrd   bx,dx,cl
+        66 0f ac 17 0d                  shrd   WORD PTR [rdi],dx,0xd
+        66 0f ad 17                     shrd   WORD PTR [rdi],dx,cl
+        0f ac d3 0d                     shrd   ebx,edx,0xd
+        0f ad d3                        shrd   ebx,edx,cl
+        0f ac 17 0d                     shrd   DWORD PTR [rdi],edx,0xd
+        0f ad 17                        shrd   DWORD PTR [rdi],edx,cl
+        48 0f ac d3 0d                  shrd   rbx,rdx,0xd
+        48 0f ad d3                     shrd   rbx,rdx,cl
+        48 0f ac 17 0d                  shrd   QWORD PTR [rdi],rdx,0xd
+        48 0f ad 17                     shrd   QWORD PTR [rdi],rdx,cl
+
+        66 0f 00 c9                     str    cx
+        0f 00 c9                        str    ecx
+        0f 00 c9                        str    ecx
+        0f 00 0f                        str    WORD PTR [rdi]
+
+        0f 01 f8                        swapgs
+        0f 05                           syscall
+        0f 34                           sysenter
+        0f 35                           sysexitd
+        48 0f 35                        sysexitq
+        0f 07                           sysretd
+        48 0f 07                        sysretq
+
+        0f ff cb                        ud0    ecx,ebx
+        0f ff 0f                        ud0    ecx,DWORD PTR [rdi]
+        0f b9 cb                        ud1    ecx,ebx
+        0f b9 0f                        ud1    ecx,DWORD PTR [rdi]
+        0f 0b                           ud2
+
+        0f 09                           wbinvd
+        0f 30                           wrmsr
+
+        0f c0 d1                        xadd   cl,dl
+        66 0f c1 d1                     xadd   cx,dx
+        0f c1 d1                        xadd   ecx,edx
+        48 0f c1 d1                     xadd   rcx,rdx
+        0f c0 17                        xadd   BYTE PTR [rdi],dl
+        66 0f c1 17                     xadd   WORD PTR [rdi],dx
+        0f c1 17                        xadd   DWORD PTR [rdi],edx
+        48 0f c1 17                     xadd   QWORD PTR [rdi],rdx
+
+        0f 01 d0                        xgetbv
+        0f 01 d1                        xsetbv
+
+        d7                              xlat   BYTE PTR ds:[rbx]
+        48 d7                           "rex.W xlat" BYTE PTR ds:[rbx]

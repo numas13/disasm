@@ -1,0 +1,1190 @@
+# vim: set expandtab ts=2 sts=2 sw=2
+
+##############################################################################
+# Fields
+##############################################################################
+
+%gpr_base     6:1 5:1 32:3          !function=ex_base
+%gpr_reg      7:1 35:3              !function=ex_reg
+%mode         38:2
+
+%k_reg        35:3
+
+%vl           21:2                  !function=ex_vl
+
+%mm_base      6:1 5:1 32:3          !function=ex_base
+%mm_reg       4:1 7:1 35:3          !function=ex_base
+%mm_v         19:1 11:4             !function=ex_mm_v
+
+##############################################################################
+# Argument sets
+##############################################################################
+
+&evex_rm_rv       rw mode r b msz rsz
+&evex_mr_rv       rw mode r b msz bsz
+&evex_rm_vr       rw mode r b msz bsz
+&evex_rm_vv       rw mode r b msz bcst
+&evex_rm_vk       rw mode r b msz
+
+&evex_rvm_vvv     rw mode r v b msz bcst
+&evex_rvm_vvr     rw mode r v b msz bsz
+
+##############################################################################
+# Formats
+##############################################################################
+
+# EVEX
+#
+# |39        32|31    24|23            16|15          8|7            0|
+# |------------|--------|----------------|-------------|--------------|
+# | mm rrr bbb | opcode | z L'L b V' aaa | W vvvv 1 pp | RXB R' 0 mmm |
+# |------------|--------|----------------|-------------|--------------|
+
+@rm_vv            ........ ........ ........ ........ ........ \
+                  &evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@mr_vv            ........ ........ ........ ........ ........ \
+                  evex_mr_vv=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@vm_vv            ........ ........ ........ ........ ........ \
+                  &evex_rm_vv %mode r=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+@rm_kv            ........ ........ ........ ........ ........ \
+                  evex_rm_kv=&evex_rm_vv %mode r=%k_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_vk            ........ ........ ........ ........ ........ \
+                  evex_rm_vk=&evex_rm_vv %mode r=%mm_reg b=%gpr_base msz=1 rw=2 bcst=0
+
+@rvm_vvv          ........ ........ ........ ........ ........ \
+                  &evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+@rvm_xxx          ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rvm_xxx=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rvm_vvx_128          ........ ........ ........ ........ ........ \
+                  evex_rvm_vvx_128=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_vv_er         ........ ........ ........ ........ ........ \
+                  evex_rm_vv_er=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_vv_sae        ........ ........ ........ ........ ........ \
+                  evex_rm_vv_sae=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rvm_vvv_er       ........ ........ ........ ........ ........ \
+                  evex_rvm_vvv_er=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rvm_vvv_sae      ........ ........ ........ ........ ........ \
+                  evex_rvm_vvv_sae=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rvm_xxx_er       ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rvm_xxx_er=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rvm_xxx_sae      ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rvm_xxx_sae=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+
+@rvm_kvv          ........ ........ ........ ........ ........ \
+                  evex_rvm_kvv=&evex_rvm_vvv %mode r=%k_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+@rvm_kvv_sae      ........ ........ ........ ........ ........ \
+                  evex_rvm_kvv_sae=&evex_rvm_vvv %mode r=%k_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@fmaddp           ........ ........ ........ ........ ........ \
+                  fmaddp=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+@fmaddp_er        ........ ........ ........ ........ ........ \
+                  fmaddp_er=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+@fmadds_er        ........ ........ ........ ........ ........ \
+                  tuple=1 fmadds_er=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+
+@rm_hv            ........ ........ ........ ........ ........ \
+                  evex_rm_hv=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_hv_sae        ........ ........ ........ ........ ........ \
+                  evex_rm_hv_sae=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_vh            ........ ........ ........ ........ ........ \
+                  evex_rm_vh=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_vq            ........ ........ ........ ........ ........ \
+                  evex_rm_vq=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_ve            ........ ........ ........ ........ ........ \
+                  evex_rm_ve=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_hv_er         ........ ........ ........ ........ ........ \
+                  evex_rm_hv_er=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_qv_er         ........ ........ ........ ........ ........ \
+                  evex_rm_qv_er=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_vh_er         ........ ........ ........ ........ ........ \
+                  evex_rm_vh_er=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_vq_er         ........ ........ ........ ........ ........ \
+                  evex_rm_vq_er=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_vh_sae        ........ ........ ........ ........ ........ \
+                  evex_rm_vh_sae=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_vq_sae        ........ ........ ........ ........ ........ \
+                  evex_rm_vq_sae=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@mr_hv            ........ ........ ........ ........ ........ \
+                  evex_mr_hv=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@mr_qv            ........ ........ ........ ........ ........ \
+                  evex_mr_qv=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@mr_ev            ........ ........ ........ ........ ........ \
+                  evex_mr_ev=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@mr_hv_sae        ........ ........ ........ ........ ........ \
+                  evex_mr_hv_sae=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_vx            ........ ........ ........ ........ ........ \
+                  evex_rm_vx=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_vy            ........ ........ ........ ........ ........ \
+                  evex_rm_vy=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_xx            ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rm_xx=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_yx            ........ ........ ........ ........ ........ \
+                  evex_rm_yx=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_zx            ........ ........ ........ ........ ........ \
+                  evex_rm_zx=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@rm_zy            ........ ........ ........ ........ ........ \
+                  evex_rm_zy=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_xx_sae        ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rm_xx_sae=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_rx            ........ ........ ........ ........ ........ \
+                  evex_rm_rx=&evex_rm_rv %mode r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
+
+@rm_rx_er         ........ ........ ........ ........ ........ \
+                  evex_rm_rx_er=&evex_rm_rv %mode r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
+
+@rm_rx_sae        ........ ........ ........ ........ ........ \
+                  evex_rm_rx_sae=&evex_rm_rv %mode r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
+
+@rm_vr            ........ ........ ........ ........ ........ \
+                  evex_rm_vr=&evex_rm_vr %mode r=%mm_reg b=%gpr_base msz=1 bsz=1 rw=2
+@rm_xr            ........ ........ ........ ........ ........ \
+                  evex_rm_xr=&evex_rm_vr %mode r=%mm_reg b=%gpr_base msz=1 bsz=1 rw=2
+
+@mr_xx            ........ ........ ........ ........ ........ \
+                  evex_mr_xx=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@mr_xy            ........ ........ ........ ........ ........ \
+                  evex_mr_xy=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@mr_xz            ........ ........ ........ ........ ........ \
+                  evex_mr_xz=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+@mr_yz            ........ ........ ........ ........ ........ \
+                  evex_mr_yz=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
+
+@mr_rx            ........ ........ ........ ........ ........ \
+                  evex_mr_rx=&evex_mr_rv %mode r=%mm_reg b=%mm_base msz=1 bsz=1 rw=2
+
+@rvm_yyx          ........ ........ ........ ........ ........ \
+                  evex_rvm_yyx=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+@rvm_zzx          ........ ........ ........ ........ ........ \
+                  evex_rvm_zzx=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+@rvm_zzy          ........ ........ ........ ........ ........ \
+                  evex_rvm_zzy=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@mvr_xxx          ........ ........ ........ ........ ........ \
+                  evex_mvr_xxx=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rvm_xxr          ........ ........ ........ ........ ........ \
+                  evex_rvm_xxr=&evex_rvm_vvr %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bsz=0 rw=2
+
+@rvm_xxr_er       ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rvm_xxr_er=&evex_rvm_vvr %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bsz=0 rw=2
+
+@rvm_kxx_sae      ........ ........ ........ ........ ........ \
+                  tuple=1 evex_rvm_kxx_sae=&evex_rvm_vvv %mode r=%k_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
+
+@rm_kx            ........ ........ ........ ........ ........ \
+                  evex_rm_kx=&evex_rm_vv %mode r=%k_reg b=%mm_base msz=1 bcst=0 rw=2
+
+##############################################################################
+# Extension AVX-512BW
+##############################################################################
+
+vpunpcklbw        ........ 01100000 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpunpcklwd        ........ 01100001 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpacksswb         ........ 01100011 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpcmpgtb          ........ 01100100 ........ - .... 101 ... .0001 @rvm_kvv ? avx512bw avx512vl
+vpcmpgtw          ........ 01100101 ........ - .... 101 ... .0001 @rvm_kvv ? avx512bw avx512vl
+vpackuswb         ........ 01100111 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpunpckhbw        ........ 01101000 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpunpckhwd        ........ 01101001 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpackssdw         ........ 01101011 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512bw avx512vl
+vpsraw            ..100... 01110001 ........ - .... 101 ... .0001 @vm_vv uimm=8 ? avx512bw avx512vl
+vpsrlw            ..010... 01110001 ........ - .... 101 ... .0001 @vm_vv uimm=8 ? avx512bw avx512vl
+vpsllw            ..110... 01110001 ........ - .... 101 ... .0001 @vm_vv uimm=8 ? avx512bw avx512vl
+vpsrldq           ..011... 01110011 ........ - .... 101 ... .0001 @vm_vv uimm=8 ? avx512bw avx512vl
+vpslldq           ..111... 01110011 ........ - .... 101 ... .0001 @vm_vv uimm=8 ? avx512bw avx512vl
+{
+  vpinsrw         11...... 11000100 .00..... - .... 101 ... .0001 @rvm_xxr uimm=8 msz=32 ? avx512bw
+# TODO: evex disp8 for gpr
+  vpinsrw         ........ 11000100 .00..... - .... 101 ... .0001 @rvm_xxx uimm=8 msz=16 ? avx512bw
+}
+vpextrw           11...... 11000101 .00.1... - 1111 101 ... .0001 @rm_rx uimm=8 rsz=32 ? avx512bw
+vpsrlw            ........ 11010001 ........ - .... 101 ... .0001 @rvm_vvx_128 ? avx512bw avx512vl
+vpmullw           ........ 11010101 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsubusb          ........ 11011000 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsubusw          ........ 11011001 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpminub           ........ 11011010 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpaddusb          ........ 11011100 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpaddusw          ........ 11011101 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpmaxub           ........ 11011110 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpavgb            ........ 11100000 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsraw            ........ 11100001 ........ - .... 101 ... .0001 @rvm_vvx_128 ? avx512bw avx512vl
+vpavgw            ........ 11100011 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpmulhuw          ........ 11100100 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpmulhw           ........ 11100101 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsubsb           ........ 11101000 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsubsw           ........ 11101001 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpminsw           ........ 11101010 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpaddsb           ........ 11101100 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpaddsw           ........ 11101101 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpmaxsw           ........ 11101110 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsllw            ........ 11110001 ........ - .... 101 ... .0001 @rvm_vvx_128 ? avx512bw avx512vl
+vpmaddwd          ........ 11110101 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsadbw           ........ 11110110 ........ - ---- 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsubb            ........ 11111000 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpsubw            ........ 11111001 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpaddb            ........ 11111100 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+vpaddw            ........ 11111101 ........ - .... 101 ... .0001 @rvm_vvv ? avx512bw avx512vl
+
+vpshufhw          ........ 01110000 ....1... - 1111 110 ... .0001 @rm_vv uimm=8 ? avx512bw avx512vl
+
+vmovdqu8          ........ 01101111 ....1... 0 1111 111 ... .0001 @rm_vv ? avx512bw
+vmovdqu16         ........ 01101111 ....1... 1 1111 111 ... .0001 @rm_vv ? avx512bw
+vpshuflw          ........ 01110000 ....1... - 1111 111 ... .0001 @rm_vv uimm=8 ? avx512bw avx512vl
+vmovdqu8          ........ 01111111 ....1... 0 1111 111 ... .0001 @mr_vv ? avx512bw
+vmovdqu16         ........ 01111111 ....1... 1 1111 111 ... .0001 @mr_vv ? avx512bw
+
+vpshufb           ........ 00000000 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpmaddubsw        ........ 00000100 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpmulhrsw         ........ 00001011 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpsrlvw           ........ 00010000 ........ 1 .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpsravw           ........ 00010001 ........ 1 .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpsllvw           ........ 00010010 ........ 1 .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpabsb            ........ 00011100 ....1... - 1111 101 ... .0010 @rm_vv ? avx512bw avx512vl
+vpabsw            ........ 00011101 ....1... - 1111 101 ... .0010 @rm_vv ? avx512bw avx512vl
+vpmovsxbw         ........ 00100000 ....1... - 1111 101 ... .0010 @rm_vh ? avx512bw avx512vl
+vptestmb          ........ 00100110 ........ 0 .... 101 ... .0010 @rvm_kvv ? avx512bw avx512vl
+vptestmw          ........ 00100110 ........ 1 .... 101 ... .0010 @rvm_kvv ? avx512bw avx512vl
+vptestmd          ........ 00100111 ........ 0 .... 101 ... .0010 @rvm_kvv bcst=1 ? avx512f avx512vl
+vptestmq          ........ 00100111 ........ 1 .... 101 ... .0010 @rvm_kvv bcst=1 ? avx512f avx512vl
+vpackusdw         ........ 00101011 ........ - .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512bw avx512vl
+vpmovzxbw         ........ 00110000 ....1... - 1111 101 ... .0010 @rm_vh ? avx512bw avx512vl
+vpminsb           ........ 00111000 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpminuw           ........ 00111010 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpmaxsb           ........ 00111100 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpmaxuw           ........ 00111110 ........ - .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpbroadcastd      ........ 01011000 ....1... 0 1111 101 ... .0010 @rm_vx msz=32 ? avx512f avx512vl
+vpbroadcastq      ........ 01011001 ....1... 1 1111 101 ... .0010 @rm_vx msz=64 ? avx512f avx512vl
+vpblendmb         ........ 01100110 ........ 0 .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpblendmw         ........ 01100110 ........ 1 .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+vpermi2w          ........ 01110101 ........ 1 .... 101 ... .0010 @rvm_vvv rw=3 ? avx512bw avx512vl
+vpbroadcastb      ........ 01111000 ....1... 0 1111 101 ... .0010 @rm_vx msz=8  ? avx512bw avx512vl
+vpbroadcastw      ........ 01111001 ....1... 0 1111 101 ... .0010 @rm_vx msz=16 ? avx512bw avx512vl
+vpbroadcastb      11...... 01111010 ....1... 0 1111 101 ... .0010 @rm_vr msz=32 ? avx512bw avx512vl
+vpbroadcastw      11...... 01111011 ....1... 0 1111 101 ... .0010 @rm_vr msz=32 ? avx512bw avx512vl
+vpbroadcastd      11...... 01111100 ....1... 0 1111 101 ... .0010 @rm_vr msz=32 ? avx512f avx512vl
+vpbroadcastq      11...... 01111100 ....1... 1 1111 101 ... .0010 @rm_vr msz=64 ? avx512f avx512vl
+vpermt2w          ........ 01111101 ........ 1 .... 101 ... .0010 @rvm_vvv rw=3 ? avx512bw avx512vl
+vpermw            ........ 10001101 ........ 1 .... 101 ... .0010 @rvm_vvv ? avx512bw avx512vl
+
+vpmovuswb         ........ 00010000 ........ 0 .... 110 ... .0010 @mr_hv ? avx512bw avx512vl
+vpmovswb          ........ 00100000 ........ 0 .... 110 ... .0010 @mr_hv ? avx512bw avx512vl
+vptestnmb         ........ 00100110 ........ 0 .... 110 ... .0010 @rvm_kvv ? avx512bw avx512vl
+vptestnmw         ........ 00100110 ........ 1 .... 110 ... .0010 @rvm_kvv ? avx512bw avx512vl
+vptestnmd         ........ 00100111 ........ 0 .... 110 ... .0010 @rvm_kvv bcst=1 ? avx512f avx512vl
+vptestnmq         ........ 00100111 ........ 1 .... 110 ... .0010 @rvm_kvv bcst=1 ? avx512f avx512vl
+vpmovm2b          11...... 00101000 ........ 0 .... 110 ... .0010 @rm_vk ? avx512bw avx512vl
+vpmovm2w          11...... 00101000 ........ 1 .... 110 ... .0010 @rm_vk ? avx512bw avx512vl
+vpmovb2m          11...... 00101001 ........ 0 .... 110 ... .0010 @rm_kv ? avx512bw avx512vl
+vpmovw2m          11...... 00101001 ........ 1 .... 110 ... .0010 @rm_kv ? avx512bw avx512vl
+vpmovwb           ........ 00110000 ........ 0 .... 110 ... .0010 @mr_hv ? avx512bw avx512vl
+
+vpalignr          ........ 00001111 ........ - .... 101 ... .0011 @rvm_vvv uimm=8 ? avx512bw avx512vl
+vpextrb           ........ 00010100 .00.1... - 1111 101 ... .0011 @mr_rx uimm=8 msz=8 bsz=32 ? avx512bw
+vpextrw           ........ 00010101 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=16 bsz=32 ? avx512bw
+vpinsrb           ........ 00100000 .00..... - .... 101 ... .0011 @rvm_xxr uimm=8 msz=8 bsz=32 ? avx512bw
+vdbpsadbw         ........ 01000010 ........ 0 .... 101 ... .0011 @rvm_vvv uimm=8 ? avx512bw avx512vl
+
+##############################################################################
+# Extension AVX-512DQ
+##############################################################################
+
+vandps            ........ 01010100 ........ 0 .... 100 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vandnps           ........ 01010101 ........ 0 .... 100 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vorps             ........ 01010110 ........ 0 .... 100 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vxorps            ........ 01010111 ........ 0 .... 100 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vcvtqq2ps         ........ 01011011 ....1... 1 1111 100 ... .0001 @rm_hv_er bcst=1 ? avx512dq avx512vl
+
+vandpd            ........ 01010100 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vandnpd           ........ 01010101 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vorpd             ........ 01010110 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vxorpd            ........ 01010111 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vcvttps2uqq       ........ 01111000 ....1... 0 1111 101 ... .0001 @rm_vh_sae bcst=1 ? avx512dq avx512vl
+vcvttpd2uqq       ........ 01111000 ....1... 1 1111 101 ... .0001 @rm_vv_sae bcst=1 ? avx512dq avx512vl
+vcvtps2uqq        ........ 01111001 ....1... 0 1111 101 ... .0001 @rm_vh_er bcst=1 ? avx512dq avx512vl
+vcvtpd2uqq        ........ 01111001 ....1... 1 1111 101 ... .0001 @rm_vv_er bcst=1 ? avx512dq avx512vl
+vcvttps2qq        ........ 01111010 ....1... 0 1111 101 ... .0001 @rm_vh_sae bcst=1 ? avx512dq avx512vl
+vcvttpd2qq        ........ 01111010 ....1... 1 1111 101 ... .0001 @rm_vv_sae bcst=1 ? avx512dq avx512vl
+vcvtps2qq         ........ 01111011 ....1... 0 1111 101 ... .0001 @rm_vh_er bcst=1 ? avx512dq avx512vl
+vcvtpd2qq         ........ 01111011 ....1... 1 1111 101 ... .0001 @rm_vv_er bcst=1 ? avx512dq avx512vl
+
+vcvtuqq2pd        ........ 01111010 ....1... 1 1111 110 ... .0001 @rm_vv_er bcst=1 ? avx512dq avx512vl
+vcvtqq2pd         ........ 11100110 ....1... 1 1111 110 ... .0001 @rm_vv_er bcst=1 ? avx512dq avx512vl
+
+vcvtuqq2ps        ........ 01111010 ....1... 1 1111 111 ... .0001 @rm_hv_er bcst=1 ? avx512dq avx512vl
+
+vbroadcastf32x2   ........ 00011001 .01.1... 0 1111 101 ... .0010 tuple=2 @rm_vx msz=32 ? avx512dq avx512vl
+vbroadcastf32x2   ........ 00011001 .10.1... 0 1111 101 ... .0010 tuple=2 @rm_vx msz=32 ? avx512dq
+vbroadcastf64x2   0....... 00011010 .01.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq avx512vl
+vbroadcastf64x2   10...... 00011010 .01.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq avx512vl
+vbroadcastf64x2   0....... 00011010 .10.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq
+vbroadcastf64x2   10...... 00011010 .10.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq
+vbroadcastf32x8   0....... 00011011 .10.1... 0 1111 101 ... .0010 tuple=8 @rm_vy msz=32 ? avx512dq
+vbroadcastf32x8   10...... 00011011 .10.1... 0 1111 101 ... .0010 tuple=8 @rm_vy msz=32 ? avx512dq
+vpmullq           ........ 01000000 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512dq avx512vl
+vbroadcasti32x2   ........ 01011001 ....1... 0 1111 101 ... .0010 tuple=2 @rm_vx msz=32 ? avx512dq avx512vl
+vbroadcasti32x4   0....... 01011010 .01.1... 0 1111 101 ... .0010 tuple=4 @rm_vx msz=32 ? avx512f avx512vl
+vbroadcasti32x4   10...... 01011010 .01.1... 0 1111 101 ... .0010 tuple=4 @rm_vx msz=32 ? avx512f avx512vl
+vbroadcasti64x2   0....... 01011010 .01.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq avx512vl
+vbroadcasti64x2   10...... 01011010 .01.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq avx512vl
+vbroadcasti32x4   0....... 01011010 .10.1... 0 1111 101 ... .0010 tuple=4 @rm_vx msz=32 ? avx512f
+vbroadcasti32x4   10...... 01011010 .10.1... 0 1111 101 ... .0010 tuple=4 @rm_vx msz=32 ? avx512f
+vbroadcasti64x2   0....... 01011010 .10.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq
+vbroadcasti64x2   10...... 01011010 .10.1... 1 1111 101 ... .0010 tuple=2 @rm_vx msz=64 ? avx512dq
+vbroadcasti32x8   0....... 01011011 .10.1... 0 1111 101 ... .0010 tuple=8 @rm_vy msz=32 ? avx512dq
+vbroadcasti32x8   10...... 01011011 .10.1... 0 1111 101 ... .0010 tuple=8 @rm_vy msz=32 ? avx512dq
+vbroadcasti64x4   0....... 01011011 .10.1... 1 1111 101 ... .0010 tuple=4 @rm_vy msz=64 ? avx512f
+vbroadcasti64x4   10...... 01011011 .10.1... 1 1111 101 ... .0010 tuple=4 @rm_vy msz=64 ? avx512f
+
+vpmovm2d          11...... 00111000 ........ 0 .... 110 ... .0010 @rm_vk ? avx512dq avx512vl
+vpmovm2q          11...... 00111000 ........ 1 .... 110 ... .0010 @rm_vk ? avx512dq avx512vl
+vpmovd2m          11...... 00111001 ........ 0 .... 110 ... .0010 @rm_kv ? avx512dq avx512vl
+vpmovq2m          11...... 00111001 ........ 1 .... 110 ... .0010 @rm_kv ? avx512dq avx512vl
+
+vpextrd           ........ 00010110 .00.1... 0 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=32 ? avx512dq
+vpextrq           ........ 00010110 .00.1... 1 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=64 ? avx512dq
+vinsertf64x2      ........ 00011000 .01..... 1 .... 101 ... .0011 tuple=2 @rvm_yyx uimm=8 ? avx512dq avx512vl
+vinsertf64x2      ........ 00011000 .10..... 1 .... 101 ... .0011 tuple=2 @rvm_zzx uimm=8 ? avx512dq
+vextractf64x2     ........ 00011001 .01.1... 1 1111 101 ... .0011 tuple=2 @mr_xy uimm=8 ? avx512dq avx512vl
+vextractf64x2     ........ 00011001 .10.1... 1 1111 101 ... .0011 tuple=2 @mr_xz uimm=8 ? avx512dq
+vinsertf32x8      ........ 00011010 .10..... 0 .... 101 ... .0011 tuple=8 @rvm_zzy uimm=8 ? avx512dq
+vextractf32x8     ........ 00011011 .10.1... 0 1111 101 ... .0011 tuple=8 @mr_yz uimm=8 ? avx512dq avx512vl
+vpinsrd           ........ 00100010 .00..... 0 .... 101 ... .0011 tuple=1 @rvm_xxr uimm=8 msz=32 ? avx512dq
+vpinsrq           ........ 00100010 .00..... 1 .... 101 ... .0011 tuple=1 @rvm_xxr uimm=8 msz=64 ? avx512dq
+vinserti64x2      ........ 00111000 .01..... 1 .... 101 ... .0011 tuple=2 @rvm_yyx uimm=8 ? avx512dq avx512vl
+vinserti64x2      ........ 00111000 .10..... 1 .... 101 ... .0011 tuple=2 @rvm_zzx uimm=8 ? avx512dq
+vextracti64x2     ........ 00111001 .01.1... 1 1111 101 ... .0011 tuple=2 @mr_xy uimm=8 ? avx512dq avx512vl
+vextracti64x2     ........ 00111001 .10.1... 1 1111 101 ... .0011 tuple=2 @mr_xz uimm=8 ? avx512dq
+vinserti32x8      ........ 00111010 .10..... 0 .... 101 ... .0011 tuple=8 @rvm_zzy uimm=8 ? avx512dq
+vextracti32x8     ........ 00111011 .10.1... 0 1111 101 ... .0011 tuple=8 @mr_yz uimm=8 ? avx512dq avx512vl
+vrangeps          ........ 01010000 ........ 0 .... 101 ... .0011 @rvm_vvv_sae uimm=8 bcst=1 ? avx512dq avx512vl
+vrangepd          ........ 01010000 ........ 1 .... 101 ... .0011 @rvm_vvv_sae uimm=8 bcst=1 ? avx512dq avx512vl
+vrangess          ........ 01010001 .--..... 0 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=3 ? avx512dq
+vrangesd          ........ 01010001 .--..... 1 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=3 ? avx512dq
+vreduceps         ........ 01010110 ....1... 0 1111 101 ... .0011 @rm_vv_sae uimm=8 bcst=1 ? avx512dq avx512vl
+vreducepd         ........ 01010110 ....1... 1 1111 101 ... .0011 @rm_vv_sae uimm=8 bcst=1 ? avx512dq avx512vl
+vreducess         ........ 01010111 .--..... 0 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=3 ? avx512dq
+vreducesd         ........ 01010111 .--..... 1 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=3 ? avx512dq
+vfpclassps        ........ 01100110 ....1... 0 1111 101 ... .0011 @rm_kv uimm=8 bcst=-32 ? avx512dq avx512vl
+vfpclasspd        ........ 01100110 ....1... 1 1111 101 ... .0011 @rm_kv uimm=8 bcst=-64 ? avx512dq avx512vl
+vfpclassss        ........ 01100111 .--.1... 0 1111 101 ... .0011 tuple=1 @rm_kx uimm=8 msz=32 ? avx512dq
+vfpclasssd        ........ 01100111 .--.1... 1 1111 101 ... .0011 tuple=1 @rm_kx uimm=8 msz=64 ? avx512dq
+
+##############################################################################
+# Extension AVX-512F
+##############################################################################
+
+vmovups           ........ 00010000 ....1... 0 1111 100 ... .0001 @rm_vv ? avx512f avx512vl
+vmovups           ........ 00010001 ....1... 0 1111 100 ... .0001 @mr_vv ? avx512f avx512vl
+vmovhlps          11...... 00010010 .00..... 0 .... 100 ... .0001 @rvm_vvv ? avx512f
+vmovlps           0....... 00010010 .00..... 0 .... 100 ... .0001 tuple=2 @rvm_vvv msz=32 ? avx512f
+vmovlps           10...... 00010010 .00..... 0 .... 100 ... .0001 tuple=2 @rvm_vvv msz=32 ? avx512f
+vmovlps           0....... 00010011 .00.1... 0 1111 100 ... .0001 tuple=2 @mr_xx msz=32 ? avx512f
+vmovlps           10...... 00010011 .00.1... 0 1111 100 ... .0001 tuple=2 @mr_xx msz=32 ? avx512f
+vunpcklps         ........ 00010100 ........ 0 .... 100 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vunpckhps         ........ 00010101 ........ 0 .... 100 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vmovlhps          11...... 00010110 .00..... 0 .... 100 ... .0001 @rvm_vvv ? avx512f
+vmovhps           0....... 00010110 .00..... 0 .... 100 ... .0001 tuple=2 @rvm_vvv msz=32 ? avx512f
+vmovhps           10...... 00010110 .00..... 0 .... 100 ... .0001 tuple=2 @rvm_vvv msz=32 ? avx512f
+vmovhps           0....... 00010111 .00.1... 0 1111 100 ... .0001 tuple=2 @mr_xx msz=32 ? avx512f
+vmovhps           10...... 00010111 .00.1... 0 1111 100 ... .0001 tuple=2 @mr_xx msz=32 ? avx512f
+vmovaps           ........ 00101000 ....1... 0 1111 100 ... .0001 @rm_vv ? avx512f avx512vl
+vmovaps           ........ 00101001 ....1... 0 1111 100 ... .0001 @mr_vv ? avx512f avx512vl
+vmovntps          0-...... 00101011 ....1... 0 1111 100 ... .0001 @mr_vv ? avx512f avx512vl
+vmovntps          11...... 00101011 ....1... 0 1111 100 ... .0001 @mr_vv ? avx512f avx512vl
+vucomiss          ........ 00101110 .--.1... 0 1111 100 ... .0001 @rm_xx_sae msz=32 ? avx512f
+vcomiss           ........ 00101111 .--.1... 0 1111 100 ... .0001 @rm_xx_sae msz=32 ? avx512f
+vsqrtps           ........ 01010001 ....1... - 1111 100 ... .0001 @rm_vv_er bcst=1 ? avx512f avx512vl
+vaddps            ........ 01011000 ........ 0 .... 100 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vmulps            ........ 01011001 ........ 0 .... 100 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vcvtps2pd         ........ 01011010 ....1... 0 1111 100 ... .0001 @rm_vh_sae bcst=1 ? avx512f avx512vl
+vcvtdq2ps         ........ 01011011 ....1... 0 1111 100 ... .0001 @rm_vv_er bcst=1 ? avx512f avx512vl
+vsubps            ........ 01011100 ........ 0 .... 100 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vminps            ........ 01011101 ........ 0 .... 100 ... .0001 @rvm_vvv_sae bcst=1 ? avx512f avx512vl
+vdivps            ........ 01011110 ........ 0 .... 100 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vmaxps            ........ 01011111 ........ 0 .... 100 ... .0001 @rvm_vvv_sae bcst=1 ? avx512f avx512vl
+vcvttps2udq       ........ 01111000 ....1... 0 1111 100 ... .0001 @rm_vv_sae bcst=1 ? avx512f avx512vl
+vcvttpd2udq       ........ 01111000 ....1... 1 1111 100 ... .0001 @rm_hv_sae bcst=1 ? avx512f avx512vl
+vcvtps2udq        ........ 01111001 ....1... 0 1111 100 ... .0001 @rm_vv_er bcst=1 ? avx512f avx512vl
+vcvtpd2udq        ........ 01111001 ....1... 1 1111 100 ... .0001 @rm_hv_er bcst=1 ? avx512f avx512vl
+vcmpps            ........ 11000010 ........ 0 .... 100 ... .0001 @rvm_kvv_sae opc=8 bcst=1 ? avx512f avx512vl
+vshufps           ........ 11000110 ........ - .... 100 ... .0001 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+
+vmovupd           ........ 00010000 ....1... 1 1111 101 ... .0001 @rm_vv ? avx512f avx512vl
+vmovupd           ........ 00010001 ....1... 1 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vmovlpd           0....... 00010010 .00..... 1 .... 101 ... .0001 tuple=1 @rvm_vvv msz=64 ? avx512f
+vmovlpd           10...... 00010010 .00..... 1 .... 101 ... .0001 tuple=1 @rvm_vvv msz=64 ? avx512f
+vmovlpd           0....... 00010011 .00.1... 1 1111 101 ... .0001 tuple=1 @mr_xx msz=64 ? avx512f
+vmovlpd           10...... 00010011 .00.1... 1 1111 101 ... .0001 tuple=1 @mr_xx msz=64 ? avx512f
+vunpcklpd         ........ 00010100 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vunpckhpd         ........ 00010101 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vmovhpd           0....... 00010110 .00..... 1 .... 101 ... .0001 tuple=1 @rvm_vvv msz=64 ? avx512f
+vmovhpd           10...... 00010110 .00..... 1 .... 101 ... .0001 tuple=1 @rvm_vvv msz=64 ? avx512f
+vmovhpd           0....... 00010111 .00.1... 1 1111 101 ... .0001 tuple=1 @mr_xx msz=64 ? avx512f
+vmovhpd           10...... 00010111 .00.1... 1 1111 101 ... .0001 tuple=1 @mr_xx msz=64 ? avx512f
+vmovapd           ........ 00101000 ....1... 1 1111 101 ... .0001 @rm_vv ? avx512f avx512vl
+vmovapd           ........ 00101001 ....1... 1 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vmovntpd          10...... 00101011 ....1... 1 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vmovntpd          0-...... 00101011 ....1... 1 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vucomisd          ........ 00101110 .--.1... 1 1111 101 ... .0001 @rm_xx_sae msz=64 ? avx512f
+vcomisd           ........ 00101111 .--.1... 1 1111 101 ... .0001 @rm_xx_sae msz=64 ? avx512f
+vsqrtpd           ........ 01010001 ....1... - 1111 101 ... .0001 @rm_vv_er bcst=1 ? avx512f avx512vl
+vaddpd            ........ 01011000 ........ 1 .... 101 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vmulpd            ........ 01011001 ........ 1 .... 101 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vcvtpd2ps         ........ 01011010 ....1... 1 1111 101 ... .0001 @rm_hv_er bcst=1 ? avx512f avx512vl
+vcvtps2dq         ........ 01011011 ....1... 0 1111 101 ... .0001 @rm_vv_er bcst=1 ? avx512f avx512vl
+vsubpd            ........ 01011100 ........ 1 .... 101 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vminpd            ........ 01011101 ........ 1 .... 101 ... .0001 @rvm_vvv_sae bcst=1 ? avx512f avx512vl
+vdivpd            ........ 01011110 ........ 1 .... 101 ... .0001 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vmaxpd            ........ 01011111 ........ 1 .... 101 ... .0001 @rvm_vvv_sae bcst=1 ? avx512f avx512vl
+vpunpckldq        ........ 01100010 ........ - .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpcmpgtd          ........ 01100110 ........ 0 .... 101 ... .0001 @rvm_kvv bcst=1 ? avx512f avx512vl
+vpunpckhdq        ........ 01101010 ........ - .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpunpcklqdq       ........ 01101100 ........ - .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpunpckhqdq       ........ 01101101 ........ - .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vmovd             ........ 01101110 .00.1... 0 1111 101 ... .0001 tuple=1 @rm_xr msz=32 ? avx512f
+vmovq             ........ 01101110 .00.1... 1 1111 101 ... .0001 tuple=1 @rm_xr msz=64 ? avx512f
+vmovdqa32         ........ 01101111 ....1... 0 1111 101 ... .0001 @rm_vv ? avx512f avx512vl
+vmovdqa64         ........ 01101111 ....1... 1 1111 101 ... .0001 @rm_vv ? avx512f avx512vl
+vpshufd           ........ 01110000 ....1... 0 1111 101 ... .0001 @rm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vprold            ..001... 01110010 ........ 0 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vprord            ..000... 01110010 ........ 0 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpslld            ..110... 01110010 ........ 0 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpsrad            ..100... 01110010 ........ 0 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpsrld            ..010... 01110010 ........ 0 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vprolq            ..001... 01110010 ........ 1 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vprorq            ..000... 01110010 ........ 1 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpsraq            ..100... 01110010 ........ 1 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpsllq            ..110... 01110011 ........ 1 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpsrlq            ..010... 01110011 ........ 1 .... 101 ... .0001 @vm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpcmpeqb          ........ 01110100 ........ - .... 101 ... .0001 @rvm_kvv ? avx512f avx512vl
+vpcmpeqw          ........ 01110101 ........ - .... 101 ... .0001 @rvm_kvv ? avx512f avx512vl
+vpcmpeqd          ........ 01110110 ........ 0 .... 101 ... .0001 @rvm_kvv bcst=1 ? avx512f avx512vl
+vmovd             ........ 01111110 .00.1... 0 1111 101 ... .0001 tuple=1 @mr_rx msz=32 ? avx512f
+vmovq             ........ 01111110 .00.1... 1 1111 101 ... .0001 tuple=1 @mr_rx msz=64 ? avx512f
+vmovdqa32         ........ 01111111 ....1... 0 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vmovdqa64         ........ 01111111 ....1... 1 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vcmppd            ........ 11000010 ........ 1 .... 101 ... .0001 @rvm_kvv_sae opc=8 bcst=1 ? avx512f avx512vl
+vshufpd           ........ 11000110 ........ - .... 101 ... .0001 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+vpsrld            ........ 11010010 ........ 0 .... 101 ... .0001 @rvm_vvx_128 ? avx512f avx512vl
+vpsrlq            ........ 11010011 ........ 1 .... 101 ... .0001 @rvm_vvx_128 ? avx512f avx512vl
+vpaddq            ........ 11010100 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vmovq             ........ 11010110 .00.1... 1 1111 101 ... .0001 tuple=1 @mr_xx msz=64 ? avx512f
+vpandd            ........ 11011011 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpandq            ........ 11011011 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpandnd           ........ 11011111 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpandnq           ........ 11011111 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsrad            ........ 11100010 ........ 0 .... 101 ... .0001 @rvm_vvx_128 ? avx512f avx512vl
+vpsraq            ........ 11100010 ........ 1 .... 101 ... .0001 @rvm_vvx_128 ? avx512f avx512vl
+vcvttpd2dq        ........ 11100110 ....1... 1 1111 101 ... .0001 @rm_hv_sae ? avx512f avx512vl
+vmovntdq          0....... 11100111 ....1... 0 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vmovntdq          10...... 11100111 ....1... 0 1111 101 ... .0001 @mr_vv ? avx512f avx512vl
+vpord             ........ 11101011 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vporq             ........ 11101011 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpxord            ........ 11101111 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpxorq            ........ 11101111 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpslld            ........ 11110010 ........ 0 .... 101 ... .0001 @rvm_vvx_128 ? avx512f avx512vl
+vpsllq            ........ 11110011 ........ 1 .... 101 ... .0001 @rvm_vvx_128 ? avx512f avx512vl
+vpmuludq          ........ 11110100 ........ 1 ---- 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsubd            ........ 11111010 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsubq            ........ 11111011 ........ 1 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpaddd            ........ 11111110 ........ 0 .... 101 ... .0001 @rvm_vvv bcst=1 ? avx512f avx512vl
+
+{
+  vmovss          11...... 00010000 .--..... 0 .... 110 ... .0001 @rvm_vvv ? avx512f
+  vmovss          ........ 00010000 .--.1... 0 1111 110 ... .0001 @rm_xx msz=32 ? avx512f
+}
+{
+  vmovss          11...... 00010001 .--..... 0 .... 110 ... .0001 @mvr_xxx ? avx512f
+  vmovss          ........ 00010001 .--.1... 0 1111 110 ... .0001 tuple=1 @mr_xx msz=32 ? avx512f
+}
+vmovsldup         ........ 00010010 ....1... 0 1111 110 ... .0001 @rm_vv ? avx512f avx512vl
+vmovshdup         ........ 00010110 ....1... 0 1111 110 ... .0001 @rm_vv ? avx512f avx512vl
+vcvtsi2ss         ........ 00101010 ........ . .... 110 ... .0001 @rvm_xxr_er msz=3 suffix=-3 ? avx512f
+vcvttss2si        ........ 00101100 .--.1... - 1111 110 ... .0001 fixed=1 @rm_rx_sae msz=32 ? avx512f
+vcvtss2si         ........ 00101101 .--01... - 1111 110 ... .0001 fixed=1 @rm_rx     msz=32 ? avx512f
+vcvtss2si         11...... 00101101 ...11... - 1111 110 ... .0001 fixed=1 @rm_rx_er  msz=32 ? avx512f
+vsqrtss           ........ 01010001 ........ 0 .... 110 ... .0001 @rvm_xxx_er msz=32 ? avx512f
+vaddss            ........ 01011000 ........ 0 .... 110 ... .0001 @rvm_xxx_er msz=32 ? avx512f
+vmulss            ........ 01011001 ........ 0 .... 110 ... .0001 @rvm_xxx_er msz=32 ? avx512f
+vcvtss2sd         ........ 01011010 .--..... 0 .... 110 ... .0001 @rvm_xxx_sae msz=32 ? avx512f
+vcvttps2dq        ........ 01011011 ....1... 0 1111 110 ... .0001 @rm_vv_sae bcst=1 ? avx512f avx512vl
+vsubss            ........ 01011100 ........ 0 .... 110 ... .0001 @rvm_xxx_er msz=32 ? avx512f
+vminss            ........ 01011101 .--..... 0 .... 110 ... .0001 @rvm_xxx_sae msz=32 ? avx512f
+vdivss            ........ 01011110 ........ 0 .... 110 ... .0001 @rvm_xxx_er msz=32 ? avx512f
+vmaxss            ........ 01011111 .--..... 0 .... 110 ... .0001 @rvm_xxx_sae msz=32 ? avx512f
+vmovdqu32         ........ 01101111 ....1... 0 1111 110 ... .0001 @rm_vv ? avx512f avx512vl
+vmovdqu64         ........ 01101111 ....1... 1 1111 110 ... .0001 @rm_vv ? avx512f avx512vl
+vcvttss2usi       ........ 01111000 .--.1... . 1111 110 ... .0001 fixed=1 @rm_rx_sae rsz=3 msz=32 ? avx512f
+vcvtss2usi        ........ 01111001 .--01... . 1111 110 ... .0001 fixed=1 @rm_rx     rsz=3 msz=32 ? avx512f
+vcvtss2usi        11...... 01111001 ...11... . 1111 110 ... .0001 fixed=1 @rm_rx_er  rsz=3 msz=32 ? avx512f
+vcvtudq2pd        ........ 01111010 ....1... 0 1111 110 ... .0001 @rm_vh bcst=1 ? avx512f avx512vl
+vcvtusi2ss        ........ 01111011 .--0.... . .... 110 ... .0001 tuple=1 @rvm_xxr    msz=3 ? avx512f
+vcvtusi2ss        11...... 01111011 ...1.... . .... 110 ... .0001 tuple=1 @rvm_xxr_er msz=3 ? avx512f
+vmovq             ........ 01111110 .00.1... 1 1111 110 ... .0001 @rm_xx msz=64 ? avx512f
+vmovdqu32         ........ 01111111 ....1... 0 1111 110 ... .0001 @mr_vv ? avx512f avx512vl
+vmovdqu64         ........ 01111111 ....1... 1 1111 110 ... .0001 @mr_vv ? avx512f avx512vl
+vcmpss            ........ 11000010 .--..... 0 .... 110 ... .0001 @rvm_kxx_sae opc=8 msz=32 ? avx512f
+vcvtdq2pd         ........ 11100110 ....1... 0 1111 110 ... .0001 @rm_vh bcst=1 ? avx512f avx512vl
+
+{
+  vmovsd          11...... 00010000 .--..... 1 .... 111 ... .0001 @rvm_vvv ? avx512f
+  vmovsd          ........ 00010000 .--.1... 1 1111 111 ... .0001 @rm_xx msz=64 ? avx512f
+}
+{
+  vmovsd          11...... 00010001 .--..... 1 .... 111 ... .0001 @mvr_xxx ? avx512f
+  vmovsd          ........ 00010001 .--.1... 1 1111 111 ... .0001 tuple=1 @mr_xx msz=64 ? avx512f
+}
+vmovddup          ........ 00010010 .00.1... 1 1111 111 ... .0001 @rm_vv msz=64 ? avx512f avx512vl
+vmovddup          ........ 00010010 .01.1... 1 1111 111 ... .0001 @rm_vv        ? avx512f avx512vl
+vmovddup          ........ 00010010 .10.1... 1 1111 111 ... .0001 @rm_vv        ? avx512f
+vcvtsi2sd         ........ 00101010 .--..... 0 .... 111 ... .0001 tuple=1 @rvm_xxr msz=3 suffix=-3 ? avx512f
+vcvtsi2sd         ........ 00101010 ........ 1 .... 111 ... .0001 @rvm_xxr_er msz=3 suffix=-3 ? avx512f
+vcvttsd2si        ........ 00101100 .--.1... - 1111 111 ... .0001 fixed=1 @rm_rx_sae msz=64 ? avx512f
+vcvtsd2si         ........ 00101101 .--01... - 1111 111 ... .0001 fixed=1 @rm_rx     msz=64 ? avx512f
+vcvtsd2si         11...... 00101101 ...11... - 1111 111 ... .0001 fixed=1 @rm_rx_er  msz=64 ? avx512f
+vsqrtsd           ........ 01010001 ........ 1 .... 111 ... .0001 @rvm_xxx_er msz=64 ? avx512f
+vaddsd            ........ 01011000 ........ 1 .... 111 ... .0001 @rvm_xxx_er msz=64 ? avx512f
+vmulsd            ........ 01011001 ........ 1 .... 111 ... .0001 @rvm_xxx_er msz=64 ? avx512f
+vcvtsd2ss         ........ 01011010 .--0.... 1 .... 111 ... .0001 @rvm_xxx msz=64 ? avx512f
+vcvtsd2ss         11...... 01011010 ...1.... 1 .... 111 ... .0001 @rvm_xxx_er msz=64 ? avx512f
+vsubsd            ........ 01011100 ........ 1 .... 111 ... .0001 @rvm_xxx_er msz=64 ? avx512f
+vminsd            ........ 01011101 .--..... 1 .... 111 ... .0001 @rvm_xxx_sae msz=64 ? avx512f
+vdivsd            ........ 01011110 ........ 1 .... 111 ... .0001 @rvm_xxx_er msz=64 ? avx512f
+vmaxsd            ........ 01011111 .--..... 1 .... 111 ... .0001 @rvm_xxx_sae msz=64 ? avx512f
+vcvttsd2usi       ........ 01111000 .--.1... . 1111 111 ... .0001 fixed=1 @rm_rx_sae rsz=3 msz=64 ? avx512f
+vcvtsd2usi        ........ 01111001 .--01... . 1111 111 ... .0001 fixed=1 @rm_rx_sae rsz=3 msz=64 ? avx512f
+vcvtsd2usi        11...... 01111001 ...11... . 1111 111 ... .0001 fixed=1 @rm_rx_er  rsz=3 msz=64 ? avx512f
+vcvtudq2ps        ........ 01111010 ....1... 0 1111 111 ... .0001 @rm_vv_er bcst=1 ? avx512f avx512vl
+vcvtusi2sd        ........ 01111011 .--..... 0 .... 111 ... .0001 tuple=1 @rvm_xxr    msz=3 ? avx512f
+vcvtusi2sd        ........ 01111011 .--0.... 1 .... 111 ... .0001 tuple=1 @rvm_xxr    msz=3 ? avx512f
+vcvtusi2sd        11...... 01111011 ...1.... 1 .... 111 ... .0001 tuple=1 @rvm_xxr_er msz=3 ? avx512f
+vcmpsd            ........ 11000010 .--..... 1 .... 111 ... .0001 @rvm_kxx_sae opc=8 msz=64 ? avx512f
+vcvtpd2dq         ........ 11100110 ....1... 1 1111 111 ... .0001 @rm_hv_er bcst=1 ? avx512f avx512vl
+
+vpermilps         ........ 00001100 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermilpd         ........ 00001101 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vcvtph2ps         ........ 00010011 ....1... 0 1111 101 ... .0010 @rm_vh_sae ? avx512f avx512vl
+vprorvd           ........ 00010100 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vprorvq           ........ 00010100 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vprolvd           ........ 00010101 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vprolvq           ........ 00010101 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermps           ........ 00010110 .01..... 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermpd           ........ 00010110 .01..... 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermps           ........ 00010110 .10..... 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f
+vpermpd           ........ 00010110 .10..... 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f
+vbroadcastss      ........ 00011000 .00.1... 0 1111 101 ... .0010 @rm_xx msz=32 ? avx512f avx512vl
+vbroadcastss      ........ 00011000 .01.1... 0 1111 101 ... .0010 tuple=1 @rm_yx msz=32 ? avx512f avx512vl
+vbroadcastss      ........ 00011000 .10.1... 0 1111 101 ... .0010 tuple=1 @rm_zx msz=32 ? avx512f
+vbroadcastsd      ........ 00011001 .01.1... 1 1111 101 ... .0010 tuple=1 @rm_yx msz=64 ? avx512f avx512vl
+vbroadcastsd      ........ 00011001 .10.1... 1 1111 101 ... .0010 tuple=1 @rm_zx msz=64 ? avx512f
+vbroadcastf32x4   0....... 00011010 .01.1... 0 1111 101 ... .0010 tuple=4 @rm_yx msz=32 ? avx512f avx512vl
+vbroadcastf32x4   10...... 00011010 .01.1... 0 1111 101 ... .0010 tuple=4 @rm_yx msz=32 ? avx512f avx512vl
+vbroadcastf32x4   0....... 00011010 .10.1... 0 1111 101 ... .0010 tuple=4 @rm_zx msz=32 ? avx512f
+vbroadcastf32x4   10...... 00011010 .10.1... 0 1111 101 ... .0010 tuple=4 @rm_zx msz=32 ? avx512f
+vbroadcastf64x4   0....... 00011011 .10.1... 1 1111 101 ... .0010 tuple=4 @rm_zy msz=64 ? avx512f
+vbroadcastf64x4   10...... 00011011 .10.1... 1 1111 101 ... .0010 tuple=4 @rm_zy msz=64 ? avx512f
+vpabsd            ........ 00011110 ....1... - 1111 101 ... .0010 @rm_vv bcst=1 ? avx512f avx512vl
+vpabsq            ........ 00011111 ....1... - 1111 101 ... .0010 @rm_vv bcst=1 ? avx512f avx512vl
+vpmovsxbd         ........ 00100001 ....1... - 1111 101 ... .0010 @rm_vq ? avx512f avx512vl
+vpmovsxbq         ........ 00100010 ....1... - 1111 101 ... .0010 @rm_ve ? avx512f avx512vl
+vpmovsxwd         ........ 00100011 ....1... - 1111 101 ... .0010 @rm_vh ? avx512f avx512vl
+vpmovsxwq         ........ 00100100 ....1... - 1111 101 ... .0010 @rm_vq ? avx512f avx512vl
+vpmovsxdq         ........ 00100101 ....1... - 1111 101 ... .0010 @rm_vh ? avx512f avx512vl
+vpmuldq           ........ 00101000 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpcmpeqq          ........ 00101001 ........ 1 .... 101 ... .0010 @rvm_kvv bcst=1 ? avx512f avx512vl
+vmovntdqa         0....... 00101010 ....1... 0 1111 101 ... .0010 @rm_vv ? avx512f avx512vl
+vmovntdqa         10...... 00101010 ....1... 0 1111 101 ... .0010 @rm_vv ? avx512f avx512vl
+vscalefps         ........ 00101100 ........ 0 .... 101 ... .0010 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vscalefpd         ........ 00101100 ........ 1 .... 101 ... .0010 @rvm_vvv_er bcst=1 ? avx512f avx512vl
+vscalefss         ........ 00101101 ........ 0 .... 101 ... .0010 @rvm_xxx_er msz=3 ? avx512f
+vscalefsd         ........ 00101101 ........ 1 .... 101 ... .0010 @rvm_xxx_er msz=3 ? avx512f
+vpmovzxbd         ........ 00110001 ....1... - 1111 101 ... .0010 @rm_vq ? avx512f avx512vl
+vpmovzxbq         ........ 00110010 ....1... - 1111 101 ... .0010 @rm_ve ? avx512f avx512vl
+vpmovzxwd         ........ 00110011 ....1... - 1111 101 ... .0010 @rm_vh ? avx512f avx512vl
+vpmovzxwq         ........ 00110100 ....1... - 1111 101 ... .0010 @rm_vq ? avx512f avx512vl
+vpmovzxdq         ........ 00110101 ....1... - 1111 101 ... .0010 @rm_vh ? avx512f avx512vl
+vpermd            ........ 00110110 .01..... 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermq            ........ 00110110 .01..... 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermd            ........ 00110110 .10..... 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f
+vpermq            ........ 00110110 .10..... 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f
+vpcmpgtq          ........ 00110111 ........ 1 .... 101 ... .0010 @rvm_kvv bcst=1 ? avx512f avx512vl
+vpminsd           ........ 00111001 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpminsq           ........ 00111001 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpminud           ........ 00111011 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpminuq           ........ 00111011 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpmaxsd           ........ 00111101 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpmaxud           ........ 00111111 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpmaxuq           ........ 00111111 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpmulld           ........ 01000000 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vgetexpps         ........ 01000010 ....1... 0 1111 101 ... .0010 @rm_vv_sae bcst=1 ? avx512f avx512vl
+vgetexppd         ........ 01000010 ....1... 1 1111 101 ... .0010 @rm_vv_sae bcst=1 ? avx512f avx512vl
+vgetexpss         ........ 01000011 .--..... 0 .... 101 ... .0010 @rvm_xxx_sae msz=32 ? avx512f
+vgetexpsd         ........ 01000011 .--..... 1 .... 101 ... .0010 @rvm_xxx_sae msz=64 ? avx512f
+vpsrlvd           ........ 01000101 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsrlvq           ........ 01000101 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsravd           ........ 01000110 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsravq           ........ 01000110 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsllvd           ........ 01000111 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpsllvq           ........ 01000111 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vrcp14ps          ........ 01001100 ....1... 0 1111 101 ... .0010 @rm_vv bcst=1 ? avx512f avx512vl
+vrcp14pd          ........ 01001100 ....1... 1 1111 101 ... .0010 @rm_vv bcst=1 ? avx512f avx512vl
+vrcp14ss          ........ 01001101 .--..... 0 .... 101 ... .0010 tuple=1 @rvm_vvv msz=3 ? avx512f
+vrcp14sd          ........ 01001101 .--..... 1 .... 101 ... .0010 tuple=1 @rvm_vvv msz=3 ? avx512f
+vrsqrt14ps        ........ 01001110 ....1... 0 1111 101 ... .0010 @rm_vv bcst=1 ? avx512f avx512vl
+vrsqrt14pd        ........ 01001110 ....1... 1 1111 101 ... .0010 @rm_vv bcst=1 ? avx512f avx512vl
+vrsqrt14ss        ........ 01001111 .--..... 0 .... 101 ... .0010 tuple=1 @rvm_vvv msz=3 ? avx512f
+vrsqrt14sd        ........ 01001111 .--..... 1 .... 101 ... .0010 tuple=1 @rvm_vvv msz=3 ? avx512f
+vpblendmd         ........ 01100100 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpblendmq         ........ 01100100 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vblendmps         ........ 01100101 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vblendmpd         ........ 01100101 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512f avx512vl
+vpermi2d          ........ 01110110 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermi2q          ........ 01110110 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermi2ps         ........ 01110111 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermi2pd         ........ 01110111 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermt2d          ........ 01111110 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermt2q          ........ 01111110 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermt2ps         ........ 01111111 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vpermt2pd         ........ 01111111 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512f avx512vl
+vexpandps         ........ 10001000 ....1... 0 1111 101 ... .0010 tuple=1 @rm_vv ? avx512f avx512vl
+vexpandpd         ........ 10001000 ....1... 1 1111 101 ... .0010 tuple=1 @rm_vv ? avx512f avx512vl
+vpexpandd         ........ 10001001 ....1... 0 1111 101 ... .0010 tuple=1 @rm_vv ? avx512f avx512vl
+vpexpandq         ........ 10001001 ....1... 1 1111 101 ... .0010 tuple=1 @rm_vv ? avx512f avx512vl
+vcompressps       ........ 10001010 ....1... 0 1111 101 ... .0010 tuple=1 @mr_vv ? avx512f avx512vl
+vcompresspd       ........ 10001010 ....1... 1 1111 101 ... .0010 tuple=1 @mr_vv ? avx512f avx512vl
+vpcompressd       ........ 10001011 ....1... 0 1111 101 ... .0010 tuple=1 @mr_vv ? avx512f avx512vl
+vpcompressq       ........ 10001011 ....1... 1 1111 101 ... .0010 tuple=1 @mr_vv ? avx512f avx512vl
+vfmaddsub132ps    ........ 10010110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmaddsub132pd    ........ 10010110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsubadd132ps    ........ 10010111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsubadd132pd    ........ 10010111 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd132ps       ........ 10011000 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd132pd       ........ 10011000 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd132ss       ........ 10011001 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfmadd132sd       ........ 10011001 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmsub132ps       ........ 10011010 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsub132pd       ........ 10011010 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsub132ss       ........ 10011011 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfmsub132sd       ........ 10011011 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfnmadd132ps      ........ 10011100 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmadd132pd      ........ 10011100 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmadd132ss      ........ 10011101 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfnmadd132sd      ........ 10011101 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfnmsub132ps      ........ 10011110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmsub132pd      ........ 10011110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmsub132ss      ........ 10011111 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfnmsub132sd      ........ 10011111 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmaddsub213ps    ........ 10100110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmaddsub213pd    ........ 10100110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsubadd213ps    ........ 10100111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsubadd213pd    ........ 10100111 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd213ps       ........ 10101000 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd213pd       ........ 10101000 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd213ss       ........ 10101001 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfmadd213sd       ........ 10101001 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmsub213ps       ........ 10101010 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsub213pd       ........ 10101010 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsub213ss       ........ 10101011 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfmsub213sd       ........ 10101011 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfnmadd213ps      ........ 10101100 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmadd213pd      ........ 10101100 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmadd213ss      ........ 10101101 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfnmadd213sd      ........ 10101101 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfnmsub213ps      ........ 10101110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmsub213pd      ........ 10101110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmsub213ss      ........ 10101111 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfnmsub213sd      ........ 10101111 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmaddsub231ps    ........ 10110110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmaddsub231pd    ........ 10110110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsubadd231ps    ........ 10110111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsubadd231pd    ........ 10110111 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd231ps       ........ 10111000 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd231pd       ........ 10111000 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmadd231ss       ........ 10111001 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfmadd231sd       ........ 10111001 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmsub231ps       ........ 10111010 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsub231pd       ........ 10111010 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfmsub231ss       ........ 10111011 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfmsub231sd       ........ 10111011 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfnmadd231ps      ........ 10111100 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmadd231pd      ........ 10111100 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmadd231ss      ........ 10111101 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfnmadd231sd      ........ 10111101 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfnmsub231ps      ........ 10111110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmsub231pd      ........ 10111110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
+vfnmsub231ss      ........ 10111111 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
+vfnmsub231sd      ........ 10111111 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+
+vpmovusdb         ........ 00010001 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
+vpmovusqb         ........ 00010010 ........ 0 .... 110 ... .0010 @mr_ev ? avx512f avx512vl
+vpmovusdw         ........ 00010011 ........ 0 .... 110 ... .0010 @mr_hv ? avx512f avx512vl
+vpmovusqw         ........ 00010100 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
+vpmovusqd         ........ 00010101 ........ 0 .... 110 ... .0010 @mr_hv ? avx512f avx512vl
+vpmovsdb          ........ 00100001 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
+vpmovsqb          ........ 00100010 ........ 0 .... 110 ... .0010 @mr_ev ? avx512f avx512vl
+vpmovsdw          ........ 00100011 ........ 0 .... 110 ... .0010 @mr_hv ? avx512f avx512vl
+vpmovsqw          ........ 00100100 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
+vpmovsqd          ........ 00100101 ........ 0 .... 110 ... .0010 @mr_hv ? avx512f avx512vl
+vpmovdb           ........ 00110001 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
+vpmovqb           ........ 00110010 ........ 0 .... 110 ... .0010 @mr_ev ? avx512f avx512vl
+vpmovdw           ........ 00110011 ........ 0 .... 110 ... .0010 @mr_hv ? avx512f avx512vl
+vpmovqw           ........ 00110100 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
+vpmovqd           ........ 00110101 ........ 0 .... 110 ... .0010 @mr_hv ? avx512f avx512vl
+
+vpermq            ........ 00000000 .01.1... 1 1111 101 ... .0011 @rm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpermq            ........ 00000000 .10.1... 1 1111 101 ... .0011 @rm_vv uimm=8 bcst=1 ? avx512f
+vpermpd           ........ 00000001 .01.1... 1 1111 101 ... .0011 @rm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpermpd           ........ 00000001 .10.1... 1 1111 101 ... .0011 @rm_vv uimm=8 bcst=1 ? avx512f
+valignd           ........ 00000011 ........ 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+valignq           ........ 00000011 ........ 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+vpermilps         ........ 00000100 ....1... 0 1111 101 ... .0011 @rm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vpermilpd         ........ 00000101 ....1... 1 1111 101 ... .0011 @rm_vv uimm=8 bcst=1 ? avx512f avx512vl
+vrndscaleps       ........ 00001000 ....1... 0 1111 101 ... .0011 @rm_vv_sae uimm=8 bcst=1 ? avx512f avx512vl
+vrndscalepd       ........ 00001001 ....1... 1 1111 101 ... .0011 @rm_vv_sae uimm=8 bcst=1 ? avx512f avx512vl
+vrndscaless       ........ 00001010 .--..... 0 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=3 ? avx512f
+vrndscalesd       ........ 00001011 .--..... 1 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=3 ? avx512f
+vextractps        ........ 00010111 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx   uimm=8 msz=32 ? avx512f
+vinsertf32x4      ........ 00011000 .01..... 0 .... 101 ... .0011 tuple=4 @rvm_yyx uimm=8 ? avx512f avx512vl
+vinsertf32x4      ........ 00011000 .10..... 0 .... 101 ... .0011 tuple=4 @rvm_zzx uimm=8 ? avx512f
+vextractf32x4     ........ 00011001 .01.1... 0 1111 101 ... .0011 tuple=4 @mr_xy uimm=8 ? avx512f avx512vl
+vextractf32x4     ........ 00011001 .10.1... 0 1111 101 ... .0011 tuple=4 @mr_xz uimm=8 ? avx512f
+vinsertf64x4      ........ 00011010 .10..... 1 .... 101 ... .0011 tuple=4 @rvm_zzy uimm=8 ? avx512f
+vextractf64x4     ........ 00011011 .10.1... 1 1111 101 ... .0011 tuple=4 @mr_yz uimm=8 ? avx512f  avx512vl
+vcvtps2ph         ........ 00011101 ....1... 0 1111 101 ... .0011 @mr_hv_sae uimm=8 ? avx512f avx512vl
+vinsertps         ........ 00100001 ........ - .... 101 ... .0011 tuple=1 @rvm_vvv uimm=8 msz=32 ? avx512f
+vshuff32x4        ........ 00100011 .01..... 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+vshuff64x2        ........ 00100011 .01..... 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+vshuff32x4        ........ 00100011 .10..... 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f
+vshuff64x2        ........ 00100011 .10..... 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f
+vpternlogd        ........ 00100101 ........ 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 rw=3 ? avx512f avx512vl
+vpternlogq        ........ 00100101 ........ 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 rw=3 ? avx512f avx512vl
+vgetmantps        ........ 00100110 ....1... 0 1111 101 ... .0011 @rm_vv_sae uimm=8 bcst=1 ? avx512f avx512vl
+vgetmantpd        ........ 00100110 ....1... 1 1111 101 ... .0011 @rm_vv_sae uimm=8 bcst=1 ? avx512f avx512vl
+vgetmantss        ........ 00100111 .--..... 0 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=32 ? avx512f
+vgetmantsd        ........ 00100111 .--..... 1 .... 101 ... .0011 @rvm_xxx_sae uimm=8 msz=64 ? avx512f
+vinserti32x4      ........ 00111000 .01..... 0 .... 101 ... .0011 tuple=4 @rvm_yyx uimm=8 ? avx512f avx512vl
+vinserti32x4      ........ 00111000 .10..... 0 .... 101 ... .0011 tuple=4 @rvm_zzx uimm=8 ? avx512f
+vextracti32x4     ........ 00111001 .01.1... 0 1111 101 ... .0011 tuple=4 @mr_xy uimm=8 ? avx512f avx512vl
+vextracti32x4     ........ 00111001 .10.1... 0 1111 101 ... .0011 tuple=4 @mr_xz uimm=8 ? avx512f
+vinserti64x4      ........ 00111010 .10..... 1 .... 101 ... .0011 tuple=4 @rvm_zzy uimm=8 ? avx512f
+vextracti64x4     ........ 00111011 .10.1... 1 1111 101 ... .0011 tuple=4 @mr_yz uimm=8 ? avx512f  avx512vl
+vshufi32x4        ........ 01000011 .01..... 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+vshufi64x2        ........ 01000011 .01..... 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f avx512vl
+vshufi32x4        ........ 01000011 .10..... 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f
+vshufi64x2        ........ 01000011 .10..... 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512f
+vpclmulqdq        ........ 01000100 ........ - .... 101 ... .0011 @rvm_vvv opc=8 ? vpclmulqdq avx512f avx512vl
+vfixupimmps       ........ 01010100 ........ 0 .... 101 ... .0011 @rvm_vvv_sae uimm=8 bcst=1 ? avx512f avx512vl
+vfixupimmpd       ........ 01010100 ........ 1 .... 101 ... .0011 @rvm_vvv_sae uimm=8 bcst=1 ? avx512f avx512vl
+vfixupimmss       ........ 01010101 .--..... 0 .... 101 ... .0011 @rvm_xxx_sae msz=32 uimm=8 ? avx512f avx512vl
+vfixupimmsd       ........ 01010101 .--..... 1 .... 101 ... .0011 @rvm_xxx_sae msz=64 uimm=8 ? avx512f avx512vl
+
+{
+  vpcmpud         ........ 00011110 ........ 0 .... 101 ... .0011 @rvm_kvv opc=8 bcst=1 ? avx512f avx512vl
+  vpcmpequd       ........ 00011110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpltud       ........ 00011110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpleud       ........ 00011110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnequd      ........ 00011110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnltud      ........ 00011110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnleud      ........ 00011110 ........ 0 .... 101 ... .0011 ? never
+}
+{
+  vpcmpd          ........ 00011111 ........ 0 .... 101 ... .0011 @rvm_kvv opc=8 bcst=1 ? avx512f avx512vl
+  vpcmpeqd        ........ 00011111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpltd        ........ 00011111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpled        ........ 00011111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpneqd       ........ 00011111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnltd       ........ 00011111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnled       ........ 00011111 ........ 0 .... 101 ... .0011 ? never
+}
+{
+  vpcmpub         ........ 00111110 ........ 0 .... 101 ... .0011 @rvm_kvv opc=8 ? avx512f avx512vl
+  vpcmpequb       ........ 00111110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpltub       ........ 00111110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpleub       ........ 00111110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnequb      ........ 00111110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnltub      ........ 00111110 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnleub      ........ 00111110 ........ 0 .... 101 ... .0011 ? never
+}
+{
+  vpcmpb          ........ 00111111 ........ 0 .... 101 ... .0011 @rvm_kvv opc=8 ? avx512f avx512vl
+  vpcmpeqb        ........ 00111111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpltb        ........ 00111111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpleb        ........ 00111111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpneqb       ........ 00111111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnltb       ........ 00111111 ........ 0 .... 101 ... .0011 ? never
+  vpcmpnleb       ........ 00111111 ........ 0 .... 101 ... .0011 ? never
+}
+{
+  vpcmpuq         ........ 00011110 ........ 1 .... 101 ... .0011 @rvm_kvv opc=8 bcst=1 ? avx512f avx512vl
+  vpcmpequq       ........ 00011110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpltuq       ........ 00011110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpleuq       ........ 00011110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnequq      ........ 00011110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnltuq      ........ 00011110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnleuq      ........ 00011110 ........ 1 .... 101 ... .0011 ? never
+}
+{
+  vpcmpq          ........ 00011111 ........ 1 .... 101 ... .0011 @rvm_kvv opc=8 bcst=1 ? avx512f avx512vl
+  vpcmpeqq        ........ 00011111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpltq        ........ 00011111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpleq        ........ 00011111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpneqq       ........ 00011111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnltq       ........ 00011111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnleq       ........ 00011111 ........ 1 .... 101 ... .0011 ? never
+}
+{
+  vpcmpuw         ........ 00111110 ........ 1 .... 101 ... .0011 @rvm_kvv opc=8 bcst=1 ? avx512f avx512vl
+  vpcmpequw       ........ 00111110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpltuw       ........ 00111110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpleuw       ........ 00111110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnequw      ........ 00111110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnltuw      ........ 00111110 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnleuw      ........ 00111110 ........ 1 .... 101 ... .0011 ? never
+}
+{
+  vpcmpw          ........ 00111111 ........ 1 .... 101 ... .0011 @rvm_kvv opc=8 bcst=1 ? avx512f avx512vl
+  vpcmpeqw        ........ 00111111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpltw        ........ 00111111 ........ 1 .... 101 ... .0011 ? never
+  vpcmplew        ........ 00111111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpneqw       ........ 00111111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnltw       ........ 00111111 ........ 1 .... 101 ... .0011 ? never
+  vpcmpnlew       ........ 00111111 ........ 1 .... 101 ... .0011 ? never
+}
+
+##############################################################################
+# Extension VAES
+##############################################################################
+
+vaesenc           ........ 11011100 .0...... - .... 101 ... .0010 @rvm_vvv ? vaes avx512vl
+vaesenc           ........ 11011100 .10..... - .... 101 ... .0010 @rvm_vvv ? vaes avx512f
+vaesenclast       ........ 11011101 .0...... - .... 101 ... .0010 @rvm_vvv ? vaes avx512vl
+vaesenclast       ........ 11011101 .10..... - .... 101 ... .0010 @rvm_vvv ? vaes avx512f
+vaesdec           ........ 11011110 .0...... - .... 101 ... .0010 @rvm_vvv ? vaes avx512vl
+vaesdec           ........ 11011110 .10..... - .... 101 ... .0010 @rvm_vvv ? vaes avx512f
+vaesdeclast       ........ 11011111 .0...... - .... 101 ... .0010 @rvm_vvv ? vaes avx512vl
+vaesdeclast       ........ 11011111 .10..... - .... 101 ... .0010 @rvm_vvv ? vaes avx512f
+
+##############################################################################
+# Extension AVX-512FP16
+##############################################################################
+
+vrndscaleph       ........ 00001000 ....1... 0 1111 100 ... .0011 @rm_vv_sae uimm=8 bcst=16 ? avx512fp16 avx512vl
+vrndscalesh       ........ 00001010 .--..... 0 .... 100 ... .0011 @rvm_xxx_sae uimm=8 msz=16 ? avx512fp16
+vgetmantph        ........ 00100110 ....1... 0 1111 100 ... .0011 @rm_vv_sae uimm=8 bcst=16 ? avx512fp16 avx512vl
+vgetmantsh        ........ 00100111 .--..... 0 .... 100 ... .0011 @rvm_xxx_sae uimm=8 msz=16 ? avx512fp16
+vreduceph         ........ 01010110 ....1... 0 1111 100 ... .0011 @rm_vv_sae uimm=8 bcst=16 ? avx512fp16 avx512vl
+vreducesh         ........ 01010111 .--..... 0 .... 100 ... .0011 @rvm_xxx_sae uimm=8 msz=16 ? avx512fp16
+vfpclassph        ........ 01100110 ....1... 0 1111 100 ... .0011 @rm_kv uimm=8 bcst=-16 ? avx512fp16 avx512vl
+vfpclasssh        ........ 01100111 .--.1... 0 1111 100 ... .0011 tuple=1 @rm_kx uimm=8 msz=16 ? avx512fp16
+{
+  vcmpph          ........ 11000010 ........ 0 .... 100 ... .0011 @rvm_kvv_sae opc=8 bcst=16 ? avx512fp16 avx512vl
+  vcmpeqph        ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpltph        ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpleph        ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpunordph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpneqph       ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpnltph       ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpnleph       ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpordph       ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpeq_uqph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpngeph       ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpngtph       ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpfalseph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpneq_oqph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpgeph        ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpgtph        ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmptrueph      ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpeq_osph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmplt_oqph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmple_oqph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpunord_sph   ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpneq_usph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpnlt_uqph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpnle_uqph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpord_sph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpeq_usph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpnge_uqph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpngt_uqph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpfalse_osph  ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpneq_osph    ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpge_oqph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmpgt_oqph     ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+  vcmptrue_usph   ........ 11000010 ........ 0 .... 100 ... .0011 ? never
+}
+{
+  vcmpsh          ........ 11000010 .--..... 0 .... 110 ... .0011 @rvm_kxx_sae msz=16 opc=8 ? avx512fp16 avx512vl
+  vcmpeqsh        ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpltsh        ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmplesh        ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpunordsh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpneqsh       ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpnltsh       ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpnlesh       ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpordsh       ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpeq_uqsh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpngesh       ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpngtsh       ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpfalsesh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpneq_oqsh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpgesh        ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpgtsh        ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmptruesh      ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpeq_ossh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmplt_oqsh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmple_oqsh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpunord_ssh   ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpneq_ussh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpnlt_uqsh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpnle_uqsh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpord_ssh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpeq_ussh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpnge_uqsh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpngt_uqsh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpfalse_ossh  ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpneq_ossh    ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpge_oqsh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmpgt_oqsh     ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+  vcmptrue_ussh   ........ 11000010 .--..... 0 .... 110 ... .0011 ? never
+}
+
+vcvtss2sh         ........ 00011101 .--0.... 0 .... 100 ... .0101 @rvm_xxx    msz=32 ? avx512fp16
+vcvtss2sh         11...... 00011101 ...1.... 0 .... 100 ... .0101 @rvm_xxx_er msz=32 ? avx512fp16
+vucomish          ........ 00101110 .--.1... 0 1111 100 ... .0101 @rm_xx_sae msz=16 ? avx512fp16
+vcomish           ........ 00101111 .--.1... 0 1111 100 ... .0101 @rm_xx_sae msz=16 ? avx512fp16
+vsqrtph           ........ 01010001 ....1... 0 1111 100 ... .0101 @rm_vv_er bcst=16 ? avx512fp16 avx512vl
+vaddph            ........ 01011000 ........ 0 .... 100 ... .0101 @rvm_vvv_er bcst=16 ? avx512fp16 avx512vl
+vmulph            ........ 01011001 ........ 0 .... 100 ... .0101 @rvm_vvv_er bcst=16 ? avx512fp16 avx512vl
+vcvtph2pd         ........ 01011010 ....1... 0 1111 100 ... .0101 @rm_vq_sae bcst=16 ? avx512fp16 avx512vl
+vcvtdq2ph         ........ 01011011 ....1... 0 1111 100 ... .0101 @rm_hv_er bcst=1 ? avx512fp16 avx512vl
+vcvtqq2ph         ........ 01011011 ....1... 1 1111 100 ... .0101 @rm_qv_er bcst=1 ? avx512fp16 avx512vl
+vsubph            ........ 01011100 ........ 0 .... 100 ... .0101 @rvm_vvv_er bcst=16 ? avx512fp16 avx512vl
+vminph            ........ 01011101 ........ 0 .... 100 ... .0101 @rvm_vvv_sae bcst=16 ? avx512fp16 avx512vl
+vdivph            ........ 01011110 ........ 0 .... 100 ... .0101 @rvm_vvv_er bcst=16 ? avx512fp16 avx512vl
+vmaxph            ........ 01011111 ........ 0 .... 100 ... .0101 @rvm_vvv_sae bcst=16 ? avx512fp16 avx512vl
+vcvttph2udq       ........ 01111000 ....1... 0 1111 100 ... .0101 @rm_vh_sae bcst=16 ? avx512fp16 avx512vl
+vcvtph2udq        ........ 01111001 ....1... 0 1111 100 ... .0101 @rm_vh_er bcst=16 ? avx512fp16 avx512vl
+vcvttph2uw        ........ 01111100 ....1... 0 1111 100 ... .0101 @rm_vv_sae bcst=16 ? avx512fp16 avx512vl
+vcvtph2uw         ........ 01111101 ....1... 0 1111 100 ... .0101 @rm_vv_er bcst=16 ? avx512fp16 avx512vl
+
+vcvtps2phx        ........ 00011101 ....1... 0 1111 101 ... .0101 @rm_hv_er bcst=1 ? avx512fp16 avx512vl
+vcvtpd2ph         ........ 01011010 ....1... 1 1111 101 ... .0101 @rm_qv_er bcst=1 ? avx512fp16 avx512vl
+vcvtph2dq         ........ 01011011 ....1... 0 1111 101 ... .0101 @rm_vh_er bcst=16 ? avx512fp16 avx512vl
+vmovw             11...... 01101110 .00.1... - 1111 101 ... .0101 @rm_xr msz=32 ? avx512fp16
+vmovw             0....... 01101110 .00.1... - 1111 101 ... .0101 @rm_xx msz=16 ? avx512fp16
+vmovw             10...... 01101110 .00.1... - 1111 101 ... .0101 @rm_xx msz=16 ? avx512fp16
+vcvttph2uqq       ........ 01111000 ....1... 0 1111 101 ... .0101 @rm_vq_sae bcst=16 ? avx512fp16 avx512vl
+vcvtph2uqq        ........ 01111001 ....1... 0 1111 101 ... .0101 @rm_vq_er bcst=16 ? avx512fp16 avx512vl
+vcvttph2qq        ........ 01111010 ....1... 0 1111 101 ... .0101 @rm_vq_sae bcst=16 ? avx512fp16 avx512vl
+vcvtph2qq         ........ 01111011 ....1... 0 1111 101 ... .0101 @rm_vq_er bcst=16 ? avx512fp16 avx512vl
+vcvttph2w         ........ 01111100 ....1... 0 1111 101 ... .0101 @rm_vv_sae bcst=16 ? avx512fp16 avx512vl
+vcvtph2w          ........ 01111101 ....1... 0 1111 101 ... .0101 @rm_vv_er bcst=16 ? avx512fp16 avx512vl
+vmovw             11...... 01111110 .00.1... - 1111 101 ... .0101         @mr_rx msz=32 ? avx512fp16
+vmovw             0....... 01111110 .00.1... - 1111 101 ... .0101 tuple=1 @mr_xx msz=16 ? avx512fp16
+vmovw             10...... 01111110 .00.1... - 1111 101 ... .0101 tuple=1 @mr_xx msz=16 ? avx512fp16
+
+vmovsh            11...... 00010000 .--..... 0 .... 110 ... .0101 @rvm_xxx ? avx512fp16
+vmovsh            0....... 00010000 .--.1... 0 1111 110 ... .0101 @rm_xx msz=16 ? avx512fp16
+vmovsh            10...... 00010000 .--.1... 0 1111 110 ... .0101 @rm_xx msz=16 ? avx512fp16
+vmovsh            11...... 00010001 .--..... 0 .... 110 ... .0101 @mvr_xxx ? avx512fp16
+vmovsh            0....... 00010001 .--.1... 0 1111 110 ... .0101 tuple=1 @mr_xx msz=16 ? avx512fp16
+vmovsh            10...... 00010001 .--.1... 0 1111 110 ... .0101 tuple=1 @mr_xx msz=16 ? avx512fp16
+vcvtsi2sh         ........ 00101010 .--0.... . .... 110 ... .0101 tuple=1 @rvm_xxr    ? avx512fp16
+vcvtsi2sh         11...... 00101010 ...1.... . .... 110 ... .0101 tuple=1 @rvm_xxr_er ? avx512fp16
+vcvttsh2si        ........ 00101100 .--.1... . 1111 110 ... .0101 tuple=1 @rm_rx_sae rsz=3 msz=16 ? avx512fp16
+vcvtsh2si         ........ 00101101 .--01... . 1111 110 ... .0101 tuple=1 @rm_rx_sae rsz=3 msz=16 ? avx512fp16
+vcvtsh2si         11...... 00101101 ...11... . 1111 110 ... .0101 tuple=1 @rm_rx_er  rsz=3 msz=16 ? avx512fp16
+vsqrtsh           ........ 01010001 ........ 0 .... 110 ... .0101 @rvm_xxx_er msz=16 ? avx512fp16
+vaddsh            ........ 01011000 ........ 0 .... 110 ... .0101 @rvm_xxx_er msz=16 ? avx512fp16
+vmulsh            ........ 01011001 ........ 0 .... 110 ... .0101 @rvm_xxx_er msz=16 ? avx512fp16
+vcvtsh2sd         ........ 01011010 .--..... 0 .... 110 ... .0101 @rvm_xxx_sae msz=16 ? avx512fp16
+vcvttph2dq        ........ 01011011 ....1... 0 1111 110 ... .0101 @rm_vh_sae bcst=16 ? avx512fp16 avx512vl
+vsubsh            ........ 01011100 ........ 0 .... 110 ... .0101 @rvm_xxx_er msz=16 ? avx512fp16
+vminsh            ........ 01011101 .--..... 0 .... 110 ... .0101 @rvm_xxx_sae msz=16 ? avx512fp16
+vdivsh            ........ 01011110 ........ 0 .... 110 ... .0101 @rvm_xxx_er msz=16 ? avx512fp16
+vmaxsh            ........ 01011111 .--..... 0 .... 110 ... .0101 @rvm_xxx_sae msz=16 ? avx512fp16
+vcvttsh2usi       ........ 01111000 .--.1... . 1111 110 ... .0101 tuple=1 @rm_rx_sae rsz=3 msz=16 ? avx512fp16
+vcvtsh2usi        ........ 01111001 .--01... . 1111 110 ... .0101 tuple=1 @rm_rx     rsz=3 msz=16 ? avx512fp16
+vcvtsh2usi        11...... 01111001 ...11... . 1111 110 ... .0101 tuple=1 @rm_rx_er  rsz=3 msz=16 ? avx512fp16
+vcvtusi2sh        ........ 01111011 .--0.... . .... 110 ... .0101 tuple=1 @rvm_xxr    msz=3 ? avx512fp16
+vcvtusi2sh        11...... 01111011 ...1.... . .... 110 ... .0101 tuple=1 @rvm_xxr_er msz=3 ? avx512fp16
+vcvtw2ph          ........ 01111101 ....1... 0 1111 110 ... .0101 @rm_vv_er bcst=16 ? avx512fp16 avx512vl
+
+vcvtsd2sh         ........ 01011010 ........ 1 .... 111 ... .0101 @rvm_xxx_er msz=64 ? avx512fp16
+vcvtudq2ph        ........ 01111010 ....1... 0 1111 111 ... .0101 @rm_hv_er bcst=1 ? avx512fp16 avx512vl
+vcvtuqq2ph        ........ 01111010 ....1... 1 1111 111 ... .0101 @rm_qv_er bcst=1 ? avx512fp16 avx512vl
+vcvtuw2ph         ........ 01111101 ....1... 0 1111 111 ... .0101 @rm_vv_er bcst=16 ? avx512fp16 avx512vl
+
+vcvtsh2ss         ........ 00010011 .--..... 0 .... 100 ... .0110 @rvm_xxx_sae msz=16 ? avx512fp16
+
+vcvtph2psx        ........ 00010011 ....1... 0 1111 101 ... .0110 @rm_vh_sae bcst=16 ? avx512fp16 avx512vl
+vscalefph         ........ 00101100 ........ 0 .... 101 ... .0110 @rvm_vvv_er bcst=16 ? avx512fp16 avx512vl
+vscalefsh         ........ 00101101 ........ 0 .... 101 ... .0110 @rvm_xxx_er msz=16 ? avx512fp16
+vgetexpph         ........ 01000010 ....1... 0 1111 101 ... .0110 @rm_vv_sae bcst=16 ? avx512fp16 avx512vl
+vgetexpsh         ........ 01000011 .--..... 0 .... 101 ... .0110 @rvm_xxx_sae msz=16 ? avx512fp16
+vrcpph            ........ 01001100 ....1... 0 1111 101 ... .0110 @rm_vv bcst=16 ? avx512fp16 avx512vl
+vrcpsh            ........ 01001101 .--..... 0 .... 101 ... .0110 tuple=1 @rvm_vvv msz=16 ? avx512fp16
+vrsqrtph          ........ 01001110 ....1... 0 1111 101 ... .0110 @rm_vv bcst=16 ? avx512fp16 avx512vl
+vrsqrtsh          ........ 01001111 .--..... 0 .... 101 ... .0110 tuple=1 @rvm_vvv msz=16 ? avx512fp16
+vfmaddsub132ph    ........ 10010110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmsubadd132ph    ........ 10010111 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmadd132ph       ........ 10011000 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmadd132sh       ........ 10011001 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfmsub132ph       ........ 10011010 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmsub132sh       ........ 10011011 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfnmadd132ph      ........ 10011100 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfnmadd132sh      ........ 10011101 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfnmsub132ph      ........ 10011110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfnmsub132sh      ........ 10011111 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfmaddsub213ph    ........ 10100110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmsubadd213ph    ........ 10100111 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmadd213ph       ........ 10101000 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmadd213sh       ........ 10101001 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfmsub213ph       ........ 10101010 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmsub213sh       ........ 10101011 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfnmadd213ph      ........ 10101100 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfnmadd213sh      ........ 10101101 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfnmsub213ph      ........ 10101110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfnmsub213sh      ........ 10101111 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfmaddsub231ph    ........ 10110110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmsubadd231ph    ........ 10110111 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmadd231ph       ........ 10111000 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmadd231sh       ........ 10111001 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfmsub231ph       ........ 10111010 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfmsub231sh       ........ 10111011 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfnmadd231ph      ........ 10111100 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfnmadd231sh      ........ 10111101 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfnmsub231ph      ........ 10111110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
+vfnmsub231sh      ........ 10111111 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+
+vfmaddcph         ........ 01010110 ........ 0 .... 110 ... .0110 @fmaddp_er bcst=32 ? avx512fp16 avx512vl
+vfmaddcsh         ........ 01010111 ........ 0 .... 110 ... .0110 @fmadds_er  msz=32 ? avx512fp16 avx512vl
+vfmulcph          ........ 11010110 ........ 0 .... 110 ... .0110 @rvm_vvv_er bcst=1 ? avx512fp16 avx512vl
+vfmulcsh          ........ 11010111 ........ 0 .... 110 ... .0110 @rvm_xxx_er msz=32 ? avx512fp16
+
+vfcmaddcph        ........ 01010110 ........ 0 .... 111 ... .0110 @fmaddp_er bcst=32 ? avx512fp16 avx512vl
+vfcmaddcsh        ........ 01010111 ........ 0 .... 111 ... .0110 @fmadds_er  msz=32 ? avx512fp16 avx512vl
+vfcmulcph         ........ 11010110 ........ 0 .... 111 ... .0110 @rvm_vvv_er bcst=1 ? avx512fp16 avx512vl
+vfcmulcsh         ........ 11010111 ........ 0 .... 111 ... .0110 @rvm_xxx_er msz=32 ? avx512fp16
+
+##############################################################################
+# Extension AVX-512BF16
+##############################################################################
+
+vdpbf16ps         ........ 01010010 ........ 0 .... 110 ... .0010 @rvm_vvv bcst=1 ? avx512bf16 avx512vl
+vcvtneps2bf16     ........ 01110010 ....1... 0 1111 110 ... .0010 @rm_hv bcst=1 ? avx512bf16 avx512vl
+vcvtne2ps2bf16    ........ 01110010 ........ 0 .... 111 ... .0010 @rvm_vvv bcst=1 ? avx512bf16 avx512vl
+
+##############################################################################
+# Extension AVX-512CD
+##############################################################################
+
+vpbroadcastmb2q   11...... 00101010 ....1... 1 1111 110 ... .0010 @rm_vk ? avx512cd avx512vl
+vpbroadcastmw2d   11...... 00111010 ....1... 0 1111 110 ... .0010 @rm_vk ? avx512cd avx512vl
+vplzcntd          ........ 01000100 ....1... 0 1111 101 ... .0010 @rm_vv bcst=1 ? avx512cd avx512vl
+vplzcntq          ........ 01000100 ....1... 1 1111 101 ... .0010 @rm_vv bcst=1 ? avx512cd avx512vl
+vpconflictd       ........ 11000100 ....1... 0 1111 101 ... .0010 @rm_vv bcst=1 ? avx512cd avx512vl
+vpconflictq       ........ 11000100 ....1... 1 1111 101 ... .0010 @rm_vv bcst=1 ? avx512cd avx512vl
+
+##############################################################################
+# Extension AVX-512-VBMI
+##############################################################################
+
+vpermi2b          ........ 01110101 ........ 0 .... 101 ... .0010 @rvm_vvv rw=3 ? avx512_vbmi avx512vl
+vpermt2b          ........ 01111101 ........ 0 .... 101 ... .0010 @rvm_vvv rw=3 ? avx512_vbmi avx512vl
+vpmultishiftqb    ........ 10000011 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 ? avx512_vbmi avx512vl
+vpermb            ........ 10001101 ........ 0 .... 101 ... .0010 @rvm_vvv ? avx512_vbmi avx512vl
+
+##############################################################################
+# Extension AVX-512-VBMI2
+##############################################################################
+
+vpcompressb       ........ 01100011 ....1... 0 1111 101 ... .0010 fixed=0 @mr_vv ? avx512_vbmi2 avx512vl
+vpcompressw       ........ 01100011 ....1... 1 1111 101 ... .0010 fixed=2 @mr_vv ? avx512_vbmi2 avx512vl
+
+vpexpandb         ........ 01100010 ....1... 0 1111 101 ... .0010 fixed=0 @rm_vv ? avx512_vbmi2 avx512vl
+vpexpandw         ........ 01100010 ....1... 1 1111 101 ... .0010 fixed=2 @rm_vv ? avx512_vbmi2 avx512vl
+
+vpshldvw          ........ 01110000 ........ 1 .... 101 ... .0010 @rvm_vvv rw=3 ? avx512_vbmi2 avx512vl
+vpshldvd          ........ 01110001 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vbmi2 avx512vl
+vpshldvq          ........ 01110001 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vbmi2 avx512vl
+vpshrdvw          ........ 01110010 ........ 1 .... 101 ... .0010 @rvm_vvv rw=3 ? avx512_vbmi2 avx512vl
+vpshrdvd          ........ 01110011 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vbmi2 avx512vl
+vpshrdvq          ........ 01110011 ........ 1 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vbmi2 avx512vl
+
+vpshldw           ........ 01110000 ........ 1 .... 101 ... .0011 @rvm_vvv uimm=8 ? avx512_vbmi2 avx512vl
+vpshldd           ........ 01110001 ........ 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512_vbmi2 avx512vl
+vpshldq           ........ 01110001 ........ 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512_vbmi2 avx512vl
+vpshrdw           ........ 01110010 ........ 1 .... 101 ... .0011 @rvm_vvv uimm=8 ? avx512_vbmi2 avx512vl
+vpshrdd           ........ 01110011 ........ 0 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512_vbmi2 avx512vl
+vpshrdq           ........ 01110011 ........ 1 .... 101 ... .0011 @rvm_vvv uimm=8 bcst=1 ? avx512_vbmi2 avx512vl
+
+##############################################################################
+# Extension AVX-512-BITALG
+##############################################################################
+
+vpopcntb          ........ 01010100 ....1... 0 1111 101 ... .0010 @rm_vv ? avx512_bitalg avx512vl
+vpopcntw          ........ 01010100 ....1... 1 1111 101 ... .0010 @rm_vv ? avx512_bitalg avx512vl
+vpshufbitqmb      ........ 10001111 ........ 0 .... 101 ... .0010 @rvm_kvv ? avx512_bitalg avx512vl
+
+##############################################################################
+# Extension AVX-512-VNNI
+##############################################################################
+
+vpdpbusd          ........ 01010000 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vnni avx512vl
+vpdpbusds         ........ 01010001 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vnni avx512vl
+vpdpwssd          ........ 01010010 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vnni avx512vl
+vpdpwssds         ........ 01010011 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=1 rw=3 ? avx512_vnni avx512vl
+
+##############################################################################
+# Extension AVX-512-IFMA
+##############################################################################
+
+vpmadd52luq       ........ 10110100 ........ 1 .... 101 ... .0010 @fmaddp bcst=1 ? avx512_ifma avx512vl
+vpmadd52huq       ........ 10110101 ........ 1 .... 101 ... .0010 @fmaddp bcst=1 ? avx512_ifma avx512vl
+
+##############################################################################
+# Extension AVX-512-VPOPCNTDQ
+##############################################################################
+
+vpopcntd          ........ 01010101 ....1... 0 1111 101 ... .0010 @rm_vv bcst=1 ? avx512_vpopcntdq avx512vl
+vpopcntq          ........ 01010101 ....1... 1 1111 101 ... .0010 @rm_vv bcst=1 ? avx512_vpopcntdq avx512vl
+
+##############################################################################
+# Uncategorized
+##############################################################################
+
+# TODO: vfmaddrnd231pd
+
+# TODO: vgatherdpd
+# TODO: vgatherdps
+# TODO: vgatherqpd
+# TODO: vgatherqps
+# TODO: vgatherdd
+# TODO: vgatherqd
+# TODO: vgatherdq
+# TODO: vgatherqq
+# TODO: vpscatterdd
+# TODO: vpscatterdq
+# TODO: vpscatterqd
+# TODO: vpscatterqq
+# TODO: vscatterdps
+# TODO: vscatterdpd
+# TODO: vscatterqps
+# TODO: vscatterqpd

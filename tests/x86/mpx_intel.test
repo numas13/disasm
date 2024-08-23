@@ -1,0 +1,23 @@
+# TODO:
+#       f2 c3                           "bnd ret"
+
+        f3 0f 1a c7                     bndcl           bnd0,rdi
+        f3 0f 1a cf                     bndcl           bnd1,rdi
+        f3 0f 1a d7                     bndcl           bnd2,rdi
+        f3 0f 1a df                     bndcl           bnd3,rdi
+        f3 0f 1a 07                     bndcl           bnd0,[rdi]
+        f3 0f 1a 0f                     bndcl           bnd1,[rdi]
+        f3 0f 1a 17                     bndcl           bnd2,[rdi]
+        f3 0f 1a 1f                     bndcl           bnd3,[rdi]
+        f2 0f 1a c7                     bndcu           bnd0,rdi
+        f2 0f 1b c7                     bndcn           bnd0,rdi
+        f2 0f 1a 07                     bndcu           bnd0,[rdi]
+        f2 0f 1b 07                     bndcn           bnd0,[rdi]
+        0f 1a 07                        bndldx          bnd0,[rdi]
+        0f 1a 47 10                     bndldx          bnd0,[rdi+0x10]
+        0f 1a 44 cf 10                  bndldx          bnd0,[rdi+rcx*8+0x10]
+        f3 0f 1b 0f                     bndmk           bnd1,[rdi]
+        66 0f 1a ca                     bndmov          bnd1,bnd2
+        66 0f 1a 0f                     bndmov          bnd1,[rdi]
+        66 0f 1b 17                     bndmov          [rdi],bnd2
+        0f 1b 17                        bndstx          [rdi],bnd2

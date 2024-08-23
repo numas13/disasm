@@ -1,0 +1,328 @@
+# OSPKE
+        0f 01 ee                        rdpkru
+        0f 01 ef                        wrpkru
+
+# RTM
+        0f 01 d6                        xtest
+        66 c7 f8 fb ff                  xbeginw 0
+        c7 f8 fa ff ff ff               xbegin 0
+        c6 f8 13                        xabort 0x13
+
+# ADX
+        66 0f 38 f6 c8                  adcx   ecx,eax
+        66 48 0f 38 f6 c8               adcx   rcx,rax
+        66 0f 38 f6 08                  adcx   ecx,DWORD PTR [rax]
+        66 48 0f 38 f6 08               adcx   rcx,QWORD PTR [rax]
+        f3 0f 38 f6 c8                  adox   ecx,eax
+        f3 48 0f 38 f6 c8               adox   rcx,rax
+        f3 0f 38 f6 08                  adox   ecx,DWORD PTR [rax]
+        f3 48 0f 38 f6 08               adox   rcx,QWORD PTR [rax]
+
+# SMAP
+        0f 01 ca                        clac
+        0f 01 cb                        stac
+
+# CLDEMOTE
+        0f 1c 07                        cldemote BYTE PTR [rdi]
+
+# CET_SS
+        f3 0f 01 e8                     setssbsy
+        f3 0f ae 37                     clrssbsy QWORD PTR [rdi]
+        f3 0f ae e9                     incsspd ecx
+        f3 48 0f ae e9                  incsspq rcx
+        f3 0f 1e c9                     rdsspd ecx
+        f3 48 0f 1e c9                  rdsspq rcx
+        f3 0f 01 2f                     rstorssp QWORD PTR [rdi]
+        f3 0f 01 ea                     saveprevssp
+        0f 38 f6 17                     wrssd  [rdi],edx
+        48 0f 38 f6 17                  wrssq  [rdi],rdx
+        66 0f 38 f5 17                  wrussd [rdi],edx
+        66 48 0f 38 f5 17               wrussq [rdi],rdx
+
+# UINTR
+        f3 0f 01 ec                     uiret
+        f3 0f 01 ed                     testui
+        f3 0f 01 ee                     clui
+        f3 0f 01 ef                     stui
+        f3 0f c7 f1                     senduipi rcx
+
+# CLWB
+        66 0f ae 37                     clwb   BYTE PTR [rdi]
+
+# CET
+        f3 0f 1e fb                     endbr32
+        f3 0f 1e fa                     endbr64
+
+# GFNI
+#        66 0f 3a cf ca 13               gf2p8affineinvqb xmm1,xmm2,0x13
+#        66 0f 3a cf 0f 13               gf2p8affineinvqb xmm1,XMMWORD PTR [rdi],0x13
+#        c4 e3 e9 cf cb 13               vgf2p8affineinvqb xmm1,xmm2,xmm3,0x13
+#        c4 e3 e9 cf 0f 13               vgf2p8affineinvqb xmm1,xmm2,XMMWORD PTR [rdi],0x13
+#        c4 e3 ed cf cb 13               vgf2p8affineinvqb ymm1,ymm2,ymm3,0x13
+#        c4 e3 ed cf 0f 13               vgf2p8affineinvqb ymm1,ymm2,YMMWORD PTR [rdi],0x13
+#        62 f3 ed 08 cf cb 13            vgf2p8affineinvqb xmm1,xmm2,xmm3,0x13
+#        62 f3 ed 08 cf 4f 01 13         vgf2p8affineinvqb xmm1,xmm2,XMMWORD PTR [rdi+0x10],0x13
+#        62 f3 ed 18 cf 4f 02 13         vgf2p8affineinvqb xmm1,xmm2,QWORD BCST [rdi+0x10],0x13
+#        62 f3 ed 28 cf cb 13            vgf2p8affineinvqb ymm1,ymm2,ymm3,0x13
+#        62 f3 ed 28 cf 4f 01 13         vgf2p8affineinvqb ymm1,ymm2,YMMWORD PTR [rdi+0x20],0x13
+#        62 f3 ed 38 cf 4f 04 13         vgf2p8affineinvqb ymm1,ymm2,QWORD BCST [rdi+0x20],0x13
+#        62 f3 ed 48 cf cb 13            vgf2p8affineinvqb zmm1,zmm2,zmm3,0x13
+#        62 f3 ed 48 cf 4f 01 13         vgf2p8affineinvqb zmm1,zmm2,ZMMWORD PTR [rdi+0x40],0x13
+#        62 f3 ed 58 cf 4f 08 13         vgf2p8affineinvqb zmm1,zmm2,QWORD BCST [rdi+0x40],0x13
+#        66 0f 3a ce ca 13               gf2p8affineqb xmm1,xmm2,0x13
+#        66 0f 3a ce 0f 13               gf2p8affineqb xmm1,XMMWORD PTR [rdi],0x13
+#        c4 e3 e9 ce cb 13               vgf2p8affineqb xmm1,xmm2,xmm3,0x13
+#        c4 e3 e9 ce 0f 13               vgf2p8affineqb xmm1,xmm2,XMMWORD PTR [rdi],0x13
+#        c4 e3 ed ce cb 13               vgf2p8affineqb ymm1,ymm2,ymm3,0x13
+#        c4 e3 ed ce 0f 13               vgf2p8affineqb ymm1,ymm2,YMMWORD PTR [rdi],0x13
+#        62 f3 ed 08 ce cb 13            vgf2p8affineqb xmm1,xmm2,xmm3,0x13
+#        62 f3 ed 08 ce 4f 01 13         vgf2p8affineqb xmm1,xmm2,XMMWORD PTR [rdi+0x10],0x13
+#        62 f3 ed 18 ce 4f 02 13         vgf2p8affineqb xmm1,xmm2,QWORD BCST [rdi+0x10],0x13
+#        62 f3 ed 28 ce cb 13            vgf2p8affineqb ymm1,ymm2,ymm3,0x13
+#        62 f3 ed 28 ce 4f 01 13         vgf2p8affineqb ymm1,ymm2,YMMWORD PTR [rdi+0x20],0x13
+#        62 f3 ed 38 ce 4f 04 13         vgf2p8affineqb ymm1,ymm2,QWORD BCST [rdi+0x20],0x13
+#        62 f3 ed 48 ce cb 13            vgf2p8affineqb zmm1,zmm2,zmm3,0x13
+#        62 f3 ed 48 ce 4f 01 13         vgf2p8affineqb zmm1,zmm2,ZMMWORD PTR [rdi+0x40],0x13
+#        62 f3 ed 58 ce 4f 08 13         vgf2p8affineqb zmm1,zmm2,QWORD BCST [rdi+0x40],0x13
+#        66 0f 38 cf ca                  gf2p8mulb xmm1,xmm2
+#        66 0f 38 cf 0f                  gf2p8mulb xmm1,XMMWORD PTR [rdi]
+#        c4 e2 69 cf cb                  vgf2p8mulb xmm1,xmm2,xmm3
+#        c4 e2 69 cf 0f                  vgf2p8mulb xmm1,xmm2,XMMWORD PTR [rdi]
+#        c4 e2 6d cf cb                  vgf2p8mulb ymm1,ymm2,ymm3
+#        c4 e2 6d cf 0f                  vgf2p8mulb ymm1,ymm2,YMMWORD PTR [rdi]
+#        62 f2 6d 08 cf cb               vgf2p8mulb xmm1,xmm2,xmm3
+#        62 f2 6d 08 cf 4f 04            vgf2p8mulb xmm1,xmm2,XMMWORD PTR [rdi+0x40]
+#        62 f2 6d 28 cf cb               vgf2p8mulb ymm1,ymm2,ymm3
+#        62 f2 6d 28 cf 4f 02            vgf2p8mulb ymm1,ymm2,YMMWORD PTR [rdi+0x40]
+#        62 f2 6d 48 cf cb               vgf2p8mulb zmm1,zmm2,zmm3
+#        62 f2 6d 48 cf 4f 01            vgf2p8mulb zmm1,zmm2,ZMMWORD PTR [rdi+0x40]
+
+# HRESET
+#        f3 0f 3a f0 c0 13               hreset 0x13
+
+# AMX
+#        c4 e2 78 49 07                  ldtilecfg [rdi]
+
+# KL
+#        f3 0f 38 dc ca                  loadiwkey xmm1,xmm2
+
+# ENQCMD
+        f2 0f 38 f8 0f                  enqcmd rcx,[rdi]
+
+# MOVBE
+        66 0f 38 f0 0f                  movbe  cx,WORD PTR [rdi]
+        0f 38 f0 0f                     movbe  ecx,DWORD PTR [rdi]
+        48 0f 38 f0 0f                  movbe  rcx,QWORD PTR [rdi]
+        66 0f 38 f1 0f                  movbe  WORD PTR [rdi],cx
+        0f 38 f1 0f                     movbe  DWORD PTR [rdi],ecx
+        48 0f 38 f1 0f                  movbe  QWORD PTR [rdi],rcx
+
+# MOVDIRI
+        0f 38 f9 0f                     movdiri DWORD PTR [rdi],ecx
+        48 0f 38 f9 0f                  movdiri QWORD PTR [rdi],rcx
+
+# MOVDIR64B
+        66 0f 38 f8 0f                  movdir64b rcx,[rdi]
+
+# BMI1
+        66 f3 0f bc cb                  tzcnt  cx,bx
+        f3 0f bc cb                     tzcnt  ecx,ebx
+        f3 48 0f bc cb                  tzcnt  rcx,rbx
+        66 f3 0f bc 0f                  tzcnt  cx,WORD PTR [rdi]
+        f3 0f bc 0f                     tzcnt  ecx,DWORD PTR [rdi]
+        f3 48 0f bc 0f                  tzcnt  rcx,QWORD PTR [rdi]
+
+# BMI2
+        c4 e2 63 f6 ca                  mulx   ecx,ebx,edx
+        c4 e2 63 f6 0f                  mulx   ecx,ebx,DWORD PTR [rdi]
+        c4 e2 e3 f6 ca                  mulx   rcx,rbx,rdx
+        c4 e2 e3 f6 0f                  mulx   rcx,rbx,QWORD PTR [rdi]
+        c4 e3 7b f0 cb 03               rorx   ecx,ebx,0x3
+        c4 e3 7b f0 0f 03               rorx   ecx,DWORD PTR [rdi],0x3
+        c4 e3 fb f0 cb 03               rorx   rcx,rbx,0x3
+        c4 e3 fb f0 0f 03               rorx   rcx,QWORD PTR [rdi],0x3
+
+# FSGSBASE
+        f3 0f ae c0                     rdfsbase eax
+        f3 48 0f ae c0                  rdfsbase rax
+        f3 0f ae c8                     rdgsbase eax
+        f3 48 0f ae c8                  rdgsbase rax
+        f3 0f ae d1                     wrfsbase ecx
+        f3 48 0f ae d1                  wrfsbase rcx
+        f3 0f ae d9                     wrgsbase ecx
+        f3 48 0f ae d9                  wrgsbase rcx
+
+# RDRAND
+        66 0f c7 f2                     rdrand dx
+        0f c7 f2                        rdrand edx
+        48 0f c7 f2                     rdrand rdx
+
+# RDSEED
+        66 0f c7 fa                     rdseed dx
+        0f c7 fa                        rdseed edx
+        48 0f c7 fa                     rdseed rdx
+
+# SHA
+        0f 3a cc ca 01                  sha1rnds4 xmm1,xmm2,0x1
+        0f 3a cc 0f 01                  sha1rnds4 xmm1,XMMWORD PTR [rdi],0x1
+        0f 38 c8 ca                     sha1nexte xmm1,xmm2
+        0f 38 c8 0f                     sha1nexte xmm1,XMMWORD PTR [rdi]
+        0f 38 c9 ca                     sha1msg1 xmm1,xmm2
+        0f 38 c9 0f                     sha1msg1 xmm1,XMMWORD PTR [rdi]
+        0f 38 ca ca                     sha1msg2 xmm1,xmm2
+        0f 38 ca 0f                     sha1msg2 xmm1,XMMWORD PTR [rdi]
+        0f 38 cb ca                     sha256rnds2 xmm1,xmm2,xmm0
+        0f 38 cb 0f                     sha256rnds2 xmm1,XMMWORD PTR [rdi],xmm0
+        0f 38 cc ca                     sha256msg1 xmm1,xmm2
+        0f 38 cc 0f                     sha256msg1 xmm1,XMMWORD PTR [rdi]
+        0f 38 cd ca                     sha256msg2 xmm1,xmm2
+        0f 38 cd 0f                     sha256msg2 xmm1,XMMWORD PTR [rdi]
+
+# WAITPKG
+        66 0f ae f1                     tpause ecx
+        67 f3 0f ae f1                  umonitor cx     # -amd64
+        f3 0f ae f1                     umonitor ecx    # -amd64
+        67 f3 0f ae f1                  umonitor ecx
+        f3 0f ae f1                     umonitor rcx
+        f2 0f ae f1                     umwait ecx
+
+# XSAVE
+        0f ae 27                        xsave  [rdi]
+        48 0f ae 27                     xsave64 [rdi]
+        0f ae 2f                        xrstor [rdi]
+        48 0f ae 2f                     xrstor64 [rdi]
+        0f c7 27                        xsavec [rdi]
+        48 0f c7 27                     xsavec64 [rdi]
+        0f c7 1f                        xrstors [rdi]
+        48 0f c7 1f                     xrstors64 [rdi]
+        0f ae 37                        xsaveopt [rdi]
+        48 0f ae 37                     xsaveopt64 [rdi]
+        0f c7 2f                        xsaves [rdi]
+        48 0f c7 2f                     xsaves64 [rdi]
+
+# FMA4
+        c4 e3 e9 69 cc 30               vfmaddpd xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 69 cc 30               vfmaddpd ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 69 4f 40 40            vfmaddpd xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 69 4f 40 40            vfmaddpd ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 69 4f 40 30            vfmaddpd xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 69 4f 40 30            vfmaddpd ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 68 cc 30               vfmaddps xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 68 cc 30               vfmaddps ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 68 4f 40 40            vfmaddps xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 68 4f 40 40            vfmaddps ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 68 4f 40 30            vfmaddps xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 68 4f 40 30            vfmaddps ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 6b cc 30               vfmaddsd xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 6b 4f 40 40            vfmaddsd xmm1,xmm2,QWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 6b 4f 40 30            vfmaddsd xmm1,xmm2,xmm3,QWORD PTR [rdi+0x40]
+        c4 e3 e9 6a cc 30               vfmaddss xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 6a 4f 40 40            vfmaddss xmm1,xmm2,DWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 6a 4f 40 30            vfmaddss xmm1,xmm2,xmm3,DWORD PTR [rdi+0x40]
+        c4 e3 e9 6d cc 30               vfmsubpd xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 6d cc 30               vfmsubpd ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 6d 4f 40 40            vfmsubpd xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 6d 4f 40 40            vfmsubpd ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 6d 4f 40 30            vfmsubpd xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 6d 4f 40 30            vfmsubpd ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 6c cc 30               vfmsubps xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 6c cc 30               vfmsubps ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 6c 4f 40 40            vfmsubps xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 6c 4f 40 40            vfmsubps ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 6c 4f 40 30            vfmsubps xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 6c 4f 40 30            vfmsubps ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 6f cc 30               vfmsubsd xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 6f 4f 40 40            vfmsubsd xmm1,xmm2,QWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 6f 4f 40 30            vfmsubsd xmm1,xmm2,xmm3,QWORD PTR [rdi+0x40]
+        c4 e3 e9 6e cc 30               vfmsubss xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 6e 4f 40 40            vfmsubss xmm1,xmm2,DWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 6e 4f 40 30            vfmsubss xmm1,xmm2,xmm3,DWORD PTR [rdi+0x40]
+        c4 e3 e9 5d cc 30               vfmaddsubpd xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 5d cc 30               vfmaddsubpd ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 5d 4f 40 40            vfmaddsubpd xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 5d 4f 40 40            vfmaddsubpd ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 5d 4f 40 30            vfmaddsubpd xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 5d 4f 40 30            vfmaddsubpd ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 5c cc 30               vfmaddsubps xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 5c cc 30               vfmaddsubps ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 5c 4f 40 40            vfmaddsubps xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 5c 4f 40 40            vfmaddsubps ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 5c 4f 40 30            vfmaddsubps xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 5c 4f 40 30            vfmaddsubps ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 5f cc 30               vfmsubaddpd xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 5f cc 30               vfmsubaddpd ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 5f 4f 40 40            vfmsubaddpd xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 5f 4f 40 40            vfmsubaddpd ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 5f 4f 40 30            vfmsubaddpd xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 5f 4f 40 30            vfmsubaddpd ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 5e cc 30               vfmsubaddps xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 5e cc 30               vfmsubaddps ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 5e 4f 40 40            vfmsubaddps xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 5e 4f 40 40            vfmsubaddps ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 5e 4f 40 30            vfmsubaddps xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 5e 4f 40 30            vfmsubaddps ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 79 cc 30               vfnmaddpd xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 79 cc 30               vfnmaddpd ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 79 4f 40 40            vfnmaddpd xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 79 4f 40 40            vfnmaddpd ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 79 4f 40 30            vfnmaddpd xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 79 4f 40 30            vfnmaddpd ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 78 cc 30               vfnmaddps xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 78 cc 30               vfnmaddps ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 78 4f 40 40            vfnmaddps xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 78 4f 40 40            vfnmaddps ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 78 4f 40 30            vfnmaddps xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 78 4f 40 30            vfnmaddps ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 7b cc 30               vfnmaddsd xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 7b 4f 40 40            vfnmaddsd xmm1,xmm2,QWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 7b 4f 40 30            vfnmaddsd xmm1,xmm2,xmm3,QWORD PTR [rdi+0x40]
+        c4 e3 e9 7a cc 30               vfnmaddss xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 7a 4f 40 40            vfnmaddss xmm1,xmm2,DWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 7a 4f 40 30            vfnmaddss xmm1,xmm2,xmm3,DWORD PTR [rdi+0x40]
+        c4 e3 e9 7d cc 30               vfnmsubpd xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 7d cc 30               vfnmsubpd ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 7d 4f 40 40            vfnmsubpd xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 7d 4f 40 40            vfnmsubpd ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 7d 4f 40 30            vfnmsubpd xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 7d 4f 40 30            vfnmsubpd ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 7c cc 30               vfnmsubps xmm1,xmm2,xmm3,xmm4
+        c4 e3 ed 7c cc 30               vfnmsubps ymm1,ymm2,ymm3,ymm4
+        c4 e3 69 7c 4f 40 40            vfnmsubps xmm1,xmm2,XMMWORD PTR [rdi+0x40],xmm4
+        c4 e3 6d 7c 4f 40 40            vfnmsubps ymm1,ymm2,YMMWORD PTR [rdi+0x40],ymm4
+        c4 e3 e9 7c 4f 40 30            vfnmsubps xmm1,xmm2,xmm3,XMMWORD PTR [rdi+0x40]
+        c4 e3 ed 7c 4f 40 30            vfnmsubps ymm1,ymm2,ymm3,YMMWORD PTR [rdi+0x40]
+        c4 e3 e9 7f cc 30               vfnmsubsd xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 7f 4f 40 40            vfnmsubsd xmm1,xmm2,QWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 7f 4f 40 30            vfnmsubsd xmm1,xmm2,xmm3,QWORD PTR [rdi+0x40]
+        c4 e3 e9 7e cc 30               vfnmsubss xmm1,xmm2,xmm3,xmm4
+        c4 e3 69 7e 4f 40 40            vfnmsubss xmm1,xmm2,DWORD PTR [rdi+0x40],xmm4
+        c4 e3 e9 7e 4f 40 30            vfnmsubss xmm1,xmm2,xmm3,DWORD PTR [rdi+0x40]
+
+# Uncategorized
+        0f ae e8                        lfence
+        0f ae f0                        mfence
+        0f ae f8                        sfence
+
+        66 f3 0f bd ca                  lzcnt  cx,dx
+        f3 0f bd ca                     lzcnt  ecx,edx
+        f3 48 0f bd ca                  lzcnt  rcx,rdx
+        66 f3 0f bd 0f                  lzcnt  cx,WORD PTR [rdi]
+        f3 0f bd 0f                     lzcnt  ecx,DWORD PTR [rdi]
+        f3 48 0f bd 0f                  lzcnt  rcx,QWORD PTR [rdi]
+        0f 01 c5                        pconfig
+        0f 33                           rdpmc
+
+        f3 0f c7 f8                     rdpid  eax # -amd64
+        f3 0f c7 f8                     rdpid  rax
+
+        0f 01 e8                        serialize
+
+        0f 00 e1                        verr   ecx
+        0f 00 27                        verr   WORD PTR [rdi]
+        0f 00 e9                        verw   ecx
+        0f 00 2f                        verw   WORD PTR [rdi]
+
+        f3 0f 09                        wbnoinvd
+
+        f2 0f 01 e9                     xresldtrk
+        f2 0f 01 e8                     xsusldtrk

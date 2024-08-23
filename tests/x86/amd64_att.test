@@ -1,0 +1,48 @@
+        e8 00 00 00 00                  call            5
+        ff 17                           call            *(%rdi)
+
+        66 ff 20                        jmpw            *(%rax)
+        ff 20                           jmp             *(%rax)
+
+        66 6a 01                        pushw           $0x1
+        6a 01                           push            $0x1
+        66 ff 34 24                     pushw           (%rsp)
+        ff 34 24                        push            (%rsp)
+
+        88 c1                           mov             %al,%cl
+        66 88 c1                        mov             %al,%cl
+        66 89 c1                        mov             %ax,%cx
+        89 c1                           mov             %eax,%ecx
+        40 89 c1                        mov             %eax,%ecx
+        48 89 c1                        mov             %rax,%rcx
+        66 48 89 c1                     mov             %rax,%rcx
+        48 89 08                        mov             %rcx,(%rax)
+        67 48 89 08                     mov             %rcx,(%eax)
+        48 89 0c 08                     mov             %rcx,(%rax,%rcx,1)
+        48 89 4c c8 20                  mov             %rcx,0x20(%rax,%rcx,8)
+        48 89 8c c8 80 7f aa 00         mov             %rcx,0xaa7f80(%rax,%rcx,8)
+        8a c1                           mov             %cl,%al
+        66 8a c1                        mov             %cl,%al
+        66 8b c1                        mov             %cx,%ax
+        8b c1                           mov             %ecx,%eax
+        40 8b c1                        mov             %ecx,%eax
+        48 8b c1                        mov             %rcx,%rax
+        66 48 8b c1                     mov             %rcx,%rax
+        48 8b 08                        mov             (%rax),%rcx
+        67 48 8b 08                     mov             (%eax),%rcx
+        48 8b 0c 08                     mov             (%rax,%rcx,1),%rcx
+        48 8b 4c c8 20                  mov             0x20(%rax,%rcx,8),%rcx
+        48 8b 8c c8 80 7f aa 00         mov             0xaa7f80(%rax,%rcx,8),%rcx
+        b0 ff                           mov             $0xff,%al
+        41 b0 ff                        mov             $0xff,%r8b
+        66 b8 ef be                     mov             $0xbeef,%ax
+        b8 ef be ad de                  mov             $0xdeadbeef,%eax
+        49 b8 00 00 00 00 ef be ad de   movabs          $0xdeadbeef00000000,%r8
+        67 c6 00 ef                     movb            $0xef,(%eax)
+        c6 00 ef                        movb            $0xef,(%rax)
+        67 66 c7 00 ef be               movw            $0xbeef,(%eax)
+        66 c7 00 ef be                  movw            $0xbeef,(%rax)
+        c7 00 ef be ad de               movl            $0xdeadbeef,(%rax)
+        67 c7 00 ef be ad de            movl            $0xdeadbeef,(%eax)
+        49 c7 00 ef be ad de            movq            $0xffffffffdeadbeef,(%r8)
+        67 49 c7 00 ef be ad de         movq            $0xffffffffdeadbeef,(%r8d)

@@ -1,0 +1,9 @@
+        64 48 89 04 25 10 00 00 00      mov     QWORD PTR fs:0x10,rax
+        64 48 89 04 25 10 00 00 00      mov     %rax,%fs:0x10 # +att
+        64 48 8b 04 25 10 00 00 00      mov     rax,QWORD PTR fs:0x10
+        64 48 8b 04 25 10 00 00 00      mov     %fs:0x10,%rax # +att
+        48 89 04 25 10 00 00 00         mov     QWORD PTR ds:0x10,rax
+        48 89 04 25 10 00 00 00         mov     %rax,0x10 # +att
+
+1000:   74 02                           je      1004
+1000:   74 02                           je      1004 # +att

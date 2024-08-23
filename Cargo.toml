@@ -21,8 +21,10 @@ mnemonic = []
 
 # architectures
 riscv = []
+x86 = []
 all-arch = [
     "riscv",
+    "x86",
 ]
 
 [build-dependencies]

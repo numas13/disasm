@@ -1,0 +1,49 @@
+        37                              aaa
+        d5 0a                           aad         0xa
+        d4 0a                           aam         0xa
+        3f                              aas
+
+        27                              daa
+        2f                              das
+
+        66 41                           inc    cx
+        41                              inc    ecx
+        66 49                           dec    cx
+        49                              dec    ecx
+
+        66 62 0f                        bound           cx,DWORD PTR [edi]
+        62 0f                           bound           ecx,QWORD PTR [edi]
+
+#       66 c5 0f                        lds    cx,DWORD PTR [edi]
+#       c5 0f                           lds    ecx,FWORD PTR [edi]
+        66 0f b2 0f                     lss    cx,DWORD PTR [edi]
+        0f b2 0f                        lss    ecx,FWORD PTR [edi]
+#       66 c4 0f                        les    cx,DWORD PTR [edi]
+#       c4 0f                           les    ecx,FWORD PTR [edi]
+        66 0f b2 0f                     lss    cx,DWORD PTR [edi]
+        0f b2 0f                        lss    ecx,FWORD PTR [edi]
+        66 0f b5 0f                     lgs    cx,DWORD PTR [edi]
+        0f b5 0f                        lgs    ecx,FWORD PTR [edi]
+
+        66 0f 38 82 0f                  invpcid ecx,[edi]
+
+        06                              push   es
+        0e                              push   cs
+        16                              push   ss
+        1e                              push   ds
+
+        07                              pop    es
+        17                              pop    ss
+        1f                              pop    ds
+
+        60                              pusha
+        61                              popa
+
+        9c                              pushf
+        9d                              popf
+
+        9e                              sahf
+
+# TODO: mem access is 16-bit but regs is 32-bits
+#       63 f9                           arpl        ecx,edi
+#       63 3f                           arpl        WORD PTR [edi],edi

@@ -16,7 +16,7 @@ use decodetree::{
     Parser, Pattern, ValueKind,
 };
 
-#[cfg(not(any(feature = "riscv")))]
+#[cfg(not(any(feature = "riscv", feature = "x86")))]
 compile_error!("enable at least one arch");
 
 #[derive(Debug)]
@@ -519,6 +519,42 @@ fn generate() {
                     trait_name: "RiscvDecode32",
                     insn_size: &[32],
                     insn_type: "u32",
+                    ..DecodeOptions::default()
+                },
+            ),
+        #[cfg(feature = "x86")]
+        Arch::new("x86")
+            .value_type("i32")
+            .set_return_error(true)
+            .mnemonic_dot(false)
+            .decode(
+                "insn.decode",
+                "generated_decode.rs",
+                DecodeOptions {
+                    trait_name: "X86Decode",
+                    insn_size: &[24, 32],
+                    variable_size: true,
+                    insn_type: "u64",
+                    ..DecodeOptions::default()
+                },
+            )
+            .decode(
+                "insn_vex.decode",
+                "generated_decode_vex.rs",
+                DecodeOptions {
+                    trait_name: "X86DecodeVex",
+                    insn_size: &[32],
+                    insn_type: "u64",
+                    ..DecodeOptions::default()
+                },
+            )
+            .decode(
+                "insn_evex.decode",
+                "generated_decode_evex.rs",
+                DecodeOptions {
+                    trait_name: "X86DecodeEvex",
+                    insn_size: &[40],
+                    insn_type: "u64",
                     ..DecodeOptions::default()
                 },
             ),

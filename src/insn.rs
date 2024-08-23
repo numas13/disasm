@@ -77,6 +77,15 @@ impl Insn {
         self.operands.push(operand.into());
     }
 
+    pub(crate) fn push_operand_if_some<T>(&mut self, operand: Option<T>)
+    where
+        T: Into<Operand>,
+    {
+        if let Some(operand) = operand {
+            self.operands.push(operand.into());
+        }
+    }
+
     pub(crate) fn push_reg(&mut self, reg: Reg) {
         self.push_operand(OperandKind::Reg(reg));
     }

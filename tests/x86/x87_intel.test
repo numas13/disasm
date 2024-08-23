@@ -1,0 +1,136 @@
+        d9 f0                           f2xm1
+        d9 e1                           fabs
+        d8 07                           fadd   DWORD PTR [rdi]
+        dc 07                           fadd   QWORD PTR [rdi]
+        d8 c1                           fadd   st,st(1)
+        dc c1                           fadd   st(1),st
+        de c1                           faddp  st(1),st
+        da 07                           fiadd  DWORD PTR [rdi]
+        de 07                           fiadd  WORD PTR [rdi]
+        d8 37                           fdiv   DWORD PTR [rdi]
+        dc 37                           fdiv   QWORD PTR [rdi]
+        d8 f1                           fdiv   st,st(1)
+        dc f9                           fdiv   st(1),st
+        de f9                           fdivp  st(1),st
+        da 37                           fidiv  DWORD PTR [rdi]
+        de 37                           fidiv  WORD PTR [rdi]
+        d8 3f                           fdivr  DWORD PTR [rdi]
+        dc 3f                           fdivr  QWORD PTR [rdi]
+        d8 f9                           fdivr  st,st(1)
+        dc f1                           fdivr  st(1),st
+        de f1                           fdivrp st(1),st
+        da 3f                           fidivr DWORD PTR [rdi]
+        de 3f                           fidivr WORD PTR [rdi]
+        df 27                           fbld   TBYTE PTR [rdi]
+        df 37                           fbstp  TBYTE PTR [rdi]
+        d9 e0                           fchs
+        db e2                           fnclex
+        da c1                           fcmovb st,st(1)
+        da c9                           fcmove st,st(1)
+        da d1                           fcmovbe st,st(1)
+        da d9                           fcmovu st,st(1)
+        db c1                           fcmovnb st,st(1)
+        db c9                           fcmovne st,st(1)
+        db d1                           fcmovnbe st,st(1)
+        db d9                           fcmovnu st,st(1)
+        d8 17                           fcom   DWORD PTR [rdi]
+        dc 17                           fcom   QWORD PTR [rdi]
+        d8 d1                           fcom   st(1)
+        d8 1f                           fcomp  DWORD PTR [rdi]
+        dc 1f                           fcomp  QWORD PTR [rdi]
+        d8 d9                           fcomp  st(1)
+        de d9                           fcompp
+        d9 ff                           fcos
+        d9 f6                           fdecstp
+        dd c1                           ffree  st(1)
+        df c1                           ffreep st(1)
+        de 17                           ficom  WORD PTR [rdi]
+        da 17                           ficom  DWORD PTR [rdi]
+        de 1f                           ficomp WORD PTR [rdi]
+        da 1f                           ficomp DWORD PTR [rdi]
+        df 07                           fild   WORD PTR [rdi]
+        db 07                           fild   DWORD PTR [rdi]
+        df 2f                           fild   QWORD PTR [rdi]
+        d9 f7                           fincstp
+        db e3                           fninit
+        df 17                           fist   WORD PTR [rdi]
+        db 17                           fist   DWORD PTR [rdi]
+        df 1f                           fistp  WORD PTR [rdi]
+        db 1f                           fistp  DWORD PTR [rdi]
+        df 3f                           fistp  QWORD PTR [rdi]
+        df 0f                           fisttp WORD PTR [rdi]
+        db 0f                           fisttp DWORD PTR [rdi]
+        dd 0f                           fisttp QWORD PTR [rdi]
+        d9 07                           fld    DWORD PTR [rdi]
+        dd 07                           fld    QWORD PTR [rdi]
+        db 2f                           fld    TBYTE PTR [rdi]
+        d9 c1                           fld    st(1)
+        d9 e8                           fld1
+        d9 e9                           fldl2t
+        d9 ea                           fldl2e
+        d9 eb                           fldpi
+        d9 ec                           fldlg2
+        d9 ed                           fldln2
+        d9 ee                           fldz
+        d9 2f                           fldcw  WORD PTR [rdi]
+        d9 27                           fldenv [rdi]
+        d8 0f                           fmul   DWORD PTR [rdi]
+        dc 0f                           fmul   QWORD PTR [rdi]
+        d8 c9                           fmul   st,st(1)
+        dc c9                           fmul   st(1),st
+        de c9                           fmulp  st(1),st
+        da 0f                           fimul  DWORD PTR [rdi]
+        de 0f                           fimul  WORD PTR [rdi]
+        d9 d0                           fnop
+        d9 f3                           fpatan
+        d9 f8                           fprem
+        d9 f5                           fprem1
+        d9 f2                           fptan
+        d9 fc                           frndint
+        dd 27                           frstor [rdi]
+        dd 37                           fnsave [rdi]
+        d9 fd                           fscale
+        d9 fe                           fsin
+        d9 fb                           fsincos
+        d9 fa                           fsqrt
+        d9 17                           fst    DWORD PTR [rdi]
+        dd 17                           fst    QWORD PTR [rdi]
+        dd d1                           fst    st(1)
+        d9 1f                           fstp   DWORD PTR [rdi]
+        dd 1f                           fstp   QWORD PTR [rdi]
+        db 3f                           fstp   TBYTE PTR [rdi]
+        dd d9                           fstp   st(1)
+        d9 3f                           fnstcw WORD PTR [rdi]
+        d9 37                           fnstenv [rdi]
+        dd 3f                           fnstsw WORD PTR [rdi]
+        df e0                           fnstsw ax
+        d8 27                           fsub   DWORD PTR [rdi]
+        dc 27                           fsub   QWORD PTR [rdi]
+        d8 e1                           fsub   st,st(1)
+        dc e9                           fsub   st(1),st
+        de e9                           fsubp  st(1),st
+        de 27                           fisub  WORD PTR [rdi]
+        da 27                           fisub  DWORD PTR [rdi]
+        d8 2f                           fsubr  DWORD PTR [rdi]
+        dc 2f                           fsubr  QWORD PTR [rdi]
+        d8 e9                           fsubr  st,st(1)
+        dc e1                           fsubr  st(1),st
+        de e1                           fsubrp st(1),st
+        de 2f                           fisubr WORD PTR [rdi]
+        da 2f                           fisubr DWORD PTR [rdi]
+        d9 e4                           ftst
+        dd e1                           fucom  st(1)
+        dd e9                           fucomp st(1)
+        da e9                           fucompp
+        d9 e5                           fxam
+        d9 c9                           fxch   st(1)
+        d9 f4                           fxtract
+        d9 f1                           fyl2x
+        d9 f9                           fyl2xp1
+        9b                              fwait
+
+        0f 77                           emms
+        0f ae 07                        fxsave [rdi]
+        48 0f ae 07                     fxsave64 [rdi]
+        0f ae 0f                        fxrstor [rdi]
+        48 0f ae 0f                     fxrstor64 [rdi]

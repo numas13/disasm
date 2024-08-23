@@ -1,0 +1,540 @@
+        00 c0                           add    al,al
+        00 c8                           add    al,cl
+        00 d0                           add    al,dl
+        00 d8                           add    al,bl
+        00 e0                           add    al,ah
+        00 e8                           add    al,ch
+        00 f0                           add    al,dh
+        00 f8                           add    al,bh
+        44 00 c0                        add    al,r8b
+        44 00 c8                        add    al,r9b
+        44 00 d0                        add    al,r10b
+        44 00 d8                        add    al,r11b
+        44 00 e0                        add    al,r12b
+        44 00 e8                        add    al,r13b
+        44 00 f0                        add    al,r14b
+        44 00 f8                        add    al,r15b
+        40 00 c0                        add    al,al
+        40 00 c8                        add    al,cl
+        40 00 d0                        add    al,dl
+        40 00 d8                        add    al,bl
+        40 00 e0                        add    al,spl
+        40 00 e8                        add    al,bpl
+        40 00 f0                        add    al,sil
+        40 00 f8                        add    al,dil
+        44 00 c0                        add    al,r8b
+        44 00 c8                        add    al,r9b
+        44 00 d0                        add    al,r10b
+        44 00 d8                        add    al,r11b
+        44 00 e0                        add    al,r12b
+        44 00 e8                        add    al,r13b
+        44 00 f0                        add    al,r14b
+        44 00 f8                        add    al,r15b
+        66 01 c0                        add    ax,ax
+        66 01 c8                        add    ax,cx
+        66 01 d0                        add    ax,dx
+        66 01 d8                        add    ax,bx
+        66 01 e0                        add    ax,sp
+        66 01 e8                        add    ax,bp
+        66 01 f0                        add    ax,si
+        66 01 f8                        add    ax,di
+        66 44 01 c0                     add    ax,r8w
+        66 44 01 c8                     add    ax,r9w
+        66 44 01 d0                     add    ax,r10w
+        66 44 01 d8                     add    ax,r11w
+        66 44 01 e0                     add    ax,r12w
+        66 44 01 e8                     add    ax,r13w
+        66 44 01 f0                     add    ax,r14w
+        66 44 01 f8                     add    ax,r15w
+        01 c0                           add    eax,eax
+        01 c8                           add    eax,ecx
+        01 d0                           add    eax,edx
+        01 d8                           add    eax,ebx
+        01 e0                           add    eax,esp
+        01 e8                           add    eax,ebp
+        01 f0                           add    eax,esi
+        01 f8                           add    eax,edi
+        44 01 c0                        add    eax,r8d
+        44 01 c8                        add    eax,r9d
+        44 01 d0                        add    eax,r10d
+        44 01 d8                        add    eax,r11d
+        44 01 e0                        add    eax,r12d
+        44 01 e8                        add    eax,r13d
+        44 01 f0                        add    eax,r14d
+        44 01 f8                        add    eax,r15d
+        48 01 c0                        add    rax,rax
+        48 01 c8                        add    rax,rcx
+        48 01 d0                        add    rax,rdx
+        48 01 d8                        add    rax,rbx
+        48 01 e0                        add    rax,rsp
+        48 01 e8                        add    rax,rbp
+        48 01 f0                        add    rax,rsi
+        48 01 f8                        add    rax,rdi
+        4c 01 c0                        add    rax,r8
+        4c 01 c8                        add    rax,r9
+        4c 01 d0                        add    rax,r10
+        4c 01 d8                        add    rax,r11
+        4c 01 e0                        add    rax,r12
+        4c 01 e8                        add    rax,r13
+        4c 01 f0                        add    rax,r14
+        4c 01 f8                        add    rax,r15
+        00 c0                           add    al,al
+        00 c1                           add    cl,al
+        00 c2                           add    dl,al
+        00 c3                           add    bl,al
+        00 c4                           add    ah,al
+        00 c5                           add    ch,al
+        00 c6                           add    dh,al
+        00 c7                           add    bh,al
+        41 00 c0                        add    r8b,al
+        41 00 c1                        add    r9b,al
+        41 00 c2                        add    r10b,al
+        41 00 c3                        add    r11b,al
+        41 00 c4                        add    r12b,al
+        41 00 c5                        add    r13b,al
+        41 00 c6                        add    r14b,al
+        41 00 c7                        add    r15b,al
+        40 00 c0                        add    al,al
+        40 00 c1                        add    cl,al
+        40 00 c2                        add    dl,al
+        40 00 c3                        add    bl,al
+        40 00 c4                        add    spl,al
+        40 00 c5                        add    bpl,al
+        40 00 c6                        add    sil,al
+        40 00 c7                        add    dil,al
+        41 00 c0                        add    r8b,al
+        41 00 c1                        add    r9b,al
+        41 00 c2                        add    r10b,al
+        41 00 c3                        add    r11b,al
+        41 00 c4                        add    r12b,al
+        41 00 c5                        add    r13b,al
+        41 00 c6                        add    r14b,al
+        41 00 c7                        add    r15b,al
+        66 01 c0                        add    ax,ax
+        66 01 c1                        add    cx,ax
+        66 01 c2                        add    dx,ax
+        66 01 c3                        add    bx,ax
+        66 01 c4                        add    sp,ax
+        66 01 c5                        add    bp,ax
+        66 01 c6                        add    si,ax
+        66 01 c7                        add    di,ax
+        66 41 01 c0                     add    r8w,ax
+        66 41 01 c1                     add    r9w,ax
+        66 41 01 c2                     add    r10w,ax
+        66 41 01 c3                     add    r11w,ax
+        66 41 01 c4                     add    r12w,ax
+        66 41 01 c5                     add    r13w,ax
+        66 41 01 c6                     add    r14w,ax
+        66 41 01 c7                     add    r15w,ax
+        01 c0                           add    eax,eax
+        01 c1                           add    ecx,eax
+        01 c2                           add    edx,eax
+        01 c3                           add    ebx,eax
+        01 c4                           add    esp,eax
+        01 c5                           add    ebp,eax
+        01 c6                           add    esi,eax
+        01 c7                           add    edi,eax
+        41 01 c0                        add    r8d,eax
+        41 01 c1                        add    r9d,eax
+        41 01 c2                        add    r10d,eax
+        41 01 c3                        add    r11d,eax
+        41 01 c4                        add    r12d,eax
+        41 01 c5                        add    r13d,eax
+        41 01 c6                        add    r14d,eax
+        41 01 c7                        add    r15d,eax
+        48 01 c0                        add    rax,rax
+        48 01 c1                        add    rcx,rax
+        48 01 c2                        add    rdx,rax
+        48 01 c3                        add    rbx,rax
+        48 01 c4                        add    rsp,rax
+        48 01 c5                        add    rbp,rax
+        48 01 c6                        add    rsi,rax
+        48 01 c7                        add    rdi,rax
+        49 01 c0                        add    r8,rax
+        49 01 c1                        add    r9,rax
+        49 01 c2                        add    r10,rax
+        49 01 c3                        add    r11,rax
+        49 01 c4                        add    r12,rax
+        49 01 c5                        add    r13,rax
+        49 01 c6                        add    r14,rax
+        49 01 c7                        add    r15,rax
+        4a 03 04 f8                     add    rax,QWORD PTR [rax+r15*8]
+        4a 03 04 f1                     add    rax,QWORD PTR [rcx+r14*8]
+        4a 03 04 ea                     add    rax,QWORD PTR [rdx+r13*8]
+        4a 03 04 e3                     add    rax,QWORD PTR [rbx+r12*8]
+        4a 03 04 dc                     add    rax,QWORD PTR [rsp+r11*8]
+        4a 03 44 d5 00                  add    rax,QWORD PTR [rbp+r10*8+0x0]
+        4a 03 04 ce                     add    rax,QWORD PTR [rsi+r9*8]
+        4a 03 04 c7                     add    rax,QWORD PTR [rdi+r8*8]
+        49 03 04 f8                     add    rax,QWORD PTR [r8+rdi*8]
+        49 03 04 f1                     add    rax,QWORD PTR [r9+rsi*8]
+        49 03 04 ea                     add    rax,QWORD PTR [r10+rbp*8]
+        49 03 03                        add    rax,QWORD PTR [r11]
+        49 03 04 dc                     add    rax,QWORD PTR [r12+rbx*8]
+        49 03 44 d5 00                  add    rax,QWORD PTR [r13+rdx*8+0x0]
+        49 03 04 ce                     add    rax,QWORD PTR [r14+rcx*8]
+        49 03 04 c7                     add    rax,QWORD PTR [r15+rax*8]
+        4a 01 04 f8                     add    QWORD PTR [rax+r15*8],rax
+        4a 01 04 f1                     add    QWORD PTR [rcx+r14*8],rax
+        4a 01 04 ea                     add    QWORD PTR [rdx+r13*8],rax
+        4a 01 04 e3                     add    QWORD PTR [rbx+r12*8],rax
+        4a 01 04 dc                     add    QWORD PTR [rsp+r11*8],rax
+        4a 01 44 d5 00                  add    QWORD PTR [rbp+r10*8+0x0],rax
+        4a 01 04 ce                     add    QWORD PTR [rsi+r9*8],rax
+        4a 01 04 c7                     add    QWORD PTR [rdi+r8*8],rax
+        49 01 04 f8                     add    QWORD PTR [r8+rdi*8],rax
+        49 01 04 f1                     add    QWORD PTR [r9+rsi*8],rax
+        49 01 04 ea                     add    QWORD PTR [r10+rbp*8],rax
+        49 01 03                        add    QWORD PTR [r11],rax
+        49 01 04 dc                     add    QWORD PTR [r12+rbx*8],rax
+        49 01 44 d5 00                  add    QWORD PTR [r13+rdx*8+0x0],rax
+        49 01 04 ce                     add    QWORD PTR [r14+rcx*8],rax
+        49 01 04 c7                     add    QWORD PTR [r15+rax*8],rax
+        0f fc c0                        paddb  mm0,mm0
+        0f fc c8                        paddb  mm1,mm0
+        0f fc d0                        paddb  mm2,mm0
+        0f fc d8                        paddb  mm3,mm0
+        0f fc e0                        paddb  mm4,mm0
+        0f fc e8                        paddb  mm5,mm0
+        0f fc f0                        paddb  mm6,mm0
+        0f fc f8                        paddb  mm7,mm0
+        0f fc c0                        paddb  mm0,mm0
+        0f fc c1                        paddb  mm0,mm1
+        0f fc c2                        paddb  mm0,mm2
+        0f fc c3                        paddb  mm0,mm3
+        0f fc c4                        paddb  mm0,mm4
+        0f fc c5                        paddb  mm0,mm5
+        0f fc c6                        paddb  mm0,mm6
+        0f fc c7                        paddb  mm0,mm7
+        0f 54 c0                        andps  xmm0,xmm0
+        0f 54 c8                        andps  xmm1,xmm0
+        0f 54 d0                        andps  xmm2,xmm0
+        0f 54 d8                        andps  xmm3,xmm0
+        0f 54 e0                        andps  xmm4,xmm0
+        0f 54 e8                        andps  xmm5,xmm0
+        0f 54 f0                        andps  xmm6,xmm0
+        0f 54 f8                        andps  xmm7,xmm0
+        44 0f 54 c0                     andps  xmm8,xmm0
+        44 0f 54 c8                     andps  xmm9,xmm0
+        44 0f 54 d0                     andps  xmm10,xmm0
+        44 0f 54 d8                     andps  xmm11,xmm0
+        44 0f 54 e0                     andps  xmm12,xmm0
+        44 0f 54 e8                     andps  xmm13,xmm0
+        44 0f 54 f0                     andps  xmm14,xmm0
+        44 0f 54 f8                     andps  xmm15,xmm0
+        0f 54 c0                        andps  xmm0,xmm0
+        0f 54 c1                        andps  xmm0,xmm1
+        0f 54 c2                        andps  xmm0,xmm2
+        0f 54 c3                        andps  xmm0,xmm3
+        0f 54 c4                        andps  xmm0,xmm4
+        0f 54 c5                        andps  xmm0,xmm5
+        0f 54 c6                        andps  xmm0,xmm6
+        0f 54 c7                        andps  xmm0,xmm7
+        41 0f 54 c0                     andps  xmm0,xmm8
+        41 0f 54 c1                     andps  xmm0,xmm9
+        41 0f 54 c2                     andps  xmm0,xmm10
+        41 0f 54 c3                     andps  xmm0,xmm11
+        41 0f 54 c4                     andps  xmm0,xmm12
+        41 0f 54 c5                     andps  xmm0,xmm13
+        41 0f 54 c6                     andps  xmm0,xmm14
+        41 0f 54 c7                     andps  xmm0,xmm15
+        c4 c1 78 54 c7                  vandps xmm0,xmm0,xmm15
+        c4 c1 78 54 cf                  vandps xmm1,xmm0,xmm15
+        c4 c1 78 54 d7                  vandps xmm2,xmm0,xmm15
+        c4 c1 78 54 df                  vandps xmm3,xmm0,xmm15
+        c4 c1 78 54 e7                  vandps xmm4,xmm0,xmm15
+        c4 c1 78 54 ef                  vandps xmm5,xmm0,xmm15
+        c4 c1 78 54 f7                  vandps xmm6,xmm0,xmm15
+        c4 c1 78 54 ff                  vandps xmm7,xmm0,xmm15
+        c4 41 78 54 c7                  vandps xmm8,xmm0,xmm15
+        c4 41 78 54 cf                  vandps xmm9,xmm0,xmm15
+        c4 41 78 54 d7                  vandps xmm10,xmm0,xmm15
+        c4 41 78 54 df                  vandps xmm11,xmm0,xmm15
+        c4 41 78 54 e7                  vandps xmm12,xmm0,xmm15
+        c4 41 78 54 ef                  vandps xmm13,xmm0,xmm15
+        c4 41 78 54 f7                  vandps xmm14,xmm0,xmm15
+        c4 41 78 54 ff                  vandps xmm15,xmm0,xmm15
+        c4 c1 78 54 c7                  vandps xmm0,xmm0,xmm15
+        c4 c1 70 54 c7                  vandps xmm0,xmm1,xmm15
+        c4 c1 68 54 c7                  vandps xmm0,xmm2,xmm15
+        c4 c1 60 54 c7                  vandps xmm0,xmm3,xmm15
+        c4 c1 58 54 c7                  vandps xmm0,xmm4,xmm15
+        c4 c1 50 54 c7                  vandps xmm0,xmm5,xmm15
+        c4 c1 48 54 c7                  vandps xmm0,xmm6,xmm15
+        c4 c1 40 54 c7                  vandps xmm0,xmm7,xmm15
+        c4 c1 38 54 c7                  vandps xmm0,xmm8,xmm15
+        c4 c1 30 54 c7                  vandps xmm0,xmm9,xmm15
+        c4 c1 28 54 c7                  vandps xmm0,xmm10,xmm15
+        c4 c1 20 54 c7                  vandps xmm0,xmm11,xmm15
+        c4 c1 18 54 c7                  vandps xmm0,xmm12,xmm15
+        c4 c1 10 54 c7                  vandps xmm0,xmm13,xmm15
+        c4 c1 08 54 c7                  vandps xmm0,xmm14,xmm15
+        c4 c1 00 54 c7                  vandps xmm0,xmm15,xmm15
+        c4 e1 00 54 c0                  vandps xmm0,xmm15,xmm0
+        c4 e1 00 54 c1                  vandps xmm0,xmm15,xmm1
+        c4 e1 00 54 c2                  vandps xmm0,xmm15,xmm2
+        c4 e1 00 54 c3                  vandps xmm0,xmm15,xmm3
+        c4 e1 00 54 c4                  vandps xmm0,xmm15,xmm4
+        c4 e1 00 54 c5                  vandps xmm0,xmm15,xmm5
+        c4 e1 00 54 c6                  vandps xmm0,xmm15,xmm6
+        c4 e1 00 54 c7                  vandps xmm0,xmm15,xmm7
+        c4 c1 00 54 c2                  vandps xmm0,xmm15,xmm10
+        c4 c1 00 54 c3                  vandps xmm0,xmm15,xmm11
+        c4 c1 00 54 c4                  vandps xmm0,xmm15,xmm12
+        c4 c1 00 54 c5                  vandps xmm0,xmm15,xmm13
+        c4 c1 00 54 c6                  vandps xmm0,xmm15,xmm14
+        c4 c1 00 54 c7                  vandps xmm0,xmm15,xmm15
+        c4 c1 7c 54 c7                  vandps ymm0,ymm0,ymm15
+        c4 c1 7c 54 cf                  vandps ymm1,ymm0,ymm15
+        c4 c1 7c 54 d7                  vandps ymm2,ymm0,ymm15
+        c4 c1 7c 54 df                  vandps ymm3,ymm0,ymm15
+        c4 c1 7c 54 e7                  vandps ymm4,ymm0,ymm15
+        c4 c1 7c 54 ef                  vandps ymm5,ymm0,ymm15
+        c4 c1 7c 54 f7                  vandps ymm6,ymm0,ymm15
+        c4 c1 7c 54 ff                  vandps ymm7,ymm0,ymm15
+        c4 41 7c 54 c7                  vandps ymm8,ymm0,ymm15
+        c4 41 7c 54 cf                  vandps ymm9,ymm0,ymm15
+        c4 41 7c 54 d7                  vandps ymm10,ymm0,ymm15
+        c4 41 7c 54 df                  vandps ymm11,ymm0,ymm15
+        c4 41 7c 54 e7                  vandps ymm12,ymm0,ymm15
+        c4 41 7c 54 ef                  vandps ymm13,ymm0,ymm15
+        c4 41 7c 54 f7                  vandps ymm14,ymm0,ymm15
+        c4 41 7c 54 ff                  vandps ymm15,ymm0,ymm15
+        c4 c1 7c 54 c7                  vandps ymm0,ymm0,ymm15
+        c4 c1 74 54 c7                  vandps ymm0,ymm1,ymm15
+        c4 c1 6c 54 c7                  vandps ymm0,ymm2,ymm15
+        c4 c1 64 54 c7                  vandps ymm0,ymm3,ymm15
+        c4 c1 5c 54 c7                  vandps ymm0,ymm4,ymm15
+        c4 c1 54 54 c7                  vandps ymm0,ymm5,ymm15
+        c4 c1 4c 54 c7                  vandps ymm0,ymm6,ymm15
+        c4 c1 44 54 c7                  vandps ymm0,ymm7,ymm15
+        c4 c1 3c 54 c7                  vandps ymm0,ymm8,ymm15
+        c4 c1 34 54 c7                  vandps ymm0,ymm9,ymm15
+        c4 c1 2c 54 c7                  vandps ymm0,ymm10,ymm15
+        c4 c1 24 54 c7                  vandps ymm0,ymm11,ymm15
+        c4 c1 1c 54 c7                  vandps ymm0,ymm12,ymm15
+        c4 c1 14 54 c7                  vandps ymm0,ymm13,ymm15
+        c4 c1 0c 54 c7                  vandps ymm0,ymm14,ymm15
+        c4 c1 04 54 c7                  vandps ymm0,ymm15,ymm15
+        c4 e1 04 54 c0                  vandps ymm0,ymm15,ymm0
+        c4 e1 04 54 c1                  vandps ymm0,ymm15,ymm1
+        c4 e1 04 54 c2                  vandps ymm0,ymm15,ymm2
+        c4 e1 04 54 c3                  vandps ymm0,ymm15,ymm3
+        c4 e1 04 54 c4                  vandps ymm0,ymm15,ymm4
+        c4 e1 04 54 c5                  vandps ymm0,ymm15,ymm5
+        c4 e1 04 54 c6                  vandps ymm0,ymm15,ymm6
+        c4 e1 04 54 c7                  vandps ymm0,ymm15,ymm7
+        c4 c1 04 54 c2                  vandps ymm0,ymm15,ymm10
+        c4 c1 04 54 c3                  vandps ymm0,ymm15,ymm11
+        c4 c1 04 54 c4                  vandps ymm0,ymm15,ymm12
+        c4 c1 04 54 c5                  vandps ymm0,ymm15,ymm13
+        c4 c1 04 54 c6                  vandps ymm0,ymm15,ymm14
+        c4 c1 04 54 c7                  vandps ymm0,ymm15,ymm15
+        62 d1 7c 08 54 c7               vandps xmm0,xmm0,xmm15
+        62 d1 7c 08 54 cf               vandps xmm1,xmm0,xmm15
+        62 d1 7c 08 54 d7               vandps xmm2,xmm0,xmm15
+        62 d1 7c 08 54 df               vandps xmm3,xmm0,xmm15
+        62 d1 7c 08 54 e7               vandps xmm4,xmm0,xmm15
+        62 d1 7c 08 54 ef               vandps xmm5,xmm0,xmm15
+        62 d1 7c 08 54 f7               vandps xmm6,xmm0,xmm15
+        62 d1 7c 08 54 ff               vandps xmm7,xmm0,xmm15
+        62 51 7c 08 54 c7               vandps xmm8,xmm0,xmm15
+        62 51 7c 08 54 cf               vandps xmm9,xmm0,xmm15
+        62 51 7c 08 54 d7               vandps xmm10,xmm0,xmm15
+        62 51 7c 08 54 df               vandps xmm11,xmm0,xmm15
+        62 51 7c 08 54 e7               vandps xmm12,xmm0,xmm15
+        62 51 7c 08 54 ef               vandps xmm13,xmm0,xmm15
+        62 51 7c 08 54 f7               vandps xmm14,xmm0,xmm15
+        62 51 7c 08 54 ff               vandps xmm15,xmm0,xmm15
+        62 d1 7c 08 54 c7               vandps xmm0,xmm0,xmm15
+        62 d1 74 08 54 c7               vandps xmm0,xmm1,xmm15
+        62 d1 6c 08 54 c7               vandps xmm0,xmm2,xmm15
+        62 d1 64 08 54 c7               vandps xmm0,xmm3,xmm15
+        62 d1 5c 08 54 c7               vandps xmm0,xmm4,xmm15
+        62 d1 54 08 54 c7               vandps xmm0,xmm5,xmm15
+        62 d1 4c 08 54 c7               vandps xmm0,xmm6,xmm15
+        62 d1 44 08 54 c7               vandps xmm0,xmm7,xmm15
+        62 d1 3c 08 54 c7               vandps xmm0,xmm8,xmm15
+        62 d1 34 08 54 c7               vandps xmm0,xmm9,xmm15
+        62 d1 2c 08 54 c7               vandps xmm0,xmm10,xmm15
+        62 d1 24 08 54 c7               vandps xmm0,xmm11,xmm15
+        62 d1 1c 08 54 c7               vandps xmm0,xmm12,xmm15
+        62 d1 14 08 54 c7               vandps xmm0,xmm13,xmm15
+        62 d1 0c 08 54 c7               vandps xmm0,xmm14,xmm15
+        62 d1 04 08 54 c7               vandps xmm0,xmm15,xmm15
+        62 f1 04 08 54 c0               vandps xmm0,xmm15,xmm0
+        62 f1 04 08 54 c1               vandps xmm0,xmm15,xmm1
+        62 f1 04 08 54 c2               vandps xmm0,xmm15,xmm2
+        62 f1 04 08 54 c3               vandps xmm0,xmm15,xmm3
+        62 f1 04 08 54 c4               vandps xmm0,xmm15,xmm4
+        62 f1 04 08 54 c5               vandps xmm0,xmm15,xmm5
+        62 f1 04 08 54 c6               vandps xmm0,xmm15,xmm6
+        62 f1 04 08 54 c7               vandps xmm0,xmm15,xmm7
+        62 d1 04 08 54 c0               vandps xmm0,xmm15,xmm8
+        62 d1 04 08 54 c1               vandps xmm0,xmm15,xmm9
+        62 d1 04 08 54 c2               vandps xmm0,xmm15,xmm10
+        62 d1 04 08 54 c3               vandps xmm0,xmm15,xmm11
+        62 d1 04 08 54 c4               vandps xmm0,xmm15,xmm12
+        62 d1 04 08 54 c5               vandps xmm0,xmm15,xmm13
+        62 d1 04 08 54 c6               vandps xmm0,xmm15,xmm14
+        62 d1 04 08 54 c7               vandps xmm0,xmm15,xmm15
+        62 d1 7c 28 54 c7               vandps ymm0,ymm0,ymm15
+        62 d1 7c 28 54 cf               vandps ymm1,ymm0,ymm15
+        62 d1 7c 28 54 d7               vandps ymm2,ymm0,ymm15
+        62 d1 7c 28 54 df               vandps ymm3,ymm0,ymm15
+        62 d1 7c 28 54 e7               vandps ymm4,ymm0,ymm15
+        62 d1 7c 28 54 ef               vandps ymm5,ymm0,ymm15
+        62 d1 7c 28 54 f7               vandps ymm6,ymm0,ymm15
+        62 d1 7c 28 54 ff               vandps ymm7,ymm0,ymm15
+        62 51 7c 28 54 c7               vandps ymm8,ymm0,ymm15
+        62 51 7c 28 54 cf               vandps ymm9,ymm0,ymm15
+        62 51 7c 28 54 d7               vandps ymm10,ymm0,ymm15
+        62 51 7c 28 54 df               vandps ymm11,ymm0,ymm15
+        62 51 7c 28 54 e7               vandps ymm12,ymm0,ymm15
+        62 51 7c 28 54 ef               vandps ymm13,ymm0,ymm15
+        62 51 7c 28 54 f7               vandps ymm14,ymm0,ymm15
+        62 51 7c 28 54 ff               vandps ymm15,ymm0,ymm15
+        62 d1 7c 28 54 c7               vandps ymm0,ymm0,ymm15
+        62 d1 74 28 54 c7               vandps ymm0,ymm1,ymm15
+        62 d1 6c 28 54 c7               vandps ymm0,ymm2,ymm15
+        62 d1 64 28 54 c7               vandps ymm0,ymm3,ymm15
+        62 d1 5c 28 54 c7               vandps ymm0,ymm4,ymm15
+        62 d1 54 28 54 c7               vandps ymm0,ymm5,ymm15
+        62 d1 4c 28 54 c7               vandps ymm0,ymm6,ymm15
+        62 d1 44 28 54 c7               vandps ymm0,ymm7,ymm15
+        62 d1 3c 28 54 c7               vandps ymm0,ymm8,ymm15
+        62 d1 34 28 54 c7               vandps ymm0,ymm9,ymm15
+        62 d1 2c 28 54 c7               vandps ymm0,ymm10,ymm15
+        62 d1 24 28 54 c7               vandps ymm0,ymm11,ymm15
+        62 d1 1c 28 54 c7               vandps ymm0,ymm12,ymm15
+        62 d1 14 28 54 c7               vandps ymm0,ymm13,ymm15
+        62 d1 0c 28 54 c7               vandps ymm0,ymm14,ymm15
+        62 d1 04 28 54 c7               vandps ymm0,ymm15,ymm15
+        62 f1 04 28 54 c0               vandps ymm0,ymm15,ymm0
+        62 f1 04 28 54 c1               vandps ymm0,ymm15,ymm1
+        62 f1 04 28 54 c2               vandps ymm0,ymm15,ymm2
+        62 f1 04 28 54 c3               vandps ymm0,ymm15,ymm3
+        62 f1 04 28 54 c4               vandps ymm0,ymm15,ymm4
+        62 f1 04 28 54 c5               vandps ymm0,ymm15,ymm5
+        62 f1 04 28 54 c6               vandps ymm0,ymm15,ymm6
+        62 f1 04 28 54 c7               vandps ymm0,ymm15,ymm7
+        62 d1 04 28 54 c0               vandps ymm0,ymm15,ymm8
+        62 d1 04 28 54 c1               vandps ymm0,ymm15,ymm9
+        62 d1 04 28 54 c2               vandps ymm0,ymm15,ymm10
+        62 d1 04 28 54 c3               vandps ymm0,ymm15,ymm11
+        62 d1 04 28 54 c4               vandps ymm0,ymm15,ymm12
+        62 d1 04 28 54 c5               vandps ymm0,ymm15,ymm13
+        62 d1 04 28 54 c6               vandps ymm0,ymm15,ymm14
+        62 d1 04 28 54 c7               vandps ymm0,ymm15,ymm15
+        62 d1 7c 48 54 c7               vandps zmm0,zmm0,zmm15
+        62 d1 7c 48 54 cf               vandps zmm1,zmm0,zmm15
+        62 d1 7c 48 54 d7               vandps zmm2,zmm0,zmm15
+        62 d1 7c 48 54 df               vandps zmm3,zmm0,zmm15
+        62 d1 7c 48 54 e7               vandps zmm4,zmm0,zmm15
+        62 d1 7c 48 54 ef               vandps zmm5,zmm0,zmm15
+        62 d1 7c 48 54 f7               vandps zmm6,zmm0,zmm15
+        62 d1 7c 48 54 ff               vandps zmm7,zmm0,zmm15
+        62 51 7c 48 54 c7               vandps zmm8,zmm0,zmm15
+        62 51 7c 48 54 cf               vandps zmm9,zmm0,zmm15
+        62 51 7c 48 54 d7               vandps zmm10,zmm0,zmm15
+        62 51 7c 48 54 df               vandps zmm11,zmm0,zmm15
+        62 51 7c 48 54 e7               vandps zmm12,zmm0,zmm15
+        62 51 7c 48 54 ef               vandps zmm13,zmm0,zmm15
+        62 51 7c 48 54 f7               vandps zmm14,zmm0,zmm15
+        62 51 7c 48 54 ff               vandps zmm15,zmm0,zmm15
+        62 d1 7c 48 54 c7               vandps zmm0,zmm0,zmm15
+        62 d1 74 48 54 c7               vandps zmm0,zmm1,zmm15
+        62 d1 6c 48 54 c7               vandps zmm0,zmm2,zmm15
+        62 d1 64 48 54 c7               vandps zmm0,zmm3,zmm15
+        62 d1 5c 48 54 c7               vandps zmm0,zmm4,zmm15
+        62 d1 54 48 54 c7               vandps zmm0,zmm5,zmm15
+        62 d1 4c 48 54 c7               vandps zmm0,zmm6,zmm15
+        62 d1 44 48 54 c7               vandps zmm0,zmm7,zmm15
+        62 d1 3c 48 54 c7               vandps zmm0,zmm8,zmm15
+        62 d1 34 48 54 c7               vandps zmm0,zmm9,zmm15
+        62 d1 2c 48 54 c7               vandps zmm0,zmm10,zmm15
+        62 d1 24 48 54 c7               vandps zmm0,zmm11,zmm15
+        62 d1 1c 48 54 c7               vandps zmm0,zmm12,zmm15
+        62 d1 14 48 54 c7               vandps zmm0,zmm13,zmm15
+        62 d1 0c 48 54 c7               vandps zmm0,zmm14,zmm15
+        62 d1 04 48 54 c7               vandps zmm0,zmm15,zmm15
+        62 f1 04 48 54 c0               vandps zmm0,zmm15,zmm0
+        62 f1 04 48 54 c1               vandps zmm0,zmm15,zmm1
+        62 f1 04 48 54 c2               vandps zmm0,zmm15,zmm2
+        62 f1 04 48 54 c3               vandps zmm0,zmm15,zmm3
+        62 f1 04 48 54 c4               vandps zmm0,zmm15,zmm4
+        62 f1 04 48 54 c5               vandps zmm0,zmm15,zmm5
+        62 f1 04 48 54 c6               vandps zmm0,zmm15,zmm6
+        62 f1 04 48 54 c7               vandps zmm0,zmm15,zmm7
+        62 d1 04 48 54 c0               vandps zmm0,zmm15,zmm8
+        62 d1 04 48 54 c1               vandps zmm0,zmm15,zmm9
+        62 d1 04 48 54 c2               vandps zmm0,zmm15,zmm10
+        62 d1 04 48 54 c3               vandps zmm0,zmm15,zmm11
+        62 d1 04 48 54 c4               vandps zmm0,zmm15,zmm12
+        62 d1 04 48 54 c5               vandps zmm0,zmm15,zmm13
+        62 d1 04 48 54 c6               vandps zmm0,zmm15,zmm14
+        62 d1 04 48 54 c7               vandps zmm0,zmm15,zmm15
+        c5 f8 54 04 c8                  vandps xmm0,xmm0,XMMWORD PTR [rax+rcx*8]
+        c5 f0 54 0c c8                  vandps xmm1,xmm1,XMMWORD PTR [rax+rcx*8]
+        c5 e8 54 14 c8                  vandps xmm2,xmm2,XMMWORD PTR [rax+rcx*8]
+        c5 e0 54 1c c8                  vandps xmm3,xmm3,XMMWORD PTR [rax+rcx*8]
+        c5 d8 54 24 c8                  vandps xmm4,xmm4,XMMWORD PTR [rax+rcx*8]
+        c5 d0 54 2c c8                  vandps xmm5,xmm5,XMMWORD PTR [rax+rcx*8]
+        c5 c8 54 34 c8                  vandps xmm6,xmm6,XMMWORD PTR [rax+rcx*8]
+        c5 c0 54 3c c8                  vandps xmm7,xmm7,XMMWORD PTR [rax+rcx*8]
+        c5 38 54 04 c8                  vandps xmm8,xmm8,XMMWORD PTR [rax+rcx*8]
+        c5 30 54 0c c8                  vandps xmm9,xmm9,XMMWORD PTR [rax+rcx*8]
+        c5 28 54 14 c8                  vandps xmm10,xmm10,XMMWORD PTR [rax+rcx*8]
+        c5 20 54 1c c8                  vandps xmm11,xmm11,XMMWORD PTR [rax+rcx*8]
+        c5 18 54 24 c8                  vandps xmm12,xmm12,XMMWORD PTR [rax+rcx*8]
+        c5 10 54 2c c8                  vandps xmm13,xmm13,XMMWORD PTR [rax+rcx*8]
+        c5 08 54 34 c8                  vandps xmm14,xmm14,XMMWORD PTR [rax+rcx*8]
+        c5 00 54 3c c8                  vandps xmm15,xmm15,XMMWORD PTR [rax+rcx*8]
+        c4 81 78 54 04 fe               vandps xmm0,xmm0,XMMWORD PTR [r14+r15*8]
+        c4 81 70 54 0c fe               vandps xmm1,xmm1,XMMWORD PTR [r14+r15*8]
+        c4 81 68 54 14 fe               vandps xmm2,xmm2,XMMWORD PTR [r14+r15*8]
+        c4 81 60 54 1c fe               vandps xmm3,xmm3,XMMWORD PTR [r14+r15*8]
+        c4 81 58 54 24 fe               vandps xmm4,xmm4,XMMWORD PTR [r14+r15*8]
+        c4 81 50 54 2c fe               vandps xmm5,xmm5,XMMWORD PTR [r14+r15*8]
+        c4 81 48 54 34 fe               vandps xmm6,xmm6,XMMWORD PTR [r14+r15*8]
+        c4 81 40 54 3c fe               vandps xmm7,xmm7,XMMWORD PTR [r14+r15*8]
+        c4 01 38 54 04 fe               vandps xmm8,xmm8,XMMWORD PTR [r14+r15*8]
+        c4 01 30 54 0c fe               vandps xmm9,xmm9,XMMWORD PTR [r14+r15*8]
+        c4 01 28 54 14 fe               vandps xmm10,xmm10,XMMWORD PTR [r14+r15*8]
+        c4 01 20 54 1c fe               vandps xmm11,xmm11,XMMWORD PTR [r14+r15*8]
+        c4 01 18 54 24 fe               vandps xmm12,xmm12,XMMWORD PTR [r14+r15*8]
+        c4 01 10 54 2c fe               vandps xmm13,xmm13,XMMWORD PTR [r14+r15*8]
+        c4 01 08 54 34 fe               vandps xmm14,xmm14,XMMWORD PTR [r14+r15*8]
+        c4 01 00 54 3c fe               vandps xmm15,xmm15,XMMWORD PTR [r14+r15*8]
+        62 e1 7c 00 54 04 c8            vandps xmm16,xmm16,XMMWORD PTR [rax+rcx*8]
+        62 e1 74 00 54 0c c8            vandps xmm17,xmm17,XMMWORD PTR [rax+rcx*8]
+        62 e1 6c 00 54 14 c8            vandps xmm18,xmm18,XMMWORD PTR [rax+rcx*8]
+        62 e1 64 00 54 1c c8            vandps xmm19,xmm19,XMMWORD PTR [rax+rcx*8]
+        62 e1 5c 00 54 24 c8            vandps xmm20,xmm20,XMMWORD PTR [rax+rcx*8]
+        62 e1 54 00 54 2c c8            vandps xmm21,xmm21,XMMWORD PTR [rax+rcx*8]
+        62 e1 4c 00 54 34 c8            vandps xmm22,xmm22,XMMWORD PTR [rax+rcx*8]
+        62 e1 44 00 54 3c c8            vandps xmm23,xmm23,XMMWORD PTR [rax+rcx*8]
+        62 61 3c 00 54 04 c8            vandps xmm24,xmm24,XMMWORD PTR [rax+rcx*8]
+        62 61 34 00 54 0c c8            vandps xmm25,xmm25,XMMWORD PTR [rax+rcx*8]
+        62 61 2c 00 54 14 c8            vandps xmm26,xmm26,XMMWORD PTR [rax+rcx*8]
+        62 61 24 00 54 1c c8            vandps xmm27,xmm27,XMMWORD PTR [rax+rcx*8]
+        62 61 1c 00 54 24 c8            vandps xmm28,xmm28,XMMWORD PTR [rax+rcx*8]
+        62 61 14 00 54 2c c8            vandps xmm29,xmm29,XMMWORD PTR [rax+rcx*8]
+        62 61 0c 00 54 34 c8            vandps xmm30,xmm30,XMMWORD PTR [rax+rcx*8]
+        62 61 04 00 54 3c c8            vandps xmm31,xmm31,XMMWORD PTR [rax+rcx*8]
+        62 81 7c 00 54 04 fe            vandps xmm16,xmm16,XMMWORD PTR [r14+r15*8]
+        62 81 74 00 54 0c fe            vandps xmm17,xmm17,XMMWORD PTR [r14+r15*8]
+        62 81 6c 00 54 14 fe            vandps xmm18,xmm18,XMMWORD PTR [r14+r15*8]
+        62 81 64 00 54 1c fe            vandps xmm19,xmm19,XMMWORD PTR [r14+r15*8]
+        62 81 5c 00 54 24 fe            vandps xmm20,xmm20,XMMWORD PTR [r14+r15*8]
+        62 81 54 00 54 2c fe            vandps xmm21,xmm21,XMMWORD PTR [r14+r15*8]
+        62 81 4c 00 54 34 fe            vandps xmm22,xmm22,XMMWORD PTR [r14+r15*8]
+        62 81 44 00 54 3c fe            vandps xmm23,xmm23,XMMWORD PTR [r14+r15*8]
+        62 01 3c 00 54 04 fe            vandps xmm24,xmm24,XMMWORD PTR [r14+r15*8]
+        62 01 34 00 54 0c fe            vandps xmm25,xmm25,XMMWORD PTR [r14+r15*8]
+        62 01 2c 00 54 14 fe            vandps xmm26,xmm26,XMMWORD PTR [r14+r15*8]
+        62 01 24 00 54 1c fe            vandps xmm27,xmm27,XMMWORD PTR [r14+r15*8]
+        62 01 1c 00 54 24 fe            vandps xmm28,xmm28,XMMWORD PTR [r14+r15*8]
+        62 01 14 00 54 2c fe            vandps xmm29,xmm29,XMMWORD PTR [r14+r15*8]
+        62 01 0c 00 54 34 fe            vandps xmm30,xmm30,XMMWORD PTR [r14+r15*8]
+        62 01 04 00 54 3c fe            vandps xmm31,xmm31,XMMWORD PTR [r14+r15*8]

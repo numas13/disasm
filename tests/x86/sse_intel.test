@@ -1,0 +1,755 @@
+        66 0f 58 0f                     addpd  xmm1,XMMWORD PTR [rdi]
+        66 0f 58 ca                     addpd  xmm1,xmm2
+        0f 58 0f                        addps  xmm1,XMMWORD PTR [rdi]
+        0f 58 ca                        addps  xmm1,xmm2
+        f2 0f 58 0f                     addsd  xmm1,QWORD PTR [rdi]
+        f2 0f 58 ca                     addsd  xmm1,xmm2
+        f3 0f 58 0f                     addss  xmm1,DWORD PTR [rdi]
+        f3 0f 58 ca                     addss  xmm1,xmm2
+        66 0f d0 0f                     addsubpd xmm1,XMMWORD PTR [rdi]
+        66 0f d0 ca                     addsubpd xmm1,xmm2
+        f2 0f d0 0f                     addsubps xmm1,XMMWORD PTR [rdi]
+        f2 0f d0 ca                     addsubps xmm1,xmm2
+        66 0f 55 4f 10                  andnpd xmm1,XMMWORD PTR [rdi+0x10]
+        66 0f 55 ca                     andnpd xmm1,xmm2
+        0f 55 4f 10                     andnps xmm1,XMMWORD PTR [rdi+0x10]
+        0f 55 ca                        andnps xmm1,xmm2
+        66 0f 54 4f 10                  andpd  xmm1,XMMWORD PTR [rdi+0x10]
+        66 0f 54 ca                     andpd  xmm1,xmm2
+        0f 54 4f 10                     andps  xmm1,XMMWORD PTR [rdi+0x10]
+        0f 54 ca                        andps  xmm1,xmm2
+        66 0f 3a 0d 0f 13               blendpd xmm1,XMMWORD PTR [rdi],0x13
+        66 0f 3a 0d ca 13               blendpd xmm1,xmm2,0x13
+        66 0f 3a 0c 0f 13               blendps xmm1,XMMWORD PTR [rdi],0x13
+        66 0f 3a 0c ca 13               blendps xmm1,xmm2,0x13
+        66 0f 38 15 0f                  blendvpd xmm1,XMMWORD PTR [rdi],xmm0
+        66 0f 38 15 ca                  blendvpd xmm1,xmm2,xmm0
+        66 0f 38 14 0f                  blendvps xmm1,XMMWORD PTR [rdi],xmm0
+        66 0f 38 14 ca                  blendvps xmm1,xmm2,xmm0
+        66 0f c2 0f 00                  cmpeqpd xmm1,XMMWORD PTR [rdi]
+        66 0f c2 ca 00                  cmpeqpd xmm1,xmm2
+        0f c2 0f 00                     cmpeqps xmm1,XMMWORD PTR [rdi]
+        0f c2 ca 00                     cmpeqps xmm1,xmm2
+        f2 0f c2 0f 00                  cmpeqsd xmm1,QWORD PTR [rdi]
+        f2 0f c2 ca 00                  cmpeqsd xmm1,xmm2
+        f2 0f c2 ca 00                  cmpeqsd xmm1,xmm2
+        f3 0f c2 0f 00                  cmpeqss xmm1,DWORD PTR [rdi]
+        f3 0f c2 ca 00                  cmpeqss xmm1,xmm2
+        f3 0f c2 ca 00                  cmpeqss xmm1,xmm2
+        66 0f c2 ca 02                  cmplepd xmm1,xmm2
+        0f c2 ca 02                     cmpleps xmm1,xmm2
+        f2 0f c2 ca 02                  cmplesd xmm1,xmm2
+        f3 0f c2 ca 02                  cmpless xmm1,xmm2
+        66 0f c2 ca 01                  cmpltpd xmm1,xmm2
+        0f c2 ca 01                     cmpltps xmm1,xmm2
+        f2 0f c2 ca 01                  cmpltsd xmm1,xmm2
+        f3 0f c2 ca 01                  cmpltss xmm1,xmm2
+        66 0f c2 ca 04                  cmpneqpd xmm1,xmm2
+        0f c2 ca 04                     cmpneqps xmm1,xmm2
+        f2 0f c2 ca 04                  cmpneqsd xmm1,xmm2
+        f3 0f c2 ca 04                  cmpneqss xmm1,xmm2
+        66 0f c2 ca 06                  cmpnlepd xmm1,xmm2
+        0f c2 ca 06                     cmpnleps xmm1,xmm2
+        f2 0f c2 ca 06                  cmpnlesd xmm1,xmm2
+        f3 0f c2 ca 06                  cmpnless xmm1,xmm2
+        66 0f c2 ca 05                  cmpnltpd xmm1,xmm2
+        0f c2 ca 05                     cmpnltps xmm1,xmm2
+        f2 0f c2 ca 05                  cmpnltsd xmm1,xmm2
+        f3 0f c2 ca 05                  cmpnltss xmm1,xmm2
+        66 0f c2 ca 07                  cmpordpd xmm1,xmm2
+        0f c2 ca 07                     cmpordps xmm1,xmm2
+        f2 0f c2 ca 07                  cmpordsd xmm1,xmm2
+        f3 0f c2 ca 07                  cmpordss xmm1,xmm2
+        66 0f c2 ca 08                  cmppd  xmm1,xmm2,0x8
+        0f c2 ca 08                     cmpps  xmm1,xmm2,0x8
+        f2 0f c2 ca 08                  cmpsd  xmm1,xmm2,0x8
+        f3 0f c2 ca 08                  cmpss  xmm1,xmm2,0x8
+        66 0f c2 ca 03                  cmpunordpd xmm1,xmm2
+        0f c2 ca 03                     cmpunordps xmm1,xmm2
+        f2 0f c2 ca 03                  cmpunordsd xmm1,xmm2
+        f3 0f c2 ca 03                  cmpunordss xmm1,xmm2
+        66 0f 2f 0f                     comisd xmm1,QWORD PTR [rdi]
+        66 0f 2f ca                     comisd xmm1,xmm2
+        0f 2f 0f                        comiss xmm1,DWORD PTR [rdi]
+        0f 2f ca                        comiss xmm1,xmm2
+        f3 0f e6 0f                     cvtdq2pd xmm1,QWORD PTR [rdi]
+        f3 0f e6 ca                     cvtdq2pd xmm1,xmm2
+        0f 5b 0f                        cvtdq2ps xmm1,XMMWORD PTR [rdi]
+        0f 5b ca                        cvtdq2ps xmm1,xmm2
+        f2 0f e6 0f                     cvtpd2dq xmm1,XMMWORD PTR [rdi]
+        f2 0f e6 ca                     cvtpd2dq xmm1,xmm2
+        66 0f 2d 0f                     cvtpd2pi mm1,XMMWORD PTR [rdi]
+        66 0f 2d ca                     cvtpd2pi mm1,xmm2
+        66 0f 5a 0f                     cvtpd2ps xmm1,XMMWORD PTR [rdi]
+        66 0f 5a ca                     cvtpd2ps xmm1,xmm2
+        66 0f 2a 0f                     cvtpi2pd xmm1,QWORD PTR [rdi]
+        66 0f 2a ca                     cvtpi2pd xmm1,mm2
+        0f 2a 0f                        cvtpi2ps xmm1,QWORD PTR [rdi]
+        0f 2a ca                        cvtpi2ps xmm1,mm2
+        66 0f 5b 0f                     cvtps2dq xmm1,XMMWORD PTR [rdi]
+        66 0f 5b ca                     cvtps2dq xmm1,xmm2
+        0f 5a 0f                        cvtps2pd xmm1,QWORD PTR [rdi]
+        0f 5a ca                        cvtps2pd xmm1,xmm2
+        0f 2d 0f                        cvtps2pi mm1,QWORD PTR [rdi]
+        0f 2d ca                        cvtps2pi mm1,xmm2
+        f2 0f 2d 0f                     cvtsd2si ecx,QWORD PTR [rdi]
+        f2 0f 2d ca                     cvtsd2si ecx,xmm2
+        f2 48 0f 2d 0f                  cvtsd2si rcx,QWORD PTR [rdi]
+        f2 48 0f 2d ca                  cvtsd2si rcx,xmm2
+        f2 0f 5a 0f                     cvtsd2ss xmm1,QWORD PTR [rdi]
+        f2 0f 5a ca                     cvtsd2ss xmm1,xmm2
+        f2 0f 2a 0f                     cvtsi2sd xmm1,DWORD PTR [rdi]
+        f2 0f 2a 0f                     cvtsi2sd xmm1,DWORD PTR [rdi]
+        f2 48 0f 2a 0f                  cvtsi2sd xmm1,QWORD PTR [rdi]
+        f2 48 0f 2a 0f                  cvtsi2sd xmm1,QWORD PTR [rdi]
+        f2 0f 2a cb                     cvtsi2sd xmm1,ebx
+        f2 48 0f 2a cb                  cvtsi2sd xmm1,rbx
+        f3 0f 2a 0f                     cvtsi2ss xmm1,DWORD PTR [rdi]
+        f3 48 0f 2a 0f                  cvtsi2ss xmm1,QWORD PTR [rdi]
+        f3 0f 2a cb                     cvtsi2ss xmm1,ebx
+        f3 48 0f 2a cb                  cvtsi2ss xmm1,rbx
+        f3 0f 5a 0f                     cvtss2sd xmm1,DWORD PTR [rdi]
+        f3 0f 5a ca                     cvtss2sd xmm1,xmm2
+        f3 0f 2d 07                     cvtss2si eax,DWORD PTR [rdi]
+        f3 0f 2d c1                     cvtss2si eax,xmm1
+        f3 48 0f 2d 07                  cvtss2si rax,DWORD PTR [rdi]
+        f3 48 0f 2d c1                  cvtss2si rax,xmm1
+        66 0f e6 0f                     cvttpd2dq xmm1,XMMWORD PTR [rdi]
+        66 0f e6 ca                     cvttpd2dq xmm1,xmm2
+        66 0f 2c 0f                     cvttpd2pi mm1,XMMWORD PTR [rdi]
+        66 0f 2c ca                     cvttpd2pi mm1,xmm2
+        f3 0f 5b 0f                     cvttps2dq xmm1,XMMWORD PTR [rdi]
+        f3 0f 5b ca                     cvttps2dq xmm1,xmm2
+        0f 2c 0f                        cvttps2pi mm1,QWORD PTR [rdi]
+        0f 2c ca                        cvttps2pi mm1,xmm2
+        f2 0f 2c 0f                     cvttsd2si ecx,QWORD PTR [rdi]
+        f2 0f 2c ca                     cvttsd2si ecx,xmm2
+        f2 48 0f 2c 0f                  cvttsd2si rcx,QWORD PTR [rdi]
+        f2 48 0f 2c ca                  cvttsd2si rcx,xmm2
+        f3 0f 2c 0f                     cvttss2si ecx,DWORD PTR [rdi]
+        f3 0f 2c ca                     cvttss2si ecx,xmm2
+        f3 48 0f 2c 0f                  cvttss2si rcx,DWORD PTR [rdi]
+        f3 48 0f 2c ca                  cvttss2si rcx,xmm2
+        66 0f 5e 0f                     divpd  xmm1,XMMWORD PTR [rdi]
+        66 0f 5e ca                     divpd  xmm1,xmm2
+        0f 5e 0f                        divps  xmm1,XMMWORD PTR [rdi]
+        0f 5e ca                        divps  xmm1,xmm2
+        f2 0f 5e 0f                     divsd  xmm1,QWORD PTR [rdi]
+        f2 0f 5e ca                     divsd  xmm1,xmm2
+        f3 0f 5e 0f                     divss  xmm1,DWORD PTR [rdi]
+        f3 0f 5e ca                     divss  xmm1,xmm2
+        66 0f 3a 41 0f 13               dppd   xmm1,XMMWORD PTR [rdi],0x13
+        66 0f 3a 41 ca 13               dppd   xmm1,xmm2,0x13
+        66 0f 3a 40 0f 13               dpps   xmm1,XMMWORD PTR [rdi],0x13
+        66 0f 3a 40 ca 13               dpps   xmm1,xmm2,0x13
+        66 0f 3a 17 0f 13               extractps DWORD PTR [rdi],xmm1,0x13
+        66 0f 3a 17 c9 13               extractps ecx,xmm1,0x13
+        66 0f 7c 0f                     haddpd xmm1,XMMWORD PTR [rdi]
+        66 0f 7c ca                     haddpd xmm1,xmm2
+        f2 0f 7c 0f                     haddps xmm1,XMMWORD PTR [rdi]
+        f2 0f 7c ca                     haddps xmm1,xmm2
+        66 0f 7d 0f                     hsubpd xmm1,XMMWORD PTR [rdi]
+        66 0f 7d ca                     hsubpd xmm1,xmm2
+        f2 0f 7d 0f                     hsubps xmm1,XMMWORD PTR [rdi]
+        f2 0f 7d ca                     hsubps xmm1,xmm2
+        66 0f 3a 21 0f 13               insertps xmm1,DWORD PTR [rdi],0x13
+        66 0f 3a 21 ca 13               insertps xmm1,xmm2,0x13
+        f2 0f f0 0f                     lddqu  xmm1,[rdi]
+        0f ae 17                        ldmxcsr DWORD PTR [rdi]
+        66 0f f7 ca                     maskmovdqu xmm1,xmm2
+        0f f7 ca                        maskmovq mm1,mm2
+        66 0f 5f 0f                     maxpd  xmm1,XMMWORD PTR [rdi]
+        66 0f 5f ca                     maxpd  xmm1,xmm2
+        0f 5f 0f                        maxps  xmm1,XMMWORD PTR [rdi]
+        0f 5f ca                        maxps  xmm1,xmm2
+        f2 0f 5f 0f                     maxsd  xmm1,QWORD PTR [rdi]
+        f2 0f 5f ca                     maxsd  xmm1,xmm2
+        f3 0f 5f 0f                     maxss  xmm1,DWORD PTR [rdi]
+        f3 0f 5f ca                     maxss  xmm1,xmm2
+        66 0f 5d 0f                     minpd  xmm1,XMMWORD PTR [rdi]
+        66 0f 5d ca                     minpd  xmm1,xmm2
+        0f 5d 0f                        minps  xmm1,XMMWORD PTR [rdi]
+        0f 5d ca                        minps  xmm1,xmm2
+        f2 0f 5d 0f                     minsd  xmm1,QWORD PTR [rdi]
+        f2 0f 5d ca                     minsd  xmm1,xmm2
+        f3 0f 5d 0f                     minss  xmm1,DWORD PTR [rdi]
+        f3 0f 5d ca                     minss  xmm1,xmm2
+        66 0f 29 17                     movapd XMMWORD PTR [rdi],xmm2
+        66 0f 28 0f                     movapd xmm1,XMMWORD PTR [rdi]
+        66 0f 28 ca                     movapd xmm1,xmm2
+        0f 29 17                        movaps XMMWORD PTR [rdi],xmm2
+        0f 28 0f                        movaps xmm1,XMMWORD PTR [rdi]
+        0f 28 ca                        movaps xmm1,xmm2
+        0f 7e ca                        movd   edx,mm1
+        66 0f 7e ca                     movd   edx,xmm1
+        0f 6e ca                        movd   mm1,edx
+        66 0f 6e ca                     movd   xmm1,edx
+        f2 0f 12 4c 24 10               movddup xmm1,QWORD PTR [rsp+0x10]
+        f2 0f d6 ca                     movdq2q mm1,xmm2
+        66 0f 7f 17                     movdqa XMMWORD PTR [rdi],xmm2
+        66 0f 6f 0f                     movdqa xmm1,XMMWORD PTR [rdi]
+        66 0f 6f ca                     movdqa xmm1,xmm2
+        f3 0f 7f 17                     movdqu XMMWORD PTR [rdi],xmm2
+        f3 0f 6f 0f                     movdqu xmm1,XMMWORD PTR [rdi]
+        f3 0f 6f ca                     movdqu xmm1,xmm2
+        0f 12 ca                        movhlps xmm1,xmm2
+        66 0f 17 0f                     movhpd QWORD PTR [rdi],xmm1
+        66 0f 17 17                     movhpd QWORD PTR [rdi],xmm2
+        66 0f 16 0f                     movhpd xmm1,QWORD PTR [rdi]
+        66 0f 16 0f                     movhpd xmm1,QWORD PTR [rdi]
+        0f 17 17                        movhps QWORD PTR [rdi],xmm2
+        0f 16 0f                        movhps xmm1,QWORD PTR [rdi]
+        0f 16 ca                        movlhps xmm1,xmm2
+        66 0f 13 0f                     movlpd QWORD PTR [rdi],xmm1
+        66 0f 13 17                     movlpd QWORD PTR [rdi],xmm2
+        66 0f 12 0f                     movlpd xmm1,QWORD PTR [rdi]
+        66 0f 12 0f                     movlpd xmm1,QWORD PTR [rdi]
+        0f 13 17                        movlps QWORD PTR [rdi],xmm2
+        0f 12 0f                        movlps xmm1,QWORD PTR [rdi]
+        66 0f 50 ca                     movmskpd ecx,xmm2
+        0f 50 ca                        movmskps ecx,xmm2
+        66 0f e7 0f                     movntdq XMMWORD PTR [rdi],xmm1
+        66 0f 38 2a 0f                  movntdqa xmm1,XMMWORD PTR [rdi]
+        66 0f 2b 17                     movntpd XMMWORD PTR [rdi],xmm2
+        0f 2b 17                        movntps XMMWORD PTR [rdi],xmm2
+        0f 2b 17                        movntps XMMWORD PTR [rdi],xmm2
+        0f e7 07                        movntq QWORD PTR [rdi],mm0
+        48 0f 7e 0f                     movq   QWORD PTR [rdi],mm1
+        0f 7f 0f                        movq   QWORD PTR [rdi],mm1
+        66 48 0f 7e 0f                  movq   QWORD PTR [rdi],xmm1
+        66 0f d6 0f                     movq   QWORD PTR [rdi],xmm1
+        66 0f d6 46 10                  movq   QWORD PTR [rsi+0x10],xmm0
+        48 0f 6e 0f                     movq   mm1,QWORD PTR [rdi]
+        0f 6f 0f                        movq   mm1,QWORD PTR [rdi]
+        0f 6f ca                        movq   mm1,mm2
+        0f 7f ca                        movq   mm2,mm1
+        f3 0f 7e 48 10                  movq   xmm1,QWORD PTR [rax+0x10]
+        66 48 0f 6e 0f                  movq   xmm1,QWORD PTR [rdi]
+        f3 0f 7e 0f                     movq   xmm1,QWORD PTR [rdi]
+        f3 0f 7e ca                     movq   xmm1,xmm2
+        66 0f d6 ca                     movq   xmm2,xmm1
+        f3 0f d6 ca                     movq2dq xmm1,mm2
+        f2 0f 11 17                     movsd  QWORD PTR [rdi],xmm2
+        f2 0f 10 0f                     movsd  xmm1,QWORD PTR [rdi]
+        f2 0f 10 ca                     movsd  xmm1,xmm2
+        f2 0f 11 ca                     movsd  xmm2,xmm1
+        f3 0f 16 0f                     movshdup xmm1,XMMWORD PTR [rdi]
+        f3 0f 16 ca                     movshdup xmm1,xmm2
+        f3 0f 12 0f                     movsldup xmm1,XMMWORD PTR [rdi]
+        f3 0f 12 ca                     movsldup xmm1,xmm2
+        f3 0f 11 17                     movss  DWORD PTR [rdi],xmm2
+        f3 0f 10 0f                     movss  xmm1,DWORD PTR [rdi]
+        f3 0f 10 ca                     movss  xmm1,xmm2
+        f3 0f 11 ca                     movss  xmm2,xmm1
+        66 0f 11 17                     movupd XMMWORD PTR [rdi],xmm2
+        66 0f 10 0f                     movupd xmm1,XMMWORD PTR [rdi]
+        66 0f 10 ca                     movupd xmm1,xmm2
+        0f 11 17                        movups XMMWORD PTR [rdi],xmm2
+        0f 11 17                        movups XMMWORD PTR [rdi],xmm2
+        0f 10 0f                        movups xmm1,XMMWORD PTR [rdi]
+        0f 10 0f                        movups xmm1,XMMWORD PTR [rdi]
+        0f 10 ca                        movups xmm1,xmm2
+        0f 10 ca                        movups xmm1,xmm2
+        0f 10 ca                        movups xmm1,xmm2
+        66 0f 3a 42 0f 13               mpsadbw xmm1,XMMWORD PTR [rdi],0x13
+        66 0f 3a 42 ca 13               mpsadbw xmm1,xmm2,0x13
+        66 0f 59 0f                     mulpd  xmm1,XMMWORD PTR [rdi]
+        66 0f 59 ca                     mulpd  xmm1,xmm2
+        0f 59 0f                        mulps  xmm1,XMMWORD PTR [rdi]
+        0f 59 ca                        mulps  xmm1,xmm2
+        f2 0f 59 0f                     mulsd  xmm1,QWORD PTR [rdi]
+        f2 0f 59 ca                     mulsd  xmm1,xmm2
+        f3 0f 59 0f                     mulss  xmm1,DWORD PTR [rdi]
+        f3 0f 59 ca                     mulss  xmm1,xmm2
+        66 0f 56 0f                     orpd   xmm1,XMMWORD PTR [rdi]
+        66 0f 56 ca                     orpd   xmm1,xmm2
+        0f 56 0f                        orps   xmm1,XMMWORD PTR [rdi]
+        0f 56 ca                        orps   xmm1,xmm2
+        0f 38 1c 0f                     pabsb  mm1,QWORD PTR [rdi]
+        0f 38 1c ca                     pabsb  mm1,mm2
+        66 0f 38 1c 0f                  pabsb  xmm1,XMMWORD PTR [rdi]
+        66 0f 38 1c ca                  pabsb  xmm1,xmm2
+        0f 38 1e 0f                     pabsd  mm1,QWORD PTR [rdi]
+        0f 38 1e ca                     pabsd  mm1,mm2
+        66 0f 38 1e 0f                  pabsd  xmm1,XMMWORD PTR [rdi]
+        66 0f 38 1e ca                  pabsd  xmm1,xmm2
+        0f 38 1d 0f                     pabsw  mm1,QWORD PTR [rdi]
+        0f 38 1d ca                     pabsw  mm1,mm2
+        66 0f 38 1d 0f                  pabsw  xmm1,XMMWORD PTR [rdi]
+        66 0f 38 1d ca                  pabsw  xmm1,xmm2
+        0f 6b 0f                        packssdw mm1,QWORD PTR [rdi]
+        0f 6b ca                        packssdw mm1,mm2
+        66 0f 6b 0f                     packssdw xmm1,XMMWORD PTR [rdi]
+        66 0f 6b ca                     packssdw xmm1,xmm2
+        0f 63 0f                        packsswb mm1,QWORD PTR [rdi]
+        0f 63 ca                        packsswb mm1,mm2
+        66 0f 63 0f                     packsswb xmm1,XMMWORD PTR [rdi]
+        66 0f 63 ca                     packsswb xmm1,xmm2
+        66 0f 38 2b 0f                  packusdw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 2b ca                  packusdw xmm1,xmm2
+        66 0f 67 0f                     packuswb xmm1,XMMWORD PTR [rdi]
+        66 0f 67 ca                     packuswb xmm1,xmm2
+        0f fc 0f                        paddb  mm1,QWORD PTR [rdi]
+        0f fc ca                        paddb  mm1,mm2
+        66 0f fc 0f                     paddb  xmm1,XMMWORD PTR [rdi]
+        66 0f fc ca                     paddb  xmm1,xmm2
+        0f fe 0f                        paddd  mm1,QWORD PTR [rdi]
+        0f fe ca                        paddd  mm1,mm2
+        66 0f fe 0f                     paddd  xmm1,XMMWORD PTR [rdi]
+        66 0f fe ca                     paddd  xmm1,xmm2
+        0f d4 0f                        paddq  mm1,QWORD PTR [rdi]
+        0f d4 ca                        paddq  mm1,mm2
+        66 0f d4 0f                     paddq  xmm1,XMMWORD PTR [rdi]
+        66 0f d4 ca                     paddq  xmm1,xmm2
+        0f ec 0f                        paddsb mm1,QWORD PTR [rdi]
+        0f ec ca                        paddsb mm1,mm2
+        66 0f ec 0f                     paddsb xmm1,XMMWORD PTR [rdi]
+        66 0f ec ca                     paddsb xmm1,xmm2
+        0f ed 0f                        paddsw mm1,QWORD PTR [rdi]
+        0f ed ca                        paddsw mm1,mm2
+        66 0f ed 0f                     paddsw xmm1,XMMWORD PTR [rdi]
+        66 0f ed ca                     paddsw xmm1,xmm2
+        0f dc 0f                        paddusb mm1,QWORD PTR [rdi]
+        0f dc ca                        paddusb mm1,mm2
+        66 0f dc 0f                     paddusb xmm1,XMMWORD PTR [rdi]
+        66 0f dc ca                     paddusb xmm1,xmm2
+        0f dd 0f                        paddusw mm1,QWORD PTR [rdi]
+        0f dd ca                        paddusw mm1,mm2
+        66 0f dd 0f                     paddusw xmm1,XMMWORD PTR [rdi]
+        66 0f dd ca                     paddusw xmm1,xmm2
+        0f fd 0f                        paddw  mm1,QWORD PTR [rdi]
+        0f fd ca                        paddw  mm1,mm2
+        66 0f fd 0f                     paddw  xmm1,XMMWORD PTR [rdi]
+        66 0f fd ca                     paddw  xmm1,xmm2
+        0f 3a 0f 0f 03                  palignr mm1,QWORD PTR [rdi],0x3
+        0f 3a 0f ca 03                  palignr mm1,mm2,0x3
+        66 0f 3a 0f 0f 03               palignr xmm1,XMMWORD PTR [rdi],0x3
+        66 0f 3a 0f ca 03               palignr xmm1,xmm2,0x3
+        0f db 0f                        pand   mm1,QWORD PTR [rdi]
+        0f db ca                        pand   mm1,mm2
+        66 0f db 0f                     pand   xmm1,XMMWORD PTR [rdi]
+        66 0f db ca                     pand   xmm1,xmm2
+        0f df 0f                        pandn  mm1,QWORD PTR [rdi]
+        0f df ca                        pandn  mm1,mm2
+        66 0f df 0f                     pandn  xmm1,XMMWORD PTR [rdi]
+        66 0f df ca                     pandn  xmm1,xmm2
+        0f e0 0f                        pavgb  mm1,QWORD PTR [rdi]
+        0f e0 ca                        pavgb  mm1,mm2
+        66 0f e0 0f                     pavgb  xmm1,XMMWORD PTR [rdi]
+        66 0f e0 ca                     pavgb  xmm1,xmm2
+        0f e3 0f                        pavgw  mm1,QWORD PTR [rdi]
+        0f e3 ca                        pavgw  mm1,mm2
+        66 0f e3 0f                     pavgw  xmm1,XMMWORD PTR [rdi]
+        66 0f e3 ca                     pavgw  xmm1,xmm2
+        66 0f 38 10 0f                  pblendvb xmm1,XMMWORD PTR [rdi],xmm0
+        66 0f 38 10 ca                  pblendvb xmm1,xmm2,xmm0
+        66 0f 3a 0e 0f 7f               pblendw xmm1,XMMWORD PTR [rdi],0x7f
+        66 0f 3a 0e ca 7f               pblendw xmm1,xmm2,0x7f
+        66 0f 3a 44 ca 11               pclmulhqhqdq xmm1,xmm2
+        66 0f 3a 44 ca 01               pclmulhqlqdq xmm1,xmm2
+        66 0f 3a 44 ca 10               pclmullqhqdq xmm1,xmm2
+        66 0f 3a 44 0f 00               pclmullqlqdq xmm1,XMMWORD PTR [rdi]
+        66 0f 3a 44 ca 00               pclmullqlqdq xmm1,xmm2
+        0f 74 07                        pcmpeqb mm0,QWORD PTR [rdi]
+        0f 74 c1                        pcmpeqb mm0,mm1
+        66 0f 74 07                     pcmpeqb xmm0,XMMWORD PTR [rdi]
+        66 0f 74 c1                     pcmpeqb xmm0,xmm1
+        0f 76 07                        pcmpeqd mm0,QWORD PTR [rdi]
+        0f 76 c1                        pcmpeqd mm0,mm1
+        66 0f 76 07                     pcmpeqd xmm0,XMMWORD PTR [rdi]
+        66 0f 76 c1                     pcmpeqd xmm0,xmm1
+        66 0f 38 29 0f                  pcmpeqq xmm1,XMMWORD PTR [rdi]
+        66 0f 38 29 ca                  pcmpeqq xmm1,xmm2
+        0f 75 07                        pcmpeqw mm0,QWORD PTR [rdi]
+        0f 75 c1                        pcmpeqw mm0,mm1
+        66 0f 75 07                     pcmpeqw xmm0,XMMWORD PTR [rdi]
+        66 0f 75 c1                     pcmpeqw xmm0,xmm1
+        66 0f 3a 61 0f 00               pcmpestri xmm1,XMMWORD PTR [rdi],0x0
+        66 0f 3a 61 ca 00               pcmpestri xmm1,xmm2,0x0
+        66 0f 3a 60 0f 00               pcmpestrm xmm1,XMMWORD PTR [rdi],0x0
+        66 0f 3a 60 ca 00               pcmpestrm xmm1,xmm2,0x0
+        0f 64 0f                        pcmpgtb mm1,QWORD PTR [rdi]
+        0f 64 ca                        pcmpgtb mm1,mm2
+        66 0f 64 0f                     pcmpgtb xmm1,XMMWORD PTR [rdi]
+        66 0f 64 ca                     pcmpgtb xmm1,xmm2
+        0f 66 0f                        pcmpgtd mm1,QWORD PTR [rdi]
+        0f 66 ca                        pcmpgtd mm1,mm2
+        66 0f 66 0f                     pcmpgtd xmm1,XMMWORD PTR [rdi]
+        66 0f 66 ca                     pcmpgtd xmm1,xmm2
+        66 0f 38 37 0f                  pcmpgtq xmm1,XMMWORD PTR [rdi]
+        66 0f 38 37 ca                  pcmpgtq xmm1,xmm2
+        0f 65 0f                        pcmpgtw mm1,QWORD PTR [rdi]
+        0f 65 ca                        pcmpgtw mm1,mm2
+        66 0f 65 0f                     pcmpgtw xmm1,XMMWORD PTR [rdi]
+        66 0f 65 ca                     pcmpgtw xmm1,xmm2
+        66 0f 3a 63 0f 00               pcmpistri xmm1,XMMWORD PTR [rdi],0x0
+        66 0f 3a 63 ca 00               pcmpistri xmm1,xmm2,0x0
+        66 0f 3a 62 0f 00               pcmpistrm xmm1,XMMWORD PTR [rdi],0x0
+        66 0f 3a 62 ca 00               pcmpistrm xmm1,xmm2,0x0
+        66 0f 3a 14 17 00               pextrb BYTE PTR [rdi],xmm2,0x0
+        66 0f 3a 14 d1 00               pextrb ecx,xmm2,0x0
+        66 0f 3a 16 07 01               pextrd DWORD PTR [rdi],xmm0,0x1
+        66 0f 3a 16 17 00               pextrd DWORD PTR [rdi],xmm2,0x0
+        66 0f 3a 16 d1 00               pextrd ecx,xmm2,0x0
+        66 0f 3a 16 c2 01               pextrd edx,xmm0,0x1
+        66 48 0f 3a 16 07 01            pextrq QWORD PTR [rdi],xmm0,0x1
+        66 48 0f 3a 16 17 00            pextrq QWORD PTR [rdi],xmm2,0x0
+        66 49 0f 3a 16 c4 01            pextrq r12,xmm0,0x1
+        66 48 0f 3a 16 d1 00            pextrq rcx,xmm2,0x0
+        66 0f 3a 15 17 00               pextrw WORD PTR [rdi],xmm2,0x0
+        66 0f 3a 15 17 00               pextrw WORD PTR [rdi],xmm2,0x0
+        0f c5 ca 00                     pextrw ecx,mm2,0x0
+        66 0f c5 ca 00                  pextrw ecx,xmm2,0x0
+        0f 38 02 0f                     phaddd mm1,QWORD PTR [rdi]
+        0f 38 02 ca                     phaddd mm1,mm2
+        66 0f 38 02 0f                  phaddd xmm1,XMMWORD PTR [rdi]
+        66 0f 38 02 ca                  phaddd xmm1,xmm2
+        0f 38 03 0f                     phaddsw mm1,QWORD PTR [rdi]
+        0f 38 03 ca                     phaddsw mm1,mm2
+        66 0f 38 03 0f                  phaddsw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 03 ca                  phaddsw xmm1,xmm2
+        0f 38 01 0f                     phaddw mm1,QWORD PTR [rdi]
+        0f 38 01 ca                     phaddw mm1,mm2
+        66 0f 38 01 0f                  phaddw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 01 ca                  phaddw xmm1,xmm2
+        66 0f 38 41 0f                  phminposuw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 41 ca                  phminposuw xmm1,xmm2
+        0f 38 06 0f                     phsubd mm1,QWORD PTR [rdi]
+        0f 38 06 ca                     phsubd mm1,mm2
+        66 0f 38 06 0f                  phsubd xmm1,XMMWORD PTR [rdi]
+        66 0f 38 06 ca                  phsubd xmm1,xmm2
+        0f 38 07 0f                     phsubsw mm1,QWORD PTR [rdi]
+        0f 38 07 ca                     phsubsw mm1,mm2
+        66 0f 38 07 0f                  phsubsw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 07 ca                  phsubsw xmm1,xmm2
+        0f 38 05 0f                     phsubw mm1,QWORD PTR [rdi]
+        0f 38 05 ca                     phsubw mm1,mm2
+        66 0f 38 05 0f                  phsubw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 05 ca                  phsubw xmm1,xmm2
+        66 0f 3a 20 0f 00               pinsrb xmm1,BYTE PTR [rdi],0x0
+        66 0f 3a 20 c8 00               pinsrb xmm1,eax,0x0
+        66 0f 3a 22 0f 00               pinsrd xmm1,DWORD PTR [rdi],0x0
+        66 0f 3a 22 0f 01               pinsrd xmm1,DWORD PTR [rdi],0x1
+        66 0f 3a 22 c8 00               pinsrd xmm1,eax,0x0
+        66 41 0f 3a 22 cc 01            pinsrd xmm1,r12d,0x1
+        66 49 0f 3a 22 c4 01            pinsrq xmm0,r12,0x1
+        66 48 0f 3a 22 0f 00            pinsrq xmm1,QWORD PTR [rdi],0x0
+        66 48 0f 3a 22 0f 01            pinsrq xmm1,QWORD PTR [rdi],0x1
+        66 48 0f 3a 22 c8 00            pinsrq xmm1,rax,0x0
+        0f c4 0f 00                     pinsrw mm1,WORD PTR [rdi],0x0
+        0f c4 c8 00                     pinsrw mm1,eax,0x0
+        66 0f c4 0f 00                  pinsrw xmm1,WORD PTR [rdi],0x0
+        66 0f c4 c8 00                  pinsrw xmm1,eax,0x0
+        0f 38 04 0f                     pmaddubsw mm1,QWORD PTR [rdi]
+        0f 38 04 ca                     pmaddubsw mm1,mm2
+        66 0f 38 04 0f                  pmaddubsw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 04 ca                  pmaddubsw xmm1,xmm2
+        0f f5 0f                        pmaddwd mm1,QWORD PTR [rdi]
+        0f f5 ca                        pmaddwd mm1,mm2
+        66 0f f5 0f                     pmaddwd xmm1,XMMWORD PTR [rdi]
+        66 0f f5 ca                     pmaddwd xmm1,xmm2
+        66 0f 38 3c 0f                  pmaxsb xmm1,XMMWORD PTR [rdi]
+        66 0f 38 3c ca                  pmaxsb xmm1,xmm2
+        66 0f 38 3d 0f                  pmaxsd xmm1,XMMWORD PTR [rdi]
+        66 0f 38 3d ca                  pmaxsd xmm1,xmm2
+        0f ee 0f                        pmaxsw mm1,QWORD PTR [rdi]
+        0f ee ca                        pmaxsw mm1,mm2
+        66 0f ee 0f                     pmaxsw xmm1,XMMWORD PTR [rdi]
+        66 0f ee ca                     pmaxsw xmm1,xmm2
+        0f de 0f                        pmaxub mm1,QWORD PTR [rdi]
+        0f de ca                        pmaxub mm1,mm2
+        66 0f de 0f                     pmaxub xmm1,XMMWORD PTR [rdi]
+        66 0f de ca                     pmaxub xmm1,xmm2
+        66 0f 38 3f 0f                  pmaxud xmm1,XMMWORD PTR [rdi]
+        66 0f 38 3f ca                  pmaxud xmm1,xmm2
+        66 0f 38 3e 0f                  pmaxuw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 3e ca                  pmaxuw xmm1,xmm2
+        66 0f 38 38 0f                  pminsb xmm1,XMMWORD PTR [rdi]
+        66 0f 38 38 ca                  pminsb xmm1,xmm2
+        66 0f 38 39 0f                  pminsd xmm1,XMMWORD PTR [rdi]
+        66 0f 38 39 ca                  pminsd xmm1,xmm2
+        0f ea 0f                        pminsw mm1,QWORD PTR [rdi]
+        0f ea ca                        pminsw mm1,mm2
+        66 0f ea 0f                     pminsw xmm1,XMMWORD PTR [rdi]
+        66 0f ea ca                     pminsw xmm1,xmm2
+        0f da 0f                        pminub mm1,QWORD PTR [rdi]
+        0f da ca                        pminub mm1,mm2
+        66 0f da 0f                     pminub xmm1,XMMWORD PTR [rdi]
+        66 0f da ca                     pminub xmm1,xmm2
+        66 0f 38 3b 0f                  pminud xmm1,XMMWORD PTR [rdi]
+        66 0f 38 3b ca                  pminud xmm1,xmm2
+        66 0f 38 3a 0f                  pminuw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 3a ca                  pminuw xmm1,xmm2
+        0f d7 ca                        pmovmskb ecx,mm2
+        66 0f d7 ca                     pmovmskb ecx,xmm2
+        66 0f 38 21 44 18 10            pmovsxbd xmm0,DWORD PTR [rax+rbx*1+0x10]
+        66 0f 38 21 4f 40               pmovsxbd xmm1,DWORD PTR [rdi+0x40]
+        66 0f 38 21 ca                  pmovsxbd xmm1,xmm2
+        66 0f 38 22 4f 40               pmovsxbq xmm1,WORD PTR [rdi+0x40]
+        66 0f 38 22 ca                  pmovsxbq xmm1,xmm2
+        66 0f 38 20 4f 40               pmovsxbw xmm1,QWORD PTR [rdi+0x40]
+        66 0f 38 20 ca                  pmovsxbw xmm1,xmm2
+        66 0f 38 25 4f 40               pmovsxdq xmm1,QWORD PTR [rdi+0x40]
+        66 0f 38 25 ca                  pmovsxdq xmm1,xmm2
+        66 0f 38 23 4f 40               pmovsxwd xmm1,QWORD PTR [rdi+0x40]
+        66 0f 38 23 ca                  pmovsxwd xmm1,xmm2
+        66 0f 38 24 4f 40               pmovsxwq xmm1,DWORD PTR [rdi+0x40]
+        66 0f 38 24 ca                  pmovsxwq xmm1,xmm2
+        66 0f 38 31 4f 40               pmovzxbd xmm1,DWORD PTR [rdi+0x40]
+        66 0f 38 31 ca                  pmovzxbd xmm1,xmm2
+        66 0f 38 32 4f 40               pmovzxbq xmm1,WORD PTR [rdi+0x40]
+        66 0f 38 32 ca                  pmovzxbq xmm1,xmm2
+        66 0f 38 30 4f 40               pmovzxbw xmm1,QWORD PTR [rdi+0x40]
+        66 0f 38 30 ca                  pmovzxbw xmm1,xmm2
+        66 41 0f 38 35 44 24 0c         pmovzxdq xmm0,QWORD PTR [r12+0xc]
+        66 0f 38 35 4f 40               pmovzxdq xmm1,QWORD PTR [rdi+0x40]
+        66 0f 38 35 ca                  pmovzxdq xmm1,xmm2
+        66 0f 38 33 4f 40               pmovzxwd xmm1,QWORD PTR [rdi+0x40]
+        66 0f 38 33 ca                  pmovzxwd xmm1,xmm2
+        66 0f 38 34 4f 40               pmovzxwq xmm1,DWORD PTR [rdi+0x40]
+        66 0f 38 34 ca                  pmovzxwq xmm1,xmm2
+        66 0f 38 28 4f 40               pmuldq xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f 38 28 ca                  pmuldq xmm1,xmm2
+        0f 38 0b 4f 40                  pmulhrsw mm1,QWORD PTR [rdi+0x40]
+        0f 38 0b ca                     pmulhrsw mm1,mm2
+        66 0f 38 0b 4f 40               pmulhrsw xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f 38 0b ca                  pmulhrsw xmm1,xmm2
+        0f e4 4f 40                     pmulhuw mm1,QWORD PTR [rdi+0x40]
+        0f e4 ca                        pmulhuw mm1,mm2
+        66 0f e4 4f 40                  pmulhuw xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f e4 ca                     pmulhuw xmm1,xmm2
+        0f e5 4f 40                     pmulhw mm1,QWORD PTR [rdi+0x40]
+        0f e5 ca                        pmulhw mm1,mm2
+        66 0f e5 4f 40                  pmulhw xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f e5 ca                     pmulhw xmm1,xmm2
+        66 0f 38 40 4f 40               pmulld xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f 38 40 ca                  pmulld xmm1,xmm2
+        0f d5 4f 40                     pmullw mm1,QWORD PTR [rdi+0x40]
+        0f d5 ca                        pmullw mm1,mm2
+        66 0f d5 4f 40                  pmullw xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f d5 ca                     pmullw xmm1,xmm2
+        0f f4 4f 40                     pmuludq mm1,QWORD PTR [rdi+0x40]
+        0f f4 ca                        pmuludq mm1,mm2
+        66 0f f4 4f 40                  pmuludq xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f f4 ca                     pmuludq xmm1,xmm2
+        0f eb 0f                        por    mm1,QWORD PTR [rdi]
+        0f eb ca                        por    mm1,mm2
+        66 0f eb 0f                     por    xmm1,XMMWORD PTR [rdi]
+        66 0f eb ca                     por    xmm1,xmm2
+        0f 0d 07                        prefetch BYTE PTR [rdi]
+        0f 18 07                        prefetchnta BYTE PTR [rdi]
+        0f 18 0f                        prefetcht0 BYTE PTR [rdi]
+        0f 18 17                        prefetcht1 BYTE PTR [rdi]
+        0f 18 1f                        prefetcht2 BYTE PTR [rdi]
+        0f 0d 0f                        prefetchw BYTE PTR [rdi]
+        0f f6 4f 40                     psadbw mm1,QWORD PTR [rdi+0x40]
+        0f f6 ca                        psadbw mm1,mm2
+        66 0f f6 4f 40                  psadbw xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f f6 ca                     psadbw xmm1,xmm2
+        0f 38 00 4f 40                  pshufb mm1,QWORD PTR [rdi+0x40]
+        0f 38 00 ca                     pshufb mm1,mm2
+        66 0f 38 00 4f 40               pshufb xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f 38 00 ca                  pshufb xmm1,xmm2
+        66 0f 70 0f 13                  pshufd xmm1,XMMWORD PTR [rdi],0x13
+        66 0f 70 ca 13                  pshufd xmm1,xmm2,0x13
+        f3 0f 70 0f 13                  pshufhw xmm1,XMMWORD PTR [rdi],0x13
+        f3 0f 70 ca 13                  pshufhw xmm1,xmm2,0x13
+        f2 0f 70 0f 13                  pshuflw xmm1,XMMWORD PTR [rdi],0x13
+        f2 0f 70 ca 13                  pshuflw xmm1,xmm2,0x13
+        0f 70 0f 13                     pshufw mm1,QWORD PTR [rdi],0x13
+        0f 70 ca 13                     pshufw mm1,mm2,0x13
+        0f 38 08 0f                     psignb mm1,QWORD PTR [rdi]
+        0f 38 08 ca                     psignb mm1,mm2
+        66 0f 38 08 0f                  psignb xmm1,XMMWORD PTR [rdi]
+        66 0f 38 08 ca                  psignb xmm1,xmm2
+        0f 38 0a 0f                     psignd mm1,QWORD PTR [rdi]
+        0f 38 0a ca                     psignd mm1,mm2
+        66 0f 38 0a 0f                  psignd xmm1,XMMWORD PTR [rdi]
+        66 0f 38 0a ca                  psignd xmm1,xmm2
+        0f 38 09 0f                     psignw mm1,QWORD PTR [rdi]
+        0f 38 09 ca                     psignw mm1,mm2
+        66 0f 38 09 0f                  psignw xmm1,XMMWORD PTR [rdi]
+        66 0f 38 09 ca                  psignw xmm1,xmm2
+        0f 72 f1 13                     pslld  mm1,0x13
+        0f f2 0f                        pslld  mm1,QWORD PTR [rdi]
+        0f f2 ca                        pslld  mm1,mm2
+        66 0f 72 f1 13                  pslld  xmm1,0x13
+        66 0f f2 0f                     pslld  xmm1,XMMWORD PTR [rdi]
+        66 0f f2 ca                     pslld  xmm1,xmm2
+        66 0f 73 f9 13                  pslldq xmm1,0x13
+        66 0f 73 fa 0f                  pslldq xmm2,0xf
+        0f 73 f1 13                     psllq  mm1,0x13
+        0f f3 0f                        psllq  mm1,QWORD PTR [rdi]
+        0f f3 ca                        psllq  mm1,mm2
+        66 0f 73 f1 13                  psllq  xmm1,0x13
+        66 0f f3 0f                     psllq  xmm1,XMMWORD PTR [rdi]
+        66 0f f3 ca                     psllq  xmm1,xmm2
+        0f 71 f1 13                     psllw  mm1,0x13
+        0f f1 0f                        psllw  mm1,QWORD PTR [rdi]
+        0f f1 ca                        psllw  mm1,mm2
+        66 0f 71 f1 13                  psllw  xmm1,0x13
+        66 0f f1 0f                     psllw  xmm1,XMMWORD PTR [rdi]
+        66 0f f1 ca                     psllw  xmm1,xmm2
+        0f 72 e1 13                     psrad  mm1,0x13
+        0f e2 0f                        psrad  mm1,QWORD PTR [rdi]
+        0f e2 ca                        psrad  mm1,mm2
+        66 0f 72 e1 13                  psrad  xmm1,0x13
+        66 0f e2 0f                     psrad  xmm1,XMMWORD PTR [rdi]
+        66 0f e2 ca                     psrad  xmm1,xmm2
+        0f 71 e1 13                     psraw  mm1,0x13
+        0f e1 0f                        psraw  mm1,QWORD PTR [rdi]
+        0f e1 ca                        psraw  mm1,mm2
+        66 0f 71 e1 13                  psraw  xmm1,0x13
+        66 0f e1 0f                     psraw  xmm1,XMMWORD PTR [rdi]
+        66 0f e1 ca                     psraw  xmm1,xmm2
+        0f 72 d1 13                     psrld  mm1,0x13
+        0f d2 0f                        psrld  mm1,QWORD PTR [rdi]
+        0f d2 ca                        psrld  mm1,mm2
+        66 0f 72 d1 13                  psrld  xmm1,0x13
+        66 0f d2 0f                     psrld  xmm1,XMMWORD PTR [rdi]
+        66 0f d2 ca                     psrld  xmm1,xmm2
+        66 0f 73 d9 13                  psrldq xmm1,0x13
+        0f 73 d1 13                     psrlq  mm1,0x13
+        0f d3 0f                        psrlq  mm1,QWORD PTR [rdi]
+        0f d3 ca                        psrlq  mm1,mm2
+        66 0f 73 d1 13                  psrlq  xmm1,0x13
+        66 0f d3 0f                     psrlq  xmm1,XMMWORD PTR [rdi]
+        66 0f d3 ca                     psrlq  xmm1,xmm2
+        0f 71 d1 13                     psrlw  mm1,0x13
+        0f d1 0f                        psrlw  mm1,QWORD PTR [rdi]
+        0f d1 ca                        psrlw  mm1,mm2
+        66 0f 71 d1 13                  psrlw  xmm1,0x13
+        66 0f d1 0f                     psrlw  xmm1,XMMWORD PTR [rdi]
+        66 0f d1 ca                     psrlw  xmm1,xmm2
+        0f f8 0f                        psubb  mm1,QWORD PTR [rdi]
+        0f f8 ca                        psubb  mm1,mm2
+        66 0f f8 0f                     psubb  xmm1,XMMWORD PTR [rdi]
+        66 0f f8 ca                     psubb  xmm1,xmm2
+        0f fa 0f                        psubd  mm1,QWORD PTR [rdi]
+        0f fa ca                        psubd  mm1,mm2
+        66 0f fa 0f                     psubd  xmm1,XMMWORD PTR [rdi]
+        66 0f fa ca                     psubd  xmm1,xmm2
+        0f fb 0f                        psubq  mm1,QWORD PTR [rdi]
+        0f fb ca                        psubq  mm1,mm2
+        66 0f fb 0f                     psubq  xmm1,XMMWORD PTR [rdi]
+        66 0f fb ca                     psubq  xmm1,xmm2
+        0f e8 0f                        psubsb mm1,QWORD PTR [rdi]
+        0f e8 ca                        psubsb mm1,mm2
+        66 0f e8 0f                     psubsb xmm1,XMMWORD PTR [rdi]
+        66 0f e8 ca                     psubsb xmm1,xmm2
+        0f e9 0f                        psubsw mm1,QWORD PTR [rdi]
+        0f e9 ca                        psubsw mm1,mm2
+        66 0f e9 0f                     psubsw xmm1,XMMWORD PTR [rdi]
+        66 0f e9 ca                     psubsw xmm1,xmm2
+        0f d8 0f                        psubusb mm1,QWORD PTR [rdi]
+        0f d8 ca                        psubusb mm1,mm2
+        66 0f d8 0f                     psubusb xmm1,XMMWORD PTR [rdi]
+        66 0f d8 ca                     psubusb xmm1,xmm2
+        0f d9 0f                        psubusw mm1,QWORD PTR [rdi]
+        0f d9 ca                        psubusw mm1,mm2
+        66 0f d9 0f                     psubusw xmm1,XMMWORD PTR [rdi]
+        66 0f d9 ca                     psubusw xmm1,xmm2
+        0f f9 0f                        psubw  mm1,QWORD PTR [rdi]
+        0f f9 ca                        psubw  mm1,mm2
+        66 0f f9 0f                     psubw  xmm1,XMMWORD PTR [rdi]
+        66 0f f9 ca                     psubw  xmm1,xmm2
+        66 0f 38 17 0f                  ptest  xmm1,XMMWORD PTR [rdi]
+        66 0f 38 17 ca                  ptest  xmm1,xmm2
+        0f 68 0f                        punpckhbw mm1,QWORD PTR [rdi]
+        0f 68 ca                        punpckhbw mm1,mm2
+        66 0f 68 0f                     punpckhbw xmm1,XMMWORD PTR [rdi]
+        66 0f 68 ca                     punpckhbw xmm1,xmm2
+        0f 6a 0f                        punpckhdq mm1,QWORD PTR [rdi]
+        0f 6a ca                        punpckhdq mm1,mm2
+        66 0f 6a 0f                     punpckhdq xmm1,XMMWORD PTR [rdi]
+        66 0f 6a ca                     punpckhdq xmm1,xmm2
+        66 0f 6d 0f                     punpckhqdq xmm1,XMMWORD PTR [rdi]
+        66 0f 6d ca                     punpckhqdq xmm1,xmm2
+        0f 69 0f                        punpckhwd mm1,QWORD PTR [rdi]
+        0f 69 ca                        punpckhwd mm1,mm2
+        66 0f 69 0f                     punpckhwd xmm1,XMMWORD PTR [rdi]
+        66 0f 69 ca                     punpckhwd xmm1,xmm2
+        0f 60 0f                        punpcklbw mm1,DWORD PTR [rdi]
+        0f 60 0f                        punpcklbw mm1,DWORD PTR [rdi]
+        0f 60 ca                        punpcklbw mm1,mm2
+        0f 60 ca                        punpcklbw mm1,mm2
+        66 0f 60 0f                     punpcklbw xmm1,XMMWORD PTR [rdi]
+        66 0f 60 0f                     punpcklbw xmm1,XMMWORD PTR [rdi]
+        66 0f 60 ca                     punpcklbw xmm1,xmm2
+        66 0f 60 ca                     punpcklbw xmm1,xmm2
+        0f 62 0f                        punpckldq mm1,DWORD PTR [rdi]
+        0f 62 0f                        punpckldq mm1,DWORD PTR [rdi]
+        0f 62 ca                        punpckldq mm1,mm2
+        0f 62 ca                        punpckldq mm1,mm2
+        66 0f 62 0f                     punpckldq xmm1,XMMWORD PTR [rdi]
+        66 0f 62 0f                     punpckldq xmm1,XMMWORD PTR [rdi]
+        66 0f 62 ca                     punpckldq xmm1,xmm2
+        66 0f 62 ca                     punpckldq xmm1,xmm2
+        66 0f 6c 0f                     punpcklqdq xmm1,XMMWORD PTR [rdi]
+        66 0f 6c ca                     punpcklqdq xmm1,xmm2
+        66 0f 6c ca                     punpcklqdq xmm1,xmm2
+        0f 61 0f                        punpcklwd mm1,DWORD PTR [rdi]
+        0f 61 0f                        punpcklwd mm1,DWORD PTR [rdi]
+        0f 61 ca                        punpcklwd mm1,mm2
+        0f 61 ca                        punpcklwd mm1,mm2
+        66 0f 61 0f                     punpcklwd xmm1,XMMWORD PTR [rdi]
+        66 0f 61 0f                     punpcklwd xmm1,XMMWORD PTR [rdi]
+        66 0f 61 ca                     punpcklwd xmm1,xmm2
+        66 0f 61 ca                     punpcklwd xmm1,xmm2
+        0f ef 0f                        pxor   mm1,QWORD PTR [rdi]
+        0f ef ca                        pxor   mm1,mm2
+        66 0f ef 0f                     pxor   xmm1,XMMWORD PTR [rdi]
+        66 0f ef ca                     pxor   xmm1,xmm2
+        0f 53 0f                        rcpps  xmm1,XMMWORD PTR [rdi]
+        0f 53 ca                        rcpps  xmm1,xmm2
+        f3 0f 53 0f                     rcpss  xmm1,DWORD PTR [rdi]
+        f3 0f 53 ca                     rcpss  xmm1,xmm2
+        66 0f 3a 09 0f 01               roundpd xmm1,XMMWORD PTR [rdi],0x1
+        66 0f 3a 09 ca 01               roundpd xmm1,xmm2,0x1
+        66 0f 3a 08 0f 01               roundps xmm1,XMMWORD PTR [rdi],0x1
+        66 0f 3a 08 ca 01               roundps xmm1,xmm2,0x1
+        66 0f 3a 0b 0f 01               roundsd xmm1,QWORD PTR [rdi],0x1
+        66 0f 3a 0b ca 01               roundsd xmm1,xmm2,0x1
+        66 0f 3a 0a 0f 01               roundss xmm1,DWORD PTR [rdi],0x1
+        66 0f 3a 0a ca 01               roundss xmm1,xmm2,0x1
+        0f 52 0f                        rsqrtps xmm1,XMMWORD PTR [rdi]
+        0f 52 ca                        rsqrtps xmm1,xmm2
+        f3 0f 52 0f                     rsqrtss xmm1,DWORD PTR [rdi]
+        f3 0f 52 ca                     rsqrtss xmm1,xmm2
+        66 0f c6 0f 13                  shufpd xmm1,XMMWORD PTR [rdi],0x13
+        66 0f c6 ca 13                  shufpd xmm1,xmm2,0x13
+        0f c6 0f 13                     shufps xmm1,XMMWORD PTR [rdi],0x13
+        0f c6 ca 13                     shufps xmm1,xmm2,0x13
+        66 0f 51 0f                     sqrtpd xmm1,XMMWORD PTR [rdi]
+        66 0f 51 ca                     sqrtpd xmm1,xmm2
+        0f 51 0f                        sqrtps xmm1,XMMWORD PTR [rdi]
+        0f 51 ca                        sqrtps xmm1,xmm2
+        f2 0f 51 0f                     sqrtsd xmm1,QWORD PTR [rdi]
+        f2 0f 51 ca                     sqrtsd xmm1,xmm2
+        f3 0f 51 0f                     sqrtss xmm1,DWORD PTR [rdi]
+        f3 0f 51 ca                     sqrtss xmm1,xmm2
+        0f ae 1f                        stmxcsr DWORD PTR [rdi]
+        66 0f 5c 0f                     subpd  xmm1,XMMWORD PTR [rdi]
+        66 0f 5c ca                     subpd  xmm1,xmm2
+        0f 5c 0f                        subps  xmm1,XMMWORD PTR [rdi]
+        0f 5c ca                        subps  xmm1,xmm2
+        f2 0f 5c 0f                     subsd  xmm1,QWORD PTR [rdi]
+        f2 0f 5c ca                     subsd  xmm1,xmm2
+        f3 0f 5c 0f                     subss  xmm1,DWORD PTR [rdi]
+        f3 0f 5c ca                     subss  xmm1,xmm2
+        66 0f 2e 0f                     ucomisd xmm1,QWORD PTR [rdi]
+        66 0f 2e ca                     ucomisd xmm1,xmm2
+        0f 2e 0f                        ucomiss xmm1,DWORD PTR [rdi]
+        0f 2e ca                        ucomiss xmm1,xmm2
+        66 0f 15 0f                     unpckhpd xmm1,XMMWORD PTR [rdi]
+        66 0f 15 ca                     unpckhpd xmm1,xmm2
+        0f 15 0f                        unpckhps xmm1,XMMWORD PTR [rdi]
+        0f 15 ca                        unpckhps xmm1,xmm2
+        66 0f 14 0f                     unpcklpd xmm1,XMMWORD PTR [rdi]
+        66 0f 14 ca                     unpcklpd xmm1,xmm2
+        0f 14 0f                        unpcklps xmm1,XMMWORD PTR [rdi]
+        0f 14 ca                        unpcklps xmm1,xmm2
+        66 0f 57 4f 40                  xorpd  xmm1,XMMWORD PTR [rdi+0x40]
+        66 0f 57 ca                     xorpd  xmm1,xmm2
+        0f 57 4f 40                     xorps  xmm1,XMMWORD PTR [rdi+0x40]
+        0f 57 ca                        xorps  xmm1,xmm2
