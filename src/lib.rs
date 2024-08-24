@@ -206,6 +206,43 @@ impl Disasm {
         }
     }
 
+    pub fn decode_len(&mut self, data: &[u8]) -> usize {
+        let skip_zeroes = self.arch.skip_zeroes();
+        let mut out = Bundle::empty();
+        let mut address = self.address;
+        let mut cur = data;
+        while !cur.is_empty() {
+            if !self.opts.decode_zeroes {
+                if cur.len() < skip_zeroes {
+                    break;
+                }
+                if cur.iter().take(skip_zeroes).all(|i| *i == 0) {
+                    let zeroes = match cur.iter().position(|i| *i != 0) {
+                        Some(i) => i,
+                        None => break,
+                    };
+                    if zeroes >= (skip_zeroes * 2 - 1) {
+                        cur = &cur[zeroes & !(skip_zeroes - 1)..];
+                        continue;
+                    }
+                }
+            }
+            out.clear();
+            // TODO: optimize, backends know better how to detect instruction lengths
+            let bits = match self.decoder.decode(address, cur, &mut out) {
+                Ok(bits) => bits,
+                Err(Error::Failed(bits)) => bits,
+                Err(Error::More(_)) => break,
+            };
+            assert!(bits & 7 == 0);
+            let len = bits / 8;
+            cur = &cur[len..];
+            address += len as u64;
+        }
+
+        data.len() - cur.len()
+    }
+
     /// Do not decode `size` bytes.
     pub fn skip(&mut self, size: usize) {
         // TODO: skip: u64
