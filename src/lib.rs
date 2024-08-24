@@ -120,6 +120,7 @@ impl Arch {
 pub struct Options {
     pub alias: bool,
     pub abi_regs: bool,
+    pub decode_zeroes: bool,
 }
 
 impl Default for Options {
@@ -127,6 +128,7 @@ impl Default for Options {
         Self {
             alias: true,
             abi_regs: true,
+            decode_zeroes: false,
         }
     }
 }
@@ -136,6 +138,7 @@ pub struct Disasm {
     insn_alignment: u16,
     insn_size_min: u16,
     insn_size_max: u16,
+    opts: Options,
     arch: Arch,
     decoder: Box<dyn Decoder>,
     #[cfg(feature = "print")]
@@ -173,6 +176,7 @@ impl Disasm {
             insn_alignment: decoder.insn_alignment(),
             insn_size_min: decoder.insn_size_min(),
             insn_size_max: decoder.insn_size_max(),
+            opts,
             arch,
             decoder,
             #[cfg(feature = "print")]
@@ -269,7 +273,10 @@ impl Disasm {
         while has_more || cur.len() >= min_len {
             let address = self.address();
 
-            let zeroes = if has_more {
+            let zeroes = if self.opts.decode_zeroes {
+                // do not skip zeroes
+                None
+            } else if has_more {
                 let offset = data.len() - cur.len();
                 if cur.len() < skip_zeroes {
                     return Err(PrintError::More(offset, skip_zeroes));
