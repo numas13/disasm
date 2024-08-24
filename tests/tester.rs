@@ -22,7 +22,9 @@ fn parse() -> Result<(), String> {
         1004: 00 02     insn2 a,b,c
               00 03     "prefix insn3" a,b,c,d
               03020100  nop
+        100b     <label_a>  :
               00        "aa"
+        0000100c <label_b>:
               00        aax
     "#;
 
@@ -65,6 +67,15 @@ fn parse() -> Result<(), String> {
     assert_eq!(test.asm[0], ("aax", ""));
 
     assert!(!parser.parse(&mut test)?);
+
+    let symbols = parser.symbols();
+    assert_eq!(
+        symbols.as_slice(),
+        &[
+            (0x100b, "label_a".to_string()),
+            (0x100c, "label_b".to_string()),
+        ]
+    );
 
     Ok(())
 }

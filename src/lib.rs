@@ -26,7 +26,7 @@ pub use crate::insn::{Bundle, Insn, Opcode};
 pub use crate::operand::{Access, Operand, OperandKind, Reg, RegClass};
 
 #[cfg(feature = "print")]
-pub use crate::printer::PrinterInfo;
+pub use crate::printer::{PrinterInfo, Symbols};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -52,7 +52,7 @@ impl std::error::Error for Error {}
 #[derive(Debug)]
 pub enum PrintError {
     /// Need more bytes to decode an instruction.
-    More(usize),
+    More(usize, usize),
     /// Failed to decode an instruction.
     Io(io::Error),
 }
@@ -61,7 +61,7 @@ pub enum PrintError {
 impl fmt::Display for PrintError {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::More(_) => fmt.write_str("Need more data"),
+            Self::More(..) => fmt.write_str("Need more data"),
             Self::Io(err) => err.fmt(fmt),
         }
     }
@@ -228,42 +228,77 @@ impl Disasm {
         section_name: &str,
         info: &I,
         first: bool,
-        streaming: bool,
+        has_more: bool,
     ) -> Result<usize, PrintError>
     where
         W: Write,
         I: PrinterInfo,
     {
+        let address = self.address();
+        let mut symbol = info.get_symbol_after(address);
+
+        if first {
+            writeln!(out)?;
+            write!(out, "{address:016x} <")?;
+            match symbol {
+                Some((addr, name)) => match info.get_symbol(address) {
+                    Some((addr, name)) if addr == address => {
+                        // found symbol with exact address
+                        write!(out, "{name}")?;
+                    }
+                    _ => {
+                        // found symbol after address
+                        write!(out, "{name}-{:#x}", addr - address)?;
+                    }
+                },
+                None => {
+                    // no symbols, just print section name
+                    write!(out, "{section_name}")?;
+                }
+            }
+            writeln!(out, ">:")?;
+        }
+
         let mut bundle = Bundle::empty();
-        let mut symbol = None::<(u64, &str)>;
 
         let bytes_per_line = self.arch.bytes_per_line();
         let min_len = self.insn_size_min();
         let skip_zeroes = self.arch.skip_zeroes();
 
         let mut cur = data;
-        while cur.len() >= min_len {
+        while has_more || cur.len() >= min_len {
             let address = self.address();
-            let new_symbol = info.get_symbol(address);
-            if new_symbol.map(|i| i.0) != symbol.map(|i| i.0) {
-                symbol = new_symbol;
-                match symbol {
-                    Some((addr, name)) if addr == address => {
-                        writeln!(out)?;
-                        writeln!(out, "{address:016x} <{name}>:")?;
-                    }
-                    _ if first => {
-                        writeln!(out)?;
-                        writeln!(out, "{:016x} <{section_name}>:", self.address())?;
-                    }
-                    _ => {}
-                }
-            }
 
-            if cur.len() >= skip_zeroes && cur.iter().take(skip_zeroes).all(|i| *i == 0) {
-                let zeroes = cur.iter().position(|i| *i != 0).unwrap_or(cur.len());
-                let sym = info.get_symbol(address + zeroes as u64);
-                if sym != new_symbol || zeroes >= (skip_zeroes * 2 - 1) {
+            let zeroes = if has_more {
+                let offset = data.len() - cur.len();
+                if cur.len() < skip_zeroes {
+                    return Err(PrintError::More(offset, skip_zeroes));
+                }
+                if cur.iter().take(skip_zeroes).all(|i| *i == 0) {
+                    let len = symbol
+                        .map(|(addr, _)| (addr - address) as usize)
+                        .unwrap_or(cur.len());
+                    let zeroes = cur
+                        .iter()
+                        .take(len)
+                        .position(|i| *i != 0)
+                        .ok_or(PrintError::More(offset, cur.len() + 1))?;
+                    Some((len, zeroes))
+                } else {
+                    None
+                }
+            } else if cur.len() >= skip_zeroes && cur.iter().take(skip_zeroes).all(|i| *i == 0) {
+                let len = symbol
+                    .map(|(addr, _)| (addr - address) as usize)
+                    .unwrap_or(cur.len());
+                let zeroes = cur.iter().take(len).position(|i| *i != 0).unwrap_or(len);
+                Some((len, zeroes))
+            } else {
+                None
+            };
+
+            if let Some((len, zeroes)) = zeroes {
+                if (len != 0 && zeroes == len) || zeroes >= (skip_zeroes * 2 - 1) {
                     writeln!(out, "\t...")?;
                     let skip = zeroes & !(skip_zeroes - 1);
                     self.skip(skip);
@@ -276,20 +311,25 @@ impl Disasm {
                 Ok(len) => (len, true, None),
                 Err(err) => {
                     let len = match err {
-                        Error::More(bits) => {
-                            if streaming {
-                                // ask user for more input
-                                return Err(PrintError::More((bits + 7) / 8));
-                            } else {
-                                // or just print as fail
-                                cur.len()
-                            }
+                        Error::More(bits) if has_more => {
+                            let offset = data.len() - cur.len();
+                            return Err(PrintError::More(offset, (bits + 7) / 8));
                         }
+                        Error::More(_) => cur.len(),
                         Error::Failed(len) => len,
                     };
                     (len, false, Some("failed to decode"))
                 }
             };
+
+            if let Some((addr, name)) = symbol {
+                // TODO: what if the symbol is in the middle of the decoded instruction?
+                if addr == address {
+                    writeln!(out)?;
+                    writeln!(out, "{address:016x} <{name}>:")?;
+                    symbol = info.get_symbol_after(address + 1);
+                }
+            }
 
             let addr_width = if address >= 0x1000 { 8 } else { 4 };
             let bytes_per_chunk = self.arch.bytes_per_chunk(len);
@@ -373,5 +413,24 @@ impl Disasm {
         I: PrinterInfo,
     {
         self.print_impl(out, data, section_name, info, first, true)
+    }
+
+    #[cfg(all(feature = "std", feature = "print"))]
+    pub fn print_to_string<I>(
+        &mut self,
+        data: &[u8],
+        section_name: &str,
+        info: &I,
+        first: bool,
+    ) -> Result<String, io::Error>
+    where
+        I: PrinterInfo,
+    {
+        use std::io::Cursor;
+
+        let mut buf = Vec::new();
+        let mut cur = Cursor::new(&mut buf);
+        self.print(&mut cur, data, section_name, info, first)?;
+        Ok(unsafe { String::from_utf8_unchecked(buf) })
     }
 }

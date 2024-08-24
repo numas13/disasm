@@ -1,6 +1,8 @@
-use super::Bytes;
-use disasm::{Arch, Bundle, Disasm, Options};
 use std::{fmt, str::Lines};
+
+use disasm::{Arch, Bundle, Disasm, Options, Symbols};
+
+use super::Bytes;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ParserError {
@@ -38,6 +40,7 @@ pub struct Parser<'a> {
     file: String,
     lines: Lines<'a>,
     line: usize,
+    symbols: Symbols,
 }
 
 impl<'a> Parser<'a> {
@@ -46,6 +49,7 @@ impl<'a> Parser<'a> {
             file: file.to_owned(),
             lines: input.lines(),
             line: 0,
+            symbols: Symbols::default(),
         }
     }
 
@@ -53,13 +57,18 @@ impl<'a> Parser<'a> {
         Err(ParserError::new(&self.file, self.line, msg).to_string())
     }
 
+    pub fn symbols(self) -> Symbols {
+        self.symbols
+    }
+
     pub fn parse(&mut self, output: &mut Test<'a>) -> Result<bool, String> {
         while let Some(line) = self.lines.next().map(|l| l.trim()) {
             self.line += 1;
 
             let (line, comment) = line.split_once('#').unwrap_or((line, ""));
+
             let mut cur = line.trim();
-            if cur.is_empty() {
+            if cur.is_empty() || cur == "..." {
                 continue;
             }
 
@@ -67,6 +76,24 @@ impl<'a> Parser<'a> {
             output.address = 0;
             if let Some(pos) = cur.find(':') {
                 let (head, tail) = cur.split_at(pos);
+                if let Some(pos) = head.find('<') {
+                    // parse symbol
+                    let (head, tail) = head.split_at(pos);
+                    let head = head.trim_end();
+                    let tail = tail.trim();
+                    let address = match u64::from_str_radix(head, 16) {
+                        Ok(i) => i,
+                        Err(_) => {
+                            return self.error(format!("invalid symbol address \"{head}\""));
+                        }
+                    };
+                    if !tail.ends_with('>') {
+                        return self.error(format!("invalid symbol \"{tail}\""));
+                    }
+                    let tail = &tail[1..tail.len() - 1];
+                    self.symbols.push(address, tail);
+                    continue;
+                }
                 if head.chars().count() < 17 {
                     match u64::from_str_radix(head, 16) {
                         Ok(i) => output.address = i,
@@ -133,6 +160,35 @@ impl<'a> Parser<'a> {
         }
 
         Ok(false)
+    }
+
+    pub fn parse_all(src: &str) -> Result<(u64, Vec<u8>, Symbols), String> {
+        let mut parser = Parser::new("input", src);
+        let mut test = Test::default();
+
+        let mut start = 0;
+        let mut address = 0;
+        let mut data = vec![];
+        loop {
+            match parser.parse(&mut test) {
+                Ok(true) => {
+                    if address == 0 {
+                        start = test.address;
+                        address = test.address;
+                    }
+                    while address != test.address {
+                        data.push(0);
+                        address += 1;
+                    }
+                    data.extend_from_slice(&test.bytes);
+                    address += test.bytes.len() as u64;
+                }
+                Ok(false) => break,
+                Err(err) => panic!("error: {err}"),
+            }
+        }
+
+        Ok((start, data, parser.symbols()))
     }
 }
 
