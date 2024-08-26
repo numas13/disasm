@@ -696,6 +696,14 @@ vgatherdps        0....1.. 10010010 ........ 0 1111 101 ... .0010 @gather_vv msz
 vgatherdpd        0....1.. 10010010 ........ 1 1111 101 ... .0010 @gather_vh msz=64 ? avx512f avx512vl mask
 vgatherqps        0....1.. 10010011 ........ 0 1111 101 ... .0010 @gather_hv msz=32 ? avx512f avx512vl mask
 vgatherqpd        0....1.. 10010011 ........ 1 1111 101 ... .0010 @gather_vv msz=64 ? avx512f avx512vl mask
+vpgatherdd        10...1.. 10010000 ........ 0 1111 101 ... .0010 @gather_vv msz=32 ? avx512f avx512vl mask
+vpgatherdq        10...1.. 10010000 ........ 1 1111 101 ... .0010 @gather_vh msz=64 ? avx512f avx512vl mask
+vpgatherqd        10...1.. 10010001 ........ 0 1111 101 ... .0010 @gather_hv msz=32 ? avx512f avx512vl mask
+vpgatherqq        10...1.. 10010001 ........ 1 1111 101 ... .0010 @gather_vv msz=64 ? avx512f avx512vl mask
+vgatherdps        10...1.. 10010010 ........ 0 1111 101 ... .0010 @gather_vv msz=32 ? avx512f avx512vl mask
+vgatherdpd        10...1.. 10010010 ........ 1 1111 101 ... .0010 @gather_vh msz=64 ? avx512f avx512vl mask
+vgatherqps        10...1.. 10010011 ........ 0 1111 101 ... .0010 @gather_hv msz=32 ? avx512f avx512vl mask
+vgatherqpd        10...1.. 10010011 ........ 1 1111 101 ... .0010 @gather_vv msz=64 ? avx512f avx512vl mask
 vfmaddsub132ps    ........ 10010110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
 vfmaddsub132pd    ........ 10010110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
 vfmsubadd132ps    ........ 10010111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
