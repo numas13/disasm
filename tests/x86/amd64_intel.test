@@ -1,4 +1,7 @@
         e8 00 00 00 00                  call            5
+        66 e8 00 00                     callw           4
+        48 e8 00 00 00 00               "rex.W call"    6
+        66 48 e8 00 00 00 00            "rex.W call"    7
         66 ff 17                        call            WORD PTR [rdi]
         ff 17                           call            QWORD PTR [rdi]
         66 ff 1f                        call            DWORD PTR [rdi]
