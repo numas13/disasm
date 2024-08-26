@@ -778,7 +778,7 @@ impl<'a> Inner<'a> {
         out: &mut Insn,
         base: u8,
         size: u8,
-        vector: bool,
+        index_size: Size,
     ) -> Result<Option<Operand>, Error> {
         if self.mode == MODE_REGISTER_DIRECT {
             return Ok(None);
@@ -791,13 +791,9 @@ impl<'a> Inner<'a> {
                 OperandKind::Absolute(self.bytes.read_u32()? as u64)
             }
         } else {
-            let sib = if rm == 4 {
-                Some(self.bytes.read_u8()?)
-            } else {
-                None
-            };
+            let sib = (rm == 4).then(|| self.bytes.read_u8()).transpose()?;
             let mut offset = match self.mode {
-                1 if vector || self.mem_access != MemAccess::Full => {
+                1 if self.evex => {
                     let offset = self.bytes.read_i8()? as i32;
                     Some(self.evex_disp8(out, offset))
                 }
@@ -807,14 +803,23 @@ impl<'a> Inner<'a> {
             };
             if let Some(sib) = sib {
                 let index = ((base >> 1) & 8) | zextract(sib, 3, 3);
-                let index = Reg::new(RegClass::INT, self.addr_size.encode_gpr(index, self.rex));
+                let index = match index_size {
+                    Size::Long | Size::Quad => {
+                        Reg::new(RegClass::INT, index_size.encode_gpr(index, self.rex))
+                    }
+                    Size::Xmm | Size::Ymm | Size::Zmm => {
+                        Reg::new(RegClass::VECTOR, index_size.encode_vec(index))
+                    }
+                    _ => todo!(),
+                };
                 let base = (base & 8) | zextract(sib, 0, 3);
                 let mut base = Reg::new(RegClass::INT, self.addr_size.encode_gpr(base, self.rex));
                 if self.mode == 0 && (base.index() & GPR_MASK) == 5 {
                     offset = Some(self.bytes.read_i32()?);
                     base = NONE;
                 }
-                if (index.index() & GPR_MASK) == 4 {
+                let is_gpr = matches!(index_size, Size::Long | Size::Quad);
+                if is_gpr && (index.index() & GPR_MASK) == 4 {
                     if let Some(offset) = offset {
                         if base == NONE {
                             OperandKind::Absolute(offset as u64)
@@ -1082,7 +1087,7 @@ impl<'a> Inner<'a> {
         self.set_mem_size(msz);
         let index = index as u8;
         let mut op = self
-            .decode_mem(out, index, self.mem_size.op_size(), false)?
+            .decode_mem(out, index, self.mem_size.op_size(), self.addr_size)?
             .unwrap_or_else(|| {
                 let size = if bsz != 0 {
                     self.gpr_size(bsz)
@@ -1127,6 +1132,7 @@ impl<'a> Inner<'a> {
         access: Access,
         mode: i32,
         mem_size: i32,
+        index_size: Size,
     ) -> Result<Operand> {
         self.mode = mode as u8;
         match mem_size {
@@ -1151,7 +1157,7 @@ impl<'a> Inner<'a> {
         };
         let mut index = value as u8;
         let mut operand = self
-            .decode_mem(out, index, mem_size, true)?
+            .decode_mem(out, index, mem_size, index_size)?
             .map(|mut operand| {
                 if self.broadcast && self.broadcast_size != 0 {
                     let bcst = match size.bits() >> self.broadcast_size as usize {
@@ -1190,7 +1196,30 @@ impl<'a> Inner<'a> {
         mode: i32,
         mem_size: i32,
     ) -> Result {
-        let operand = self.set_vec_mem_impl(out, value, size, access, mode, mem_size)?;
+        let operand =
+            self.set_vec_mem_impl(out, value, size, access, mode, mem_size, self.addr_size)?;
+        self.push_operand_with_mask(out, operand);
+        Ok(())
+    }
+
+    fn set_vec_vmem(
+        &mut self,
+        out: &mut Insn,
+        value: i32,
+        access: Access,
+        mode: i32,
+        mem_size: i32,
+        index_size: Size,
+    ) -> Result {
+        let operand = self.set_vec_mem_impl(
+            out,
+            value,
+            self.vec_size,
+            access,
+            mode,
+            mem_size,
+            index_size,
+        )?;
         self.push_operand_with_mask(out, operand);
         Ok(())
     }
@@ -1304,6 +1333,52 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
+    fn set_gather_vvv(
+        &mut self,
+        out: &mut Insn,
+        args: args_gather,
+        bsz: Size,
+        vsz: Size,
+    ) -> Result {
+        let index_size = match args.isz {
+            1 => self.vec_size,
+            128 => Size::Xmm,
+            256 => Size::Ymm,
+            512 => Size::Zmm,
+            _ => todo!(),
+        };
+        self.set_vec_reg(out, args.r, bsz, Access::ReadWrite)?;
+        self.set_vec_vmem(out, args.b, Access::Read, args.mode, args.msz, index_size)?;
+        self.set_vec_reg(out, args.v, vsz, Access::ReadWrite)?;
+        Ok(())
+    }
+
+    fn set_evex_gather(
+        &mut self,
+        out: &mut Insn,
+        args: args_evex_gather,
+        bsz: Size,
+        isz: Size,
+    ) -> Result {
+        self.mem_access = MemAccess::Tuple1;
+        self.set_vec_reg(out, args.r, bsz, Access::Write)?;
+        self.set_vec_vmem(out, args.b, Access::Read, args.mode, args.msz, isz)?;
+        Ok(())
+    }
+
+    fn set_evex_scatter(
+        &mut self,
+        out: &mut Insn,
+        args: args_evex_scatter,
+        bsz: Size,
+        isz: Size,
+    ) -> Result {
+        self.mem_access = MemAccess::Tuple1;
+        self.set_vec_vmem(out, args.b, Access::Write, args.mode, args.msz, isz)?;
+        self.set_vec_reg(out, args.r, bsz, Access::Read)?;
+        Ok(())
+    }
+
     fn set_evex_fma_vvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_bcst(args.bcst);
@@ -1326,7 +1401,15 @@ impl<'a> Inner<'a> {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_vec_reg(out, args.v, size, Access::Read)?;
-        let mem = self.set_vec_mem_impl(out, args.b, size, Access::Read, args.mode, args.msz)?;
+        let mem = self.set_vec_mem_impl(
+            out,
+            args.b,
+            size,
+            Access::Read,
+            args.mode,
+            args.msz,
+            self.addr_size,
+        )?;
         self.set_vec_is4(out, 1, size, Access::Read)?;
         self.push_operand_with_mask(out, mem);
         Ok(())
@@ -1413,7 +1496,7 @@ impl<'a> Inner<'a> {
         self.set_mem_size(msz);
         let index = value as u8;
         let mut operand = self
-            .decode_mem(out, index, SIZE_DWORD, false)?
+            .decode_mem(out, index, SIZE_DWORD, self.addr_size)?
             .unwrap_or_else(|| Operand::reg(Reg::new(REG_CLASS_K, value as u64).access(access)));
         operand
             .flags_mut()
@@ -2001,6 +2084,42 @@ impl SetValue for Inner<'_> {
 
     fn set_args_evex_mr_vv(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, self.vec_size, self.vec_size)
+    }
+
+    fn set_args_gather_xvx(&mut self, out: &mut Insn, args: args_gather) -> Result {
+        self.set_gather_vvv(out, args, Size::Xmm, Size::Xmm)
+    }
+
+    fn set_args_gather_vvv(&mut self, out: &mut Insn, args: args_gather) -> Result {
+        self.set_gather_vvv(out, args, self.vec_size, self.vec_size)
+    }
+
+    fn set_args_evex_gather_vv(&mut self, out: &mut Insn, args: args_evex_gather) -> Result {
+        self.set_evex_gather(out, args, self.vec_size, self.vec_size)
+    }
+
+    fn set_args_evex_gather_vh(&mut self, out: &mut Insn, args: args_evex_gather) -> Result {
+        let half = self.vec_half().0;
+        self.set_evex_gather(out, args, self.vec_size, half)
+    }
+
+    fn set_args_evex_gather_hv(&mut self, out: &mut Insn, args: args_evex_gather) -> Result {
+        let half = self.vec_half().0;
+        self.set_evex_gather(out, args, half, self.vec_size)
+    }
+
+    fn set_args_evex_scatter_vv(&mut self, out: &mut Insn, args: args_evex_scatter) -> Result {
+        self.set_evex_scatter(out, args, self.vec_size, self.vec_size)
+    }
+
+    fn set_args_evex_scatter_vh(&mut self, out: &mut Insn, args: args_evex_scatter) -> Result {
+        let half = self.vec_half().0;
+        self.set_evex_scatter(out, args, self.vec_size, half)
+    }
+
+    fn set_args_evex_scatter_hv(&mut self, out: &mut Insn, args: args_evex_scatter) -> Result {
+        let half = self.vec_half().0;
+        self.set_evex_scatter(out, args, half, self.vec_size)
     }
 
     fn set_args_evex_rvm_vvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
@@ -2819,8 +2938,12 @@ impl X86DecodeEvex for Inner<'_> {
         false
     }
 
+    #[inline(always)]
+    fn cond_mask(&self) -> bool {
+        self.operand_mask.is_some()
+    }
+
     impl_cond_ext! {
-        cond_avx512vl = avx512vl,
         cond_avx512f = avx512f,
         cond_avx512bw = avx512bw,
         cond_avx512dq = avx512dq,
@@ -2836,6 +2959,12 @@ impl X86DecodeEvex for Inner<'_> {
         cond_vaes = vaes,
         cond_vpclmulqdq = vpclmulqdq,
         cond_gfni = gfni,
+    }
+
+    fn cond_avx512vl(&self) -> bool {
+        // TODO: only for xmm and ymm, but with respect to {er}
+        // maybe need to separate conditions
+        self.opts_arch.ext.avx512vl
     }
 
     fn ex_reg(&self, value: i32) -> i32 {

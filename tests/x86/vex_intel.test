@@ -531,6 +531,14 @@
         c4 e2 e9 bf cb                  vfnmsub231sd xmm1,xmm2,xmm3
         c4 e2 69 bf 4f 40               vfnmsub231ss xmm1,xmm2,DWORD PTR [rdi+0x40]
         c4 e2 69 bf cb                  vfnmsub231ss xmm1,xmm2,xmm3
+        c4 e2 61 92 0c 17               vgatherdps xmm1,DWORD PTR [rdi+xmm2*1],xmm3
+        c4 e2 65 92 0c 17               vgatherdps ymm1,DWORD PTR [rdi+ymm2*1],ymm3
+        c4 e2 61 93 0c 17               vgatherqps xmm1,DWORD PTR [rdi+xmm2*1],xmm3
+        c4 e2 65 93 0c 17               vgatherqps xmm1,DWORD PTR [rdi+ymm2*1],xmm3
+        c4 e2 e1 92 0c 17               vgatherdpd xmm1,QWORD PTR [rdi+xmm2*1],xmm3
+        c4 e2 e5 92 0c 17               vgatherdpd ymm1,QWORD PTR [rdi+xmm2*1],ymm3
+        c4 e2 e1 93 0c 17               vgatherqpd xmm1,QWORD PTR [rdi+xmm2*1],xmm3
+        c4 e2 e5 93 0c 17               vgatherqpd ymm1,QWORD PTR [rdi+ymm2*1],ymm3
         c4 e3 e9 cf 4f 40 80            vgf2p8affineinvqb xmm1,xmm2,XMMWORD PTR [rdi+0x40],0x80
         c4 e3 e9 cf cb 80               vgf2p8affineinvqb xmm1,xmm2,xmm3,0x80
         c4 e3 ed cf 4f 40 80            vgf2p8affineinvqb ymm1,ymm2,YMMWORD PTR [rdi+0x40],0x80
@@ -925,6 +933,14 @@
         c4 e3 79 15 17 00               vpextrw WORD PTR [rdi],xmm2,0x0
         c5 f9 c5 ca 00                  vpextrw ecx,xmm2,0x0
         c4 e3 79 15 ca 00               vpextrw edx,xmm1,0x0
+        c4 e2 61 90 4c 17 40            vpgatherdd xmm1,DWORD PTR [rdi+xmm2*1+0x40],xmm3
+        c4 e2 65 90 4c 17 40            vpgatherdd ymm1,DWORD PTR [rdi+ymm2*1+0x40],ymm3
+        c4 e2 e1 90 4c 17 40            vpgatherdq xmm1,QWORD PTR [rdi+xmm2*1+0x40],xmm3
+        c4 e2 e5 90 4c 17 40            vpgatherdq ymm1,QWORD PTR [rdi+xmm2*1+0x40],ymm3
+        c4 e2 61 91 4c 17 40            vpgatherqd xmm1,DWORD PTR [rdi+xmm2*1+0x40],xmm3
+        c4 e2 65 91 4c 17 40            vpgatherqd xmm1,DWORD PTR [rdi+ymm2*1+0x40],xmm3
+        c4 e2 e1 91 4c 17 40            vpgatherqq xmm1,QWORD PTR [rdi+xmm2*1+0x40],xmm3
+        c4 e2 e5 91 4c 17 40            vpgatherqq ymm1,QWORD PTR [rdi+ymm2*1+0x40],ymm3
         c4 e2 69 02 0f                  vphaddd xmm1,xmm2,XMMWORD PTR [rdi]
         c4 e2 69 02 cb                  vphaddd xmm1,xmm2,xmm3
         c4 e2 6d 02 0f                  vphaddd ymm1,ymm2,YMMWORD PTR [rdi]
