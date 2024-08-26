@@ -406,6 +406,12 @@
         62 f3 7d 18 26 4f 10 01         vgetmantps xmm1,DWORD BCST [rdi+0x40],0x1
         62 f3 7d 38 26 4f 10 01         vgetmantps ymm1,DWORD BCST [rdi+0x40],0x1
         62 f3 7d 58 26 4f 10 01         vgetmantps zmm1,DWORD BCST [rdi+0x40],0x1
+        62 f3 ed 18 cf 4f 08 80         vgf2p8affineinvqb xmm1,xmm2,QWORD BCST [rdi+0x40],0x80
+        62 f3 ed 38 cf 4f 08 80         vgf2p8affineinvqb ymm1,ymm2,QWORD BCST [rdi+0x40],0x80
+        62 f3 ed 58 cf 4f 08 80         vgf2p8affineinvqb zmm1,zmm2,QWORD BCST [rdi+0x40],0x80
+        62 f3 ed 18 ce 4f 08 80         vgf2p8affineqb xmm1,xmm2,QWORD BCST [rdi+0x40],0x80
+        62 f3 ed 38 ce 4f 08 80         vgf2p8affineqb ymm1,ymm2,QWORD BCST [rdi+0x40],0x80
+        62 f3 ed 58 ce 4f 08 80         vgf2p8affineqb zmm1,zmm2,QWORD BCST [rdi+0x40],0x80
         62 f1 ed 18 5f 4f 08            vmaxpd xmm1,xmm2,QWORD BCST [rdi+0x40]
         62 f1 ed 38 5f 4f 08            vmaxpd ymm1,ymm2,QWORD BCST [rdi+0x40]
         62 f1 ed 58 5f 4f 08            vmaxpd zmm1,zmm2,QWORD BCST [rdi+0x40]

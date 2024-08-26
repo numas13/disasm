@@ -531,6 +531,18 @@
         c4 e2 e9 bf cb                  vfnmsub231sd xmm1,xmm2,xmm3
         c4 e2 69 bf 4f 40               vfnmsub231ss xmm1,xmm2,DWORD PTR [rdi+0x40]
         c4 e2 69 bf cb                  vfnmsub231ss xmm1,xmm2,xmm3
+        c4 e3 e9 cf 4f 40 80            vgf2p8affineinvqb xmm1,xmm2,XMMWORD PTR [rdi+0x40],0x80
+        c4 e3 e9 cf cb 80               vgf2p8affineinvqb xmm1,xmm2,xmm3,0x80
+        c4 e3 ed cf 4f 40 80            vgf2p8affineinvqb ymm1,ymm2,YMMWORD PTR [rdi+0x40],0x80
+        c4 e3 ed cf cb 80               vgf2p8affineinvqb ymm1,ymm2,ymm3,0x80
+        c4 e3 e9 ce 4f 40 80            vgf2p8affineqb xmm1,xmm2,XMMWORD PTR [rdi+0x40],0x80
+        c4 e3 e9 ce cb 80               vgf2p8affineqb xmm1,xmm2,xmm3,0x80
+        c4 e3 ed ce 4f 40 80            vgf2p8affineqb ymm1,ymm2,YMMWORD PTR [rdi+0x40],0x80
+        c4 e3 ed ce cb 80               vgf2p8affineqb ymm1,ymm2,ymm3,0x80
+        c4 e2 69 cf 4f 40               vgf2p8mulb xmm1,xmm2,XMMWORD PTR [rdi+0x40]
+        c4 e2 69 cf cb                  vgf2p8mulb xmm1,xmm2,xmm3
+        c4 e2 6d cf 4f 40               vgf2p8mulb ymm1,ymm2,YMMWORD PTR [rdi+0x40]
+        c4 e2 6d cf cb                  vgf2p8mulb ymm1,ymm2,ymm3
         c5 e9 7c 0f                     vhaddpd xmm1,xmm2,XMMWORD PTR [rdi]
         c5 e9 7c cb                     vhaddpd xmm1,xmm2,xmm3
         c5 ed 7c 0f                     vhaddpd ymm1,ymm2,YMMWORD PTR [rdi]

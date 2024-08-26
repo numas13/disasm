@@ -435,6 +435,7 @@ pub struct Extensions {
     pub waitpkg: bool,
     pub f16c: bool,
     pub wbnoinvd: bool,
+    pub gfni: bool,
 }
 
 impl Extensions {
@@ -504,6 +505,7 @@ impl Extensions {
             waitpkg: true,
             f16c: true,
             wbnoinvd: true,
+            gfni: true,
         }
     }
 }
@@ -2742,6 +2744,7 @@ impl X86Decode for Inner<'_> {
         cond_sha = sha,
         cond_waitpkg = waitpkg,
         cond_wbnoinvd = wbnoinvd,
+        cond_gfni = gfni,
 
         cond_i386 = i386,
         cond_amd64 = amd64,
@@ -2781,6 +2784,7 @@ impl X86DecodeVex for Inner<'_> {
         cond_vaes = vaes,
         cond_vpclmulqdq = vpclmulqdq,
         cond_f16c = f16c,
+        cond_gfni = gfni,
     }
 
     fn cond_aes_or_vaes(&self) -> bool {
@@ -2830,6 +2834,7 @@ impl X86DecodeEvex for Inner<'_> {
         cond_avx512_vpopcntdq = avx512_vpopcntdq,
         cond_vaes = vaes,
         cond_vpclmulqdq = vpclmulqdq,
+        cond_gfni = gfni,
     }
 
     fn ex_reg(&self, value: i32) -> i32 {

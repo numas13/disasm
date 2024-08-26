@@ -298,6 +298,14 @@
         c4 e3 69 7e 4f 40 40            vfnmsubss xmm1,xmm2,DWORD PTR [rdi+0x40],xmm4
         c4 e3 e9 7e 4f 40 30            vfnmsubss xmm1,xmm2,xmm3,DWORD PTR [rdi+0x40]
 
+# GFNI
+        66 0f 3a cf ca 80               gf2p8affineinvqb xmm1,xmm2,0x80
+        66 0f 3a cf 4f 40 80            gf2p8affineinvqb xmm1,XMMWORD PTR [rdi+0x40],0x80
+        66 0f 3a ce ca 80               gf2p8affineqb xmm1,xmm2,0x80
+        66 0f 3a ce 4f 40 80            gf2p8affineqb xmm1,XMMWORD PTR [rdi+0x40],0x80
+        66 0f 38 cf ca                  gf2p8mulb xmm1,xmm2
+        66 0f 38 cf 4f 40               gf2p8mulb xmm1,XMMWORD PTR [rdi+0x40]
+
 # Uncategorized
         0f ae e8                        lfence
         0f ae f0                        mfence
