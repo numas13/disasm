@@ -549,6 +549,8 @@ struct State {
     addr_size: Size,
     mem_size: Size,
     reg_size: Size,
+    // special case for evex vgather/vscatter
+    vext: u8,
     vl: u8,
     vec_size: Size,
     mem_size_override: bool,
@@ -648,6 +650,7 @@ impl<'a> Inner<'a> {
         if evex[2] & 0x80 != 0 {
             self.set_w();
         }
+        self.vext = zextract(evex[3], 3, 1) ^ 1;
         self.set_vl(zextract(evex[3], 5, 2))?;
 
         self.broadcast = evex[3] & 0x10 != 0;
@@ -808,6 +811,7 @@ impl<'a> Inner<'a> {
                         Reg::new(RegClass::INT, index_size.encode_gpr(index, self.rex))
                     }
                     Size::Xmm | Size::Ymm | Size::Zmm => {
+                        let index = (self.vext << 4) | index;
                         Reg::new(RegClass::VECTOR, index_size.encode_vec(index))
                     }
                     _ => todo!(),
