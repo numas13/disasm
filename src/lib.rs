@@ -275,29 +275,44 @@ impl Disasm {
         W: Write,
         I: PrinterInfo,
     {
+        fn print_symbol(
+            out: &mut impl Write,
+            address: u64,
+            name: &str,
+            offset: u64,
+        ) -> io::Result<()> {
+            write!(out, "\n{address:016x} <{name}")?;
+            if offset != 0 {
+                write!(out, "-{offset:#x}")?;
+            }
+            writeln!(out, ">:")
+        }
+
         let address = self.address();
         let mut symbol = info.get_symbol_after(address);
 
         if first {
-            writeln!(out)?;
-            write!(out, "{address:016x} <")?;
             match symbol {
                 Some((addr, name)) => match info.get_symbol(address) {
                     Some((addr, name)) if addr == address => {
                         // found symbol with exact address
-                        write!(out, "{name}")?;
+                        print_symbol(out, address, name, 0)?;
                     }
                     _ => {
                         // found symbol after address
-                        write!(out, "{name}-{:#x}", addr - address)?;
+                        print_symbol(out, address, name, addr - address)?;
                     }
                 },
                 None => {
                     // no symbols, just print section name
-                    write!(out, "{section_name}")?;
+                    print_symbol(out, address, section_name, 0)?;
                 }
             }
-            writeln!(out, ">:")?;
+        } else if let Some((addr, name)) = info.get_symbol(address) {
+            if address == addr {
+                // found symbol with exact address
+                print_symbol(out, address, name, 0)?;
+            }
         }
 
         let mut bundle = Bundle::empty();
@@ -369,12 +384,12 @@ impl Disasm {
             if let Some((addr, name)) = symbol {
                 // TODO: what if the symbol is in the middle of the decoded instruction?
                 if addr == address {
-                    writeln!(out)?;
-                    writeln!(out, "{address:016x} <{name}>:")?;
+                    print_symbol(out, address, name, 0)?;
                     symbol = info.get_symbol_after(address + 1);
                 }
             }
 
+            // TODO: address width based on end address?
             let addr_width = if address >= 0x1000 { 8 } else { 4 };
             let bytes_per_chunk = self.arch.bytes_per_chunk(len);
             let mut insns = bundle.iter();
