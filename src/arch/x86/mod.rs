@@ -665,14 +665,18 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn read_uimm(&mut self, size: i32) -> Result<(usize, u64), Error> {
-        let size = match size {
+    fn imm_size(&self, value: i32) -> usize {
+        match value {
             0 => unreachable!("size must not be zero"),
             1 => 8 << self.mem_size.suffix(),
             2 if self.w => 32,
             2 => 8 << self.mem_size.suffix(),
-            _ => size as usize,
-        };
+            _ => value as usize,
+        }
+    }
+
+    fn read_uimm(&mut self, value: i32) -> Result<(usize, u64), Error> {
+        let size = self.imm_size(value);
         let imm = match size {
             8 => self.bytes.read_u8()? as u64,
             16 => self.bytes.read_u16()? as u64,
@@ -681,6 +685,13 @@ impl<'a> Inner<'a> {
             _ => unreachable!("invalid size {size}"),
         };
         Ok((size, imm))
+    }
+
+    fn set_simm_impl(&mut self, out: &mut Insn, value: i32, to: usize) -> Result {
+        let (size, imm) = self.read_uimm(value)?;
+        out.push_uimm(sign_extend(imm, size, to));
+        self.need_suffix = true;
+        Ok(())
     }
 
     fn evex_disp8(&self, out: &Insn, mut offset: i32) -> i32 {
@@ -2209,13 +2220,15 @@ impl SetValue for Inner<'_> {
     }
 
     fn set_simm(&mut self, out: &mut Insn, value: i32) -> Result {
-        let (size, mut imm) = self.read_uimm(value)?;
-        let shift = 64 - size;
-        imm = (((imm << shift) as i64) >> shift) as u64;
-        imm &= !0 >> (64 - (8 << self.mem_size.suffix()));
-        out.push_uimm(imm);
-        self.need_suffix = true;
-        Ok(())
+        self.set_simm_impl(out, value, self.mem_size.bits())
+    }
+
+    fn set_simm32(&mut self, out: &mut Insn, value: i32) -> Result {
+        self.set_simm_impl(out, value, 32)
+    }
+
+    fn set_simm64(&mut self, out: &mut Insn, value: i32) -> Result {
+        self.set_simm_impl(out, value, 64)
     }
 
     fn set_rel(&mut self, out: &mut Insn, mut value: i32) -> Result {
@@ -2887,6 +2900,11 @@ fn access_from_mask(mask: i32) -> Access {
         3 => Access::ReadWrite,
         _ => unreachable!("unexpected access mask {mask:#x}"),
     }
+}
+
+fn sign_extend(value: u64, from: usize, to: usize) -> u64 {
+    let shift = 64 - from;
+    ((((value << shift) as i64) >> shift) as u64) & (!0 >> (64 - to))
 }
 
 pub(crate) fn decoder(opts: crate::Options, opts_arch: Options) -> Box<dyn crate::Decoder> {

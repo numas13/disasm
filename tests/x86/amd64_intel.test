@@ -29,9 +29,15 @@
         ff 27                           jmp    QWORD PTR [rdi]
 
         6a 01                           push   0x1
+        6a ff                           push   0xffffffff # -amd64
+        6a ff                           push   0xffffffffffffffff
         66 6a 7f                        pushw  0x7f
+        66 6a ff                        pushw  0xffff
         66 68 ff 7f                     pushw  0x7fff
+        66 68 ff ff                     pushw  0xffff
         68 ff ff ff 7f                  push   0x7fffffff
+        68 ff ff ff ff                  push   0xffffffff # -amd64
+        68 ff ff ff ff                  push   0xffffffffffffffff
         66 50                           push   ax
         50                              push   rax
         66 ff f0                        push   ax

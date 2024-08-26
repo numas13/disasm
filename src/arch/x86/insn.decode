@@ -388,13 +388,13 @@ push                       01010... - --1- --- ... 00000 @b_r rw=1 msz=16 suffix
 push                       01010... - --0- --- ... 00000 @b_r rw=1 msz=4  suffix=1
 pushw                      01101000 - --1- --- ... 00000 uimm=16
 {
-  push                     01101000 - --0- --- ... 00000 simm=32 suffix_lazy=64 ? amd64
-  push                     01101000 - --0- --- ... 00000 uimm=32 suffix_lazy=32
+  push                     01101000 - --0- --- ... 00000 simm64=32 suffix_lazy=64 ? amd64
+  push                     01101000 - --0- --- ... 00000 simm32=32 suffix_lazy=32
 }
 pushw                      01101010 - --1- --- ... 00000 simm=8
 {
-  push                     01101010 - --0- --- ... 00000 simm=8 suffix_lazy=64 ? amd64
-  push                     01101010 - --0- --- ... 00000 simm=8 suffix_lazy=32
+  push                     01101010 - --0- --- ... 00000 simm64=8 suffix_lazy=64 ? amd64
+  push                     01101010 - --0- --- ... 00000 simm32=8 suffix_lazy=32
 }
 push              ..110... 11111111 - --1- --- ... 00000 @m_r msz=16 suffix=-16
 push              ..110... 11111111 - --0- --- ... 00000 @m_r msz=4  suffix_lazy=1
