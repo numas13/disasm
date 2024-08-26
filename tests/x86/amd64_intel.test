@@ -1069,3 +1069,100 @@
 
         d7                              xlat   BYTE PTR ds:[rbx]
         48 d7                           "rex.W xlat" BYTE PTR ds:[rbx]
+
+        66 0f 40 cb                     cmovo  cx,bx
+        66 0f 41 cb                     cmovno cx,bx
+        66 0f 42 cb                     cmovb  cx,bx
+        66 0f 43 cb                     cmovae cx,bx
+        66 0f 44 cb                     cmove  cx,bx
+        66 0f 45 cb                     cmovne cx,bx
+        66 0f 46 cb                     cmovbe cx,bx
+        66 0f 47 cb                     cmova  cx,bx
+        66 0f 48 cb                     cmovs  cx,bx
+        66 0f 49 cb                     cmovns cx,bx
+        66 0f 4a cb                     cmovp  cx,bx
+        66 0f 4b cb                     cmovnp cx,bx
+        66 0f 4c cb                     cmovl  cx,bx
+        66 0f 4d cb                     cmovge cx,bx
+        66 0f 4e cb                     cmovle cx,bx
+        66 0f 4f cb                     cmovg  cx,bx
+        66 0f 40 0f                     cmovo  cx,WORD PTR [rdi]
+        66 0f 41 0f                     cmovno cx,WORD PTR [rdi]
+        66 0f 42 0f                     cmovb  cx,WORD PTR [rdi]
+        66 0f 43 0f                     cmovae cx,WORD PTR [rdi]
+        66 0f 44 0f                     cmove  cx,WORD PTR [rdi]
+        66 0f 45 0f                     cmovne cx,WORD PTR [rdi]
+        66 0f 46 0f                     cmovbe cx,WORD PTR [rdi]
+        66 0f 47 0f                     cmova  cx,WORD PTR [rdi]
+        66 0f 48 0f                     cmovs  cx,WORD PTR [rdi]
+        66 0f 49 0f                     cmovns cx,WORD PTR [rdi]
+        66 0f 4a 0f                     cmovp  cx,WORD PTR [rdi]
+        66 0f 4b 0f                     cmovnp cx,WORD PTR [rdi]
+        66 0f 4c 0f                     cmovl  cx,WORD PTR [rdi]
+        66 0f 4d 0f                     cmovge cx,WORD PTR [rdi]
+        66 0f 4e 0f                     cmovle cx,WORD PTR [rdi]
+        66 0f 4f 0f                     cmovg  cx,WORD PTR [rdi]
+        0f 40 cb                        cmovo  ecx,ebx
+        0f 41 cb                        cmovno ecx,ebx
+        0f 42 cb                        cmovb  ecx,ebx
+        0f 43 cb                        cmovae ecx,ebx
+        0f 44 cb                        cmove  ecx,ebx
+        0f 45 cb                        cmovne ecx,ebx
+        0f 46 cb                        cmovbe ecx,ebx
+        0f 47 cb                        cmova  ecx,ebx
+        0f 48 cb                        cmovs  ecx,ebx
+        0f 49 cb                        cmovns ecx,ebx
+        0f 4a cb                        cmovp  ecx,ebx
+        0f 4b cb                        cmovnp ecx,ebx
+        0f 4c cb                        cmovl  ecx,ebx
+        0f 4d cb                        cmovge ecx,ebx
+        0f 4e cb                        cmovle ecx,ebx
+        0f 4f cb                        cmovg  ecx,ebx
+        0f 40 0f                        cmovo  ecx,DWORD PTR [rdi]
+        0f 41 0f                        cmovno ecx,DWORD PTR [rdi]
+        0f 42 0f                        cmovb  ecx,DWORD PTR [rdi]
+        0f 43 0f                        cmovae ecx,DWORD PTR [rdi]
+        0f 44 0f                        cmove  ecx,DWORD PTR [rdi]
+        0f 45 0f                        cmovne ecx,DWORD PTR [rdi]
+        0f 46 0f                        cmovbe ecx,DWORD PTR [rdi]
+        0f 47 0f                        cmova  ecx,DWORD PTR [rdi]
+        0f 48 0f                        cmovs  ecx,DWORD PTR [rdi]
+        0f 49 0f                        cmovns ecx,DWORD PTR [rdi]
+        0f 4a 0f                        cmovp  ecx,DWORD PTR [rdi]
+        0f 4b 0f                        cmovnp ecx,DWORD PTR [rdi]
+        0f 4c 0f                        cmovl  ecx,DWORD PTR [rdi]
+        0f 4d 0f                        cmovge ecx,DWORD PTR [rdi]
+        0f 4e 0f                        cmovle ecx,DWORD PTR [rdi]
+        0f 4f 0f                        cmovg  ecx,DWORD PTR [rdi]
+        48 0f 40 cb                     cmovo  rcx,rbx
+        48 0f 41 cb                     cmovno rcx,rbx
+        48 0f 42 cb                     cmovb  rcx,rbx
+        48 0f 43 cb                     cmovae rcx,rbx
+        48 0f 44 cb                     cmove  rcx,rbx
+        48 0f 45 cb                     cmovne rcx,rbx
+        48 0f 46 cb                     cmovbe rcx,rbx
+        48 0f 47 cb                     cmova  rcx,rbx
+        48 0f 48 cb                     cmovs  rcx,rbx
+        48 0f 49 cb                     cmovns rcx,rbx
+        48 0f 4a cb                     cmovp  rcx,rbx
+        48 0f 4b cb                     cmovnp rcx,rbx
+        48 0f 4c cb                     cmovl  rcx,rbx
+        48 0f 4d cb                     cmovge rcx,rbx
+        48 0f 4e cb                     cmovle rcx,rbx
+        48 0f 4f cb                     cmovg  rcx,rbx
+        48 0f 40 0f                     cmovo  rcx,QWORD PTR [rdi]
+        48 0f 41 0f                     cmovno rcx,QWORD PTR [rdi]
+        48 0f 42 0f                     cmovb  rcx,QWORD PTR [rdi]
+        48 0f 43 0f                     cmovae rcx,QWORD PTR [rdi]
+        48 0f 44 0f                     cmove  rcx,QWORD PTR [rdi]
+        48 0f 45 0f                     cmovne rcx,QWORD PTR [rdi]
+        48 0f 46 0f                     cmovbe rcx,QWORD PTR [rdi]
+        48 0f 47 0f                     cmova  rcx,QWORD PTR [rdi]
+        48 0f 48 0f                     cmovs  rcx,QWORD PTR [rdi]
+        48 0f 49 0f                     cmovns rcx,QWORD PTR [rdi]
+        48 0f 4a 0f                     cmovp  rcx,QWORD PTR [rdi]
+        48 0f 4b 0f                     cmovnp rcx,QWORD PTR [rdi]
+        48 0f 4c 0f                     cmovl  rcx,QWORD PTR [rdi]
+        48 0f 4d 0f                     cmovge rcx,QWORD PTR [rdi]
+        48 0f 4e 0f                     cmovle rcx,QWORD PTR [rdi]
+        48 0f 4f 0f                     cmovg  rcx,QWORD PTR [rdi]

@@ -830,59 +830,59 @@ setns             ..000... 10011001 - 000- --- ... 00001 @m_r rw=2 msz=8
 # setnle          ..000... 10011111 - 000- --- ... 00001 @m_r rw=2 msz=8
 }
 
-cmovo             ........ 01000000 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-cmovno            ........ 01000001 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+cmovo             ........ 01000000 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+cmovno            ........ 01000001 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 {
-  cmovb           ........ 01000010 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovc           ........ 01000010 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnae         ........ 01000010 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovb           ........ 01000010 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovc           ........ 01000010 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnae         ........ 01000010 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovae          ........ 01000011 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnc          ........ 01000011 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnb          ........ 01000011 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovae          ........ 01000011 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnc          ........ 01000011 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnb          ........ 01000011 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmove           ........ 01000100 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovz           ........ 01000100 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmove           ........ 01000100 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovz           ........ 01000100 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovne          ........ 01000101 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnz          ........ 01000101 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovne          ........ 01000101 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnz          ........ 01000101 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovbe          ........ 01000110 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovna          ........ 01000110 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovbe          ........ 01000110 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovna          ........ 01000110 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmova           ........ 01000111 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnbe         ........ 01000111 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmova           ........ 01000111 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnbe         ........ 01000111 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
-cmovs             ........ 01001000 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-cmovns            ........ 01001001 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+cmovs             ........ 01001000 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+cmovns            ........ 01001001 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 {
-  cmovp           ........ 01001010 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovpe          ........ 01001010 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-}
-{
-  cmovnp          ........ 01001011 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovpo          ........ 01001011 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovp           ........ 01001010 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovpe          ........ 01001010 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovl           ........ 01001100 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnge         ........ 01001100 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovnp          ........ 01001011 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovpo          ........ 01001011 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovge          ........ 01001101 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnl          ........ 01001101 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovl           ........ 01001100 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnge         ........ 01001100 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovle          ........ 01001110 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovng          ........ 01001110 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovge          ........ 01001101 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnl          ........ 01001101 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 {
-  cmovg           ........ 01001111 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
-# cmovnle         ........ 01001111 - 000- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+  cmovle          ........ 01001110 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovng          ........ 01001110 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+}
+{
+  cmovg           ........ 01001111 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
+# cmovnle         ........ 01001111 - 00-- --- ... 00001 @rm_rr rw=2 suffix=1 ? cmov
 }
 
 ##############################################################################
