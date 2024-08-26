@@ -746,6 +746,7 @@ impl<'a> Inner<'a> {
             },
             MemAccess::Fixed2 => offset *= 2,
             MemAccess::Tuple1 => match self.mem_size {
+                Size::Byte => {}
                 Size::Word => offset *= 2,
                 _ if self.w => offset *= 8,
                 _ => offset *= 4,
