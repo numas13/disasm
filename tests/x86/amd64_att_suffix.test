@@ -1,8 +1,3 @@
-        f2 0f 2a 0c 24                  cvtsi2sdl   (%rsp),%xmm1
-        f2 48 0f 2a 0c 24               cvtsi2sdq   (%rsp),%xmm1
-        f3 0f 2a 0f                     cvtsi2ssl   (%rdi),%xmm1
-        f3 48 0f 2a 0f                  cvtsi2ssq   (%rdi),%xmm1
-
         c4 e2 70 f5 da                  bzhi        %ecx,%edx,%ebx
         c4 e2 f0 f5 da                  bzhi        %rcx,%rdx,%rbx
 

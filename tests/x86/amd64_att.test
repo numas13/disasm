@@ -46,3 +46,16 @@
         67 c7 00 ef be ad de            movl            $0xdeadbeef,(%eax)
         49 c7 00 ef be ad de            movq            $0xffffffffdeadbeef,(%r8)
         67 49 c7 00 ef be ad de         movq            $0xffffffffdeadbeef,(%r8d)
+
+        f3 0f 2a cb                     cvtsi2ss %ebx,%xmm1
+        f3 48 0f 2a cb                  cvtsi2ss %rbx,%xmm1
+        f2 0f 2a cb                     cvtsi2sd %ebx,%xmm1
+        f2 48 0f 2a cb                  cvtsi2sd %rbx,%xmm1
+        f3 0f 2a cb                     cvtsi2ssl %ebx,%xmm1 # +suffix
+        f3 48 0f 2a cb                  cvtsi2ssq %rbx,%xmm1 # +suffix
+        f2 0f 2a cb                     cvtsi2sdl %ebx,%xmm1 # +suffix
+        f2 48 0f 2a cb                  cvtsi2sdq %rbx,%xmm1 # +suffix
+        f3 0f 2a 0f                     cvtsi2ssl (%rdi),%xmm1
+        f3 48 0f 2a 0f                  cvtsi2ssq (%rdi),%xmm1
+        f2 0f 2a 0f                     cvtsi2sdl (%rdi),%xmm1
+        f2 48 0f 2a 0f                  cvtsi2sdq (%rdi),%xmm1

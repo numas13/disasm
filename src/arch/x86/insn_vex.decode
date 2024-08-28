@@ -387,8 +387,8 @@ vmovaps           ........ 00101001 - 1111 000 ... 00001 @mr_xx ? avx
 vmovapd           ........ 00101001 - 1111 001 ... 00001 @mr_xx ? avx
 vmovaps           ........ 00101001 - 1111 100 ... 00001 @mr_yy ? avx
 vmovapd           ........ 00101001 - 1111 101 ... 00001 @mr_yy ? avx
-vcvtsi2ss         ........ 00101010 - .... -10 ... 00001 @rvm_xxr msz=3 suffix=-3 ? avx
-vcvtsi2sd         ........ 00101010 - .... -11 ... 00001 @rvm_xxr msz=3 suffix=-3 ? avx
+vcvtsi2ss         ........ 00101010 - .... -10 ... 00001 @rvm_xxr msz=3 suffix=3 ? avx
+vcvtsi2sd         ........ 00101010 - .... -11 ... 00001 @rvm_xxr msz=3 suffix=3 ? avx
 vmovntps          0-...... 00101011 - 1111 000 ... 00001 @mr_xx ? avx
 vmovntps          11...... 00101011 - 1111 000 ... 00001 @mr_xx ? avx
 vmovntpd          0....... 00101011 - 1111 001 ... 00001 @mr_xx ? avx

@@ -571,8 +571,8 @@ vcvtdq2pd         ........ 11100110 ....1... 0 1111 110 ... .0001 @rm_vh bcst=1 
 vmovddup          ........ 00010010 .00.1... 1 1111 111 ... .0001 @rm_vv msz=64 ? avx512f avx512vl
 vmovddup          ........ 00010010 .01.1... 1 1111 111 ... .0001 @rm_vv        ? avx512f avx512vl
 vmovddup          ........ 00010010 .10.1... 1 1111 111 ... .0001 @rm_vv        ? avx512f
-vcvtsi2sd         ........ 00101010 .--..... 0 .... 111 ... .0001 tuple=1 @rvm_xxr msz=3 suffix=-3 ? avx512f
-vcvtsi2sd         ........ 00101010 ........ 1 .... 111 ... .0001 @rvm_xxr_er msz=3 suffix=-3 ? avx512f
+vcvtsi2sd         ........ 00101010 .--..... 0 .... 111 ... .0001 tuple=1 @rvm_xxr msz=3 suffix=3 ? avx512f
+vcvtsi2sd         ........ 00101010 ........ 1 .... 111 ... .0001 @rvm_xxr_er msz=3 suffix=3 ? avx512f
 vcvttsd2si        ........ 00101100 .--.1... - 1111 111 ... .0001 fixed=1 @rm_rx_sae msz=64 ? avx512f
 vcvtsd2si         ........ 00101101 .--01... - 1111 111 ... .0001 fixed=1 @rm_rx     msz=64 ? avx512f
 vcvtsd2si         11...... 00101101 ...11... - 1111 111 ... .0001 fixed=1 @rm_rx_er  msz=64 ? avx512f
