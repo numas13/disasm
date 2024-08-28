@@ -47,6 +47,22 @@
         49 c7 00 ef be ad de            movq            $0xffffffffdeadbeef,(%r8)
         67 49 c7 00 ef be ad de         movq            $0xffffffffdeadbeef,(%r8d)
 
+        48 d3 c3                        rol    %cl,%rbx
+        48 d3 cb                        ror    %cl,%rbx
+        48 d3 d3                        rcl    %cl,%rbx
+        48 d3 db                        rcr    %cl,%rbx
+        48 d3 e3                        shl    %cl,%rbx
+        48 d3 eb                        shr    %cl,%rbx
+        48 d3 fb                        sar    %cl,%rbx
+
+        49 d3 06                        rolq   %cl,(%r14)
+        49 d3 0e                        rorq   %cl,(%r14)
+        49 d3 16                        rclq   %cl,(%r14)
+        49 d3 1e                        rcrq   %cl,(%r14)
+        49 d3 26                        shlq   %cl,(%r14)
+        49 d3 2e                        shrq   %cl,(%r14)
+        49 d3 3e                        sarq   %cl,(%r14)
+
         f3 0f 2a cb                     cvtsi2ss %ebx,%xmm1
         f3 48 0f 2a cb                  cvtsi2ss %rbx,%xmm1
         f2 0f 2a cb                     cvtsi2sd %ebx,%xmm1

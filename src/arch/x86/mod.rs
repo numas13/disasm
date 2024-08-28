@@ -1679,6 +1679,15 @@ impl SetValue for Inner<'_> {
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)
     }
 
+    fn set_args_shift_cl(&mut self, out: &mut Insn, args: args_mem) -> Result {
+        let access = access_from_mask(args.rw);
+        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
+        let has_gpr = self.has_gpr;
+        self.set_gpr_reg(out, 1, Access::Read, 8)?;
+        self.has_gpr = has_gpr; // ignore cl register
+        Ok(())
+    }
+
     fn set_args_m_m(&mut self, out: &mut Insn, args: args_mem_vec) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_mem(out, args.b, Size::Mm, access, args.mode, args.msz)

@@ -121,8 +121,7 @@
 @shift1           ........ ........ . .... ... ... ..... \
                   &mem %mode b=%base rw=3 msz=1 bsz=0 i=1
 @shift_cl         ........ ........ . .... ... ... ..... \
-                  &mem %mode b=%base rw=3 msz=1 bsz=0 \
-                  &reg reg=1 rw=1 rsz=8
+                  shift_cl=&mem %mode b=%base rw=3 msz=1 bsz=0
 
 @rm_mm            ........ ........ ........ ........ \
                   &rm_mm rw=3 %mode r=%reg b=%base msz=1
