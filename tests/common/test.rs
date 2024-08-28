@@ -61,6 +61,10 @@ impl<'a> Parser<'a> {
         self.symbols
     }
 
+    pub fn first_symbol_address(&self) -> Option<u64> {
+        self.symbols.as_slice().get(0).map(|(addr, _)| *addr)
+    }
+
     pub fn parse(&mut self, output: &mut Test<'a>) -> Result<bool, String> {
         while let Some(line) = self.lines.next().map(|l| l.trim()) {
             self.line += 1;
@@ -173,8 +177,8 @@ impl<'a> Parser<'a> {
             match parser.parse(&mut test) {
                 Ok(true) => {
                     if address == 0 {
-                        start = test.address;
-                        address = test.address;
+                        start = parser.first_symbol_address().unwrap_or(test.address);
+                        address = start;
                     }
                     while address != test.address {
                         data.push(0);

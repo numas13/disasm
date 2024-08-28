@@ -275,45 +275,32 @@ impl Disasm {
         W: Write,
         I: PrinterInfo,
     {
-        fn print_symbol(
-            out: &mut impl Write,
-            address: u64,
-            name: &str,
-            offset: u64,
-        ) -> io::Result<()> {
-            write!(out, "\n{address:016x} <{name}")?;
-            if offset != 0 {
-                write!(out, "-{offset:#x}")?;
-            }
-            writeln!(out, ">:")
-        }
-
         let address = self.address();
-        let mut symbol = info.get_symbol_after(address);
+        let mut next_symbol = info.get_symbol_after(address);
+        let mut first_symbol = match info.get_symbol(address) {
+            Some((addr, name)) if address == addr => Some((name, 0)),
+            _ if first => match next_symbol {
+                Some((addr, name)) => Some((name, addr - address)),
+                _ => Some((section_name, 0)),
+            },
+            _ => None,
+        };
 
-        if first {
-            match symbol {
-                Some((addr, name)) => match info.get_symbol(address) {
-                    Some((addr, name)) if addr == address => {
-                        // found symbol with exact address
-                        print_symbol(out, address, name, 0)?;
-                    }
-                    _ => {
-                        // found symbol after address
-                        print_symbol(out, address, name, addr - address)?;
-                    }
-                },
-                None => {
-                    // no symbols, just print section name
-                    print_symbol(out, address, section_name, 0)?;
+        let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<()> {
+            if let Some((name, offset)) = first_symbol.take() {
+                if offset != 0 {
+                    writeln!(out, "\n{address:016x} <{name}-{offset:#x}>:")?;
+                } else {
+                    writeln!(out, "\n{address:016x} <{name}>:")?;
+                }
+            } else if let Some((addr, name)) = *next_symbol {
+                if addr == address {
+                    writeln!(out, "\n{address:016x} <{name}>:")?;
+                    *next_symbol = info.get_symbol_after(address);
                 }
             }
-        } else if let Some((addr, name)) = info.get_symbol(address) {
-            if address == addr {
-                // found symbol with exact address
-                print_symbol(out, address, name, 0)?;
-            }
-        }
+            Ok(())
+        };
 
         let mut bundle = Bundle::empty();
 
@@ -334,20 +321,22 @@ impl Disasm {
                     return Err(PrintError::More(offset, skip_zeroes));
                 }
                 if cur.iter().take(skip_zeroes).all(|i| *i == 0) {
-                    let len = symbol
+                    let len = info
+                        .get_symbol_after(address)
                         .map(|(addr, _)| (addr - address) as usize)
                         .unwrap_or(cur.len());
                     let zeroes = cur
                         .iter()
                         .take(len)
                         .position(|i| *i != 0)
-                        .ok_or(PrintError::More(offset, cur.len() + 1))?;
+                        .ok_or(PrintError::More(offset, len + 1))?;
                     Some((len, zeroes))
                 } else {
                     None
                 }
             } else if cur.len() >= skip_zeroes && cur.iter().take(skip_zeroes).all(|i| *i == 0) {
-                let len = symbol
+                let len = info
+                    .get_symbol_after(address)
                     .map(|(addr, _)| (addr - address) as usize)
                     .unwrap_or(cur.len());
                 let zeroes = cur.iter().take(len).position(|i| *i != 0).unwrap_or(len);
@@ -358,6 +347,7 @@ impl Disasm {
 
             if let Some((len, zeroes)) = zeroes {
                 if (len != 0 && zeroes == len) || zeroes >= (skip_zeroes * 2 - 1) {
+                    print_symbol(out, address, &mut next_symbol)?;
                     writeln!(out, "\t...")?;
                     let skip = zeroes & !(skip_zeroes - 1);
                     self.skip(skip);
@@ -381,13 +371,7 @@ impl Disasm {
                 }
             };
 
-            if let Some((addr, name)) = symbol {
-                // TODO: what if the symbol is in the middle of the decoded instruction?
-                if addr == address {
-                    print_symbol(out, address, name, 0)?;
-                    symbol = info.get_symbol_after(address + 1);
-                }
-            }
+            print_symbol(out, address, &mut next_symbol)?;
 
             // TODO: address width based on end address?
             let addr_width = if address >= 0x1000 { 8 } else { 4 };
