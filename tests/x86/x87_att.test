@@ -1,0 +1,136 @@
+        d9 f0                           f2xm1
+        d9 e1                           fabs
+        d8 07                           fadds  (%rdi)
+        dc 07                           faddl  (%rdi)
+        d8 c1                           fadd   %st(1),%st
+        dc c1                           fadd   %st,%st(1)
+        de c1                           faddp  %st,%st(1)
+        da 07                           fiaddl (%rdi)
+        de 07                           fiadds (%rdi)
+        d8 37                           fdivs  (%rdi)
+        dc 37                           fdivl  (%rdi)
+        d8 f1                           fdiv   %st(1),%st
+        dc f9                           fdivr  %st,%st(1)
+        de f9                           fdivrp %st,%st(1)
+        da 37                           fidivl (%rdi)
+        de 37                           fidivs (%rdi)
+        d8 3f                           fdivrs (%rdi)
+        dc 3f                           fdivrl (%rdi)
+        d8 f9                           fdivr  %st(1),%st
+        dc f1                           fdiv   %st,%st(1)
+        de f1                           fdivp  %st,%st(1)
+        da 3f                           fidivrl (%rdi)
+        de 3f                           fidivrs (%rdi)
+        df 27                           fbld   (%rdi)
+        df 37                           fbstp  (%rdi)
+        d9 e0                           fchs
+        db e2                           fnclex
+        da c1                           fcmovb %st(1),%st
+        da c9                           fcmove %st(1),%st
+        da d1                           fcmovbe %st(1),%st
+        da d9                           fcmovu %st(1),%st
+        db c1                           fcmovnb %st(1),%st
+        db c9                           fcmovne %st(1),%st
+        db d1                           fcmovnbe %st(1),%st
+        db d9                           fcmovnu %st(1),%st
+        d8 17                           fcoms  (%rdi)
+        dc 17                           fcoml  (%rdi)
+        d8 d1                           fcom   %st(1)
+        d8 1f                           fcomps (%rdi)
+        dc 1f                           fcompl (%rdi)
+        d8 d9                           fcomp  %st(1)
+        de d9                           fcompp
+        d9 ff                           fcos
+        d9 f6                           fdecstp
+        dd c1                           ffree  %st(1)
+        df c1                           ffreep %st(1)
+        de 17                           ficoms (%rdi)
+        da 17                           ficoml (%rdi)
+        de 1f                           ficomps (%rdi)
+        da 1f                           ficompl (%rdi)
+        df 07                           filds  (%rdi)
+        db 07                           fildl  (%rdi)
+        df 2f                           fildll (%rdi)
+        d9 f7                           fincstp
+        db e3                           fninit
+        df 17                           fists  (%rdi)
+        db 17                           fistl  (%rdi)
+        df 1f                           fistps (%rdi)
+        db 1f                           fistpl (%rdi)
+        df 3f                           fistpll (%rdi)
+        df 0f                           fisttps (%rdi)
+        db 0f                           fisttpl (%rdi)
+        dd 0f                           fisttpll (%rdi)
+        d9 07                           flds   (%rdi)
+        dd 07                           fldl   (%rdi)
+        db 2f                           fldt   (%rdi)
+        d9 c1                           fld    %st(1)
+        d9 e8                           fld1
+        d9 e9                           fldl2t
+        d9 ea                           fldl2e
+        d9 eb                           fldpi
+        d9 ec                           fldlg2
+        d9 ed                           fldln2
+        d9 ee                           fldz
+        d9 2f                           fldcw  (%rdi)
+        d9 27                           fldenv (%rdi)
+        d8 0f                           fmuls  (%rdi)
+        dc 0f                           fmull  (%rdi)
+        d8 c9                           fmul   %st(1),%st
+        dc c9                           fmul   %st,%st(1)
+        de c9                           fmulp  %st,%st(1)
+        da 0f                           fimull (%rdi)
+        de 0f                           fimuls (%rdi)
+        d9 d0                           fnop
+        d9 f3                           fpatan
+        d9 f8                           fprem
+        d9 f5                           fprem1
+        d9 f2                           fptan
+        d9 fc                           frndint
+        dd 27                           frstor (%rdi)
+        dd 37                           fnsave (%rdi)
+        d9 fd                           fscale
+        d9 fe                           fsin
+        d9 fb                           fsincos
+        d9 fa                           fsqrt
+        d9 17                           fsts   (%rdi)
+        dd 17                           fstl   (%rdi)
+        dd d1                           fst    %st(1)
+        d9 1f                           fstps  (%rdi)
+        dd 1f                           fstpl  (%rdi)
+        db 3f                           fstpt  (%rdi)
+        dd d9                           fstp   %st(1)
+        d9 3f                           fnstcw (%rdi)
+        d9 37                           fnstenv (%rdi)
+        dd 3f                           fnstsw (%rdi)
+        df e0                           fnstsw %ax
+        d8 27                           fsubs  (%rdi)
+        dc 27                           fsubl  (%rdi)
+        d8 e1                           fsub   %st(1),%st
+        dc e9                           fsubr  %st,%st(1)
+        de e9                           fsubrp %st,%st(1)
+        de 27                           fisubs (%rdi)
+        da 27                           fisubl (%rdi)
+        d8 2f                           fsubrs (%rdi)
+        dc 2f                           fsubrl (%rdi)
+        d8 e9                           fsubr  %st(1),%st
+        dc e1                           fsub   %st,%st(1)
+        de e1                           fsubp  %st,%st(1)
+        de 2f                           fisubrs (%rdi)
+        da 2f                           fisubrl (%rdi)
+        d9 e4                           ftst
+        dd e1                           fucom  %st(1)
+        dd e9                           fucomp %st(1)
+        da e9                           fucompp
+        d9 e5                           fxam
+        d9 c9                           fxch   %st(1)
+        d9 f4                           fxtract
+        d9 f1                           fyl2x
+        d9 f9                           fyl2xp1
+        9b                              fwait
+
+        0f 77                           emms
+        0f ae 07                        fxsave (%rdi)
+        48 0f ae 07                     fxsave64 (%rdi)
+        0f ae 0f                        fxrstor (%rdi)
+        48 0f ae 0f                     fxrstor64 (%rdi)

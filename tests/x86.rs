@@ -49,6 +49,7 @@ test!(amd64_att, "x86/amd64_att.test", "+amd64 +att");
 test!(amd64_att_suffix, "x86/amd64_att_suffix.test", "+amd64 +att");
 
 test!(x87_intel, "x86/x87_intel.test", "+amd64");
+test!(x87_att, "x86/x87_att.test", "+amd64 +att");
 test!(bmi_intel, "x86/bmi_intel.test", "+amd64");
 test!(aes_intel, "x86/aes_intel.test", "+amd64");
 test!(mpx_intel, "x86/mpx_intel.test", "+amd64");

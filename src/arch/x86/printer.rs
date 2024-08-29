@@ -538,14 +538,17 @@ impl crate::printer::Printer for Printer {
         len += mnemonic.len();
 
         if self.is_att() && insn.flags().any(super::INSN_SUFFIX) {
-            let c = match insn.flags().field(super::INSN_FIELD_SUFFIX) {
-                super::SUFFIX_B => 'b',
-                super::SUFFIX_W => 'w',
-                super::SUFFIX_L => 'l',
-                super::SUFFIX_Q => 'q',
+            let suffix = match insn.flags().field(super::INSN_FIELD_SUFFIX) {
+                super::SUFFIX_B => "b",
+                super::SUFFIX_W => "w",
+                super::SUFFIX_L => "l",
+                super::SUFFIX_Q => "q",
+                super::SUFFIX_FP_S => "s",
+                super::SUFFIX_FP_L => "l",
+                super::SUFFIX_FP_LL => "ll",
                 _ => unreachable!(),
             };
-            fmt.write_char(c)?;
+            fmt.write_str(suffix)?;
             len += 1;
         }
 

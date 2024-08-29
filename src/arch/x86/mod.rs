@@ -107,6 +107,9 @@ const SUFFIX_B: u32 = 0;
 const SUFFIX_W: u32 = 1;
 const SUFFIX_L: u32 = 2;
 const SUFFIX_Q: u32 = 3;
+const SUFFIX_FP_S: u32 = 4;
+const SUFFIX_FP_L: u32 = 5;
+const SUFFIX_FP_LL: u32 = 6;
 
 const FIXED_PREFIX: usize = 2;
 
@@ -1600,6 +1603,27 @@ impl SetValue for Inner<'_> {
                 .field_set(INSN_FIELD_SUFFIX, suffix)
                 .set(INSN_SUFFIX);
         };
+        Ok(())
+    }
+
+    fn set_fp_suffix(&mut self, out: &mut Insn, value: i32) -> Result {
+        if !self.is_att() {
+            return Ok(());
+        }
+        let size = if value == 1 {
+            self.mem_size.bits()
+        } else {
+            value as usize
+        };
+        let suffix = match size {
+            32 => SUFFIX_FP_S,
+            64 => SUFFIX_FP_L,
+            80 => SUFFIX_FP_LL,
+            _ => unreachable!("unexpected fp suffix for size {size} (value={value})"),
+        };
+        out.flags_mut()
+            .field_set(INSN_FIELD_SUFFIX, suffix)
+            .set(INSN_SUFFIX);
         Ok(())
     }
 
