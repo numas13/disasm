@@ -71,6 +71,7 @@ const OP_ST: u64 = 0;
 const OP_STI: u64 = 1;
 const OP_SAE: u64 = 2;
 const OP_ER_SAE: u64 = 3;
+const OP_MOFFSET: u64 = 4;
 
 const OP_FIELD_MEM: Field = Field::new(16, 4);
 const OP_FIELD_BCST: Field = Field::new(20, 3);
@@ -1110,6 +1111,31 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
+    fn set_moffset(&mut self, out: &mut Insn, msz: i32, _access: Access) -> Result {
+        self.set_mem_size(msz);
+        let offset = match self.addr_size {
+            Size::Word => self.bytes.read_u16()? as u64,
+            Size::Long => self.bytes.read_u32()? as u64,
+            Size::Quad => self.bytes.read_u64()?,
+            _ => unreachable!("unexpected address size {:?}", self.addr_size),
+        };
+        let kind = OperandKind::ArchSpec(OP_MOFFSET, offset, 0);
+        let mut op = Operand::new(kind);
+        let flags = op.flags_mut();
+        if self.segment != SEGMENT_NONE {
+            flags.field_set(OP_FIELD_SEGMENT, self.segment);
+            self.segment = 0;
+        } else {
+            flags.field_set(OP_FIELD_SEGMENT, SEGMENT_DS);
+        }
+        flags
+            .set(OP_NO_PTR)
+            .field_set(OP_FIELD_MEM, self.mem_size.op_size() as u32);
+        out.push_operand(op);
+        self.need_suffix = true;
+        Ok(())
+    }
+
     fn push_operand_with_mask(&mut self, out: &mut Insn, operand: Operand) {
         if self.is_att() {
             if let Some(mask) = self.operand_mask.take() {
@@ -1674,6 +1700,14 @@ impl SetValue for Inner<'_> {
     fn set_indirect(&mut self, _: &mut Insn, value: i32) -> Result {
         self.indirect = value != 0;
         Ok(())
+    }
+
+    fn set_moffs_ro(&mut self, out: &mut Insn, value: i32) -> Result {
+        self.set_moffset(out, value, Access::Read)
+    }
+
+    fn set_moffs_wr(&mut self, out: &mut Insn, value: i32) -> Result {
+        self.set_moffset(out, value, Access::Write)
     }
 
     fn set_args_segment(&mut self, out: &mut Insn, args: args_segment) -> Result {

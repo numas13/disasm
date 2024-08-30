@@ -381,6 +381,11 @@ mov                        10111... 0 ---- --- ... 00000 @b_r rw=2 uimm=1 suffix
 mov               ..000... 11000110 - ---- --- ... 00000 @m_r rw=2 uimm=8 suffix=8 msz=8
 mov               ..000... 11000111 - ---- --- ... 00000 @m_r rw=2 aimm=2 suffix=1
 
+mov                        10100000 - ---- --- ... 00000 @a rw=2 moffs_ro=8 suffix=8 rsz=8
+mov                        10100001 . --.- --- ... 00000 @a rw=2 moffs_ro=1 suffix=1
+mov                        10100010 - ---- --- ... 00000 moffs_wr=8 @a rw=1 suffix=8 rsz=8
+mov                        10100011 . --.- --- ... 00000 moffs_wr=1 @a rw=1 suffix=1
+
 lea               ........ 10001101 - ---- --- ... 00000 @rm_rr rw=2 suffix=1
 
 push                       01010... - --1- --- ... 00000 @b_r rw=1 msz=16 suffix=1
