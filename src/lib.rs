@@ -114,6 +114,25 @@ impl Arch {
             Arch::X86(..) => 8,
         }
     }
+
+    pub fn addr_size(&self) -> usize {
+        match self {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(opts) => match opts.xlen {
+                arch::riscv::Xlen::X32 => 32,
+                arch::riscv::Xlen::X64 => 64,
+                arch::riscv::Xlen::X128 => 128,
+            },
+            #[cfg(feature = "x86")]
+            Arch::X86(opts) => {
+                if opts.ext.amd64 {
+                    64
+                } else {
+                    32
+                }
+            }
+        }
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -286,16 +305,17 @@ impl Disasm {
             _ => None,
         };
 
+        let width = self.arch.addr_size() / 4;
         let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<()> {
             if let Some((name, offset)) = first_symbol.take() {
                 if offset != 0 {
-                    writeln!(out, "\n{address:016x} <{name}-{offset:#x}>:")?;
+                    writeln!(out, "\n{address:0width$x} <{name}-{offset:#x}>:")?;
                 } else {
-                    writeln!(out, "\n{address:016x} <{name}>:")?;
+                    writeln!(out, "\n{address:0width$x} <{name}>:")?;
                 }
             } else if let Some((addr, name)) = *next_symbol {
                 if addr == address {
-                    writeln!(out, "\n{address:016x} <{name}>:")?;
+                    writeln!(out, "\n{address:0width$x} <{name}>:")?;
                     *next_symbol = info.get_symbol_after(address);
                 }
             }
