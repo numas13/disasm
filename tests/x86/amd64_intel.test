@@ -101,6 +101,39 @@
         49 c7 00 ef be ad de            mov    QWORD PTR [r8],0xffffffffdeadbeef
         67 49 c7 00 ef be ad de         mov    QWORD PTR [r8d],0xffffffffdeadbeef
 
+        66 8e c9                        mov    cs,cx
+        66 8e d9                        mov    ds,cx
+        66 8e e1                        mov    fs,cx
+        66 8e e9                        mov    gs,cx
+        8e c9                           mov    cs,ecx
+        8e d9                           mov    ds,ecx
+        8e e1                           mov    fs,ecx
+        8e e9                           mov    gs,ecx
+        48 8e c9                        mov    cs,rcx
+        48 8e d9                        mov    ds,rcx
+        48 8e e1                        mov    fs,rcx
+        48 8e e9                        mov    gs,rcx
+        8e 0f                           mov    cs,WORD PTR [rdi]
+        8e 1f                           mov    ds,WORD PTR [rdi]
+        8e 27                           mov    fs,WORD PTR [rdi]
+        8e 2f                           mov    gs,WORD PTR [rdi]
+        66 8c c9                        mov    cx,cs
+        66 8c d9                        mov    cx,ds
+        66 8c e1                        mov    cx,fs
+        66 8c e9                        mov    cx,gs
+        8c c9                           mov    ecx,cs
+        8c d9                           mov    ecx,ds
+        8c e1                           mov    ecx,fs
+        8c e9                           mov    ecx,gs
+        48 8c c9                        mov    rcx,cs
+        48 8c d9                        mov    rcx,ds
+        48 8c e1                        mov    rcx,fs
+        48 8c e9                        mov    rcx,gs
+        8c 0f                           mov    WORD PTR [rdi],cs
+        8c 1f                           mov    WORD PTR [rdi],ds
+        8c 27                           mov    WORD PTR [rdi],fs
+        8c 2f                           mov    WORD PTR [rdi],gs
+
 # TODO:        0f 20 d1                        mov    rcx,cr2
 # TODO:        0f 22 d1                        mov    cr2,rcx
 # TODO:        44 0f 22 c1                     mov    cr8,rcx

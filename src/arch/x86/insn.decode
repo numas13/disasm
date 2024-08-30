@@ -62,17 +62,17 @@
 # mm rrr bbb | opcode | w f3 f2 66 rex 0 pp | rxb 00010 | # 0f 38
 # mm rrr bbb | opcode | w f3 f2 66 rex 0 pp | rxb 00011 | # 0f 3a
 
-@cs_r                      ........ . .... ... ... ..... &segment seg=0 rw=1
-@ds_r                      ........ . .... ... ... ..... &segment seg=1 rw=1
+@es_r                      ........ . .... ... ... ..... &segment seg=0 rw=1
+@cs_r                      ........ . .... ... ... ..... &segment seg=1 rw=1
 @ss_r                      ........ . .... ... ... ..... &segment seg=2 rw=1
-@es_r                      ........ . .... ... ... ..... &segment seg=3 rw=1
+@ds_r                      ........ . .... ... ... ..... &segment seg=3 rw=1
 @fs_r                      ........ . .... ... ... ..... &segment seg=4 rw=1
 @gs_r                      ........ . .... ... ... ..... &segment seg=5 rw=1
 
-@cs_w                      ........ . .... ... ... ..... &segment seg=0 rw=2
-@ds_w                      ........ . .... ... ... ..... &segment seg=1 rw=2
+@es_w                      ........ . .... ... ... ..... &segment seg=0 rw=2
+@cs_w                      ........ . .... ... ... ..... &segment seg=1 rw=2
 @ss_w                      ........ . .... ... ... ..... &segment seg=2 rw=2
-@es_w                      ........ . .... ... ... ..... &segment seg=3 rw=2
+@ds_w                      ........ . .... ... ... ..... &segment seg=3 rw=2
 @fs_w                      ........ . .... ... ... ..... &segment seg=4 rw=2
 @gs_w                      ........ . .... ... ... ..... &segment seg=5 rw=2
 
@@ -114,6 +114,11 @@
 
 @rm_rm            ........ ........ . .... ... ... ..... \
                   &rm_rm rw=3 %mode b=%base r=%reg msz=1 rsz=1
+
+@rm_sr            ........ ........ . .... ... ... ..... \
+                  rm_sr=&rm_rr %mode b=%base r=%reg msz=1 bsz=0 rsz=1 rw=3
+@mr_rs            ........ ........ . .... ... ... ..... \
+                  mr_rs=&mr_rr %mode b=%base r=%reg msz=1 bsz=0 rsz=1 rw=3
 
 @a                ........ ........ . .... ... ... ..... \
                   &reg reg=0 rw=3 rsz=1
@@ -380,6 +385,9 @@ movabs                     10111... 1 ---- --- ... 00000 @b_r rw=2 uimm=1 suffix
 mov                        10111... 0 ---- --- ... 00000 @b_r rw=2 uimm=1 suffix=1
 mov               ..000... 11000110 - ---- --- ... 00000 @m_r rw=2 uimm=8 suffix=8 msz=8
 mov               ..000... 11000111 - ---- --- ... 00000 @m_r rw=2 aimm=2 suffix=1
+
+mov               ........ 10001100 - ---- --- ... 00000 @mr_rs rw=2 msz=16 bsz=1 suffix=1
+mov               ........ 10001110 - ---- --- ... 00000 @rm_sr rw=2 msz=16 bsz=1 suffix=1
 
 mov                        10100000 - ---- --- ... 00000 @a rw=2 moffs_ro=8 suffix=8 rsz=8
 mov                        10100001 . --.- --- ... 00000 @a rw=2 moffs_ro=1 suffix=1

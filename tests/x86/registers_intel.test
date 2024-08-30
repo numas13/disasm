@@ -190,6 +190,12 @@
         49 01 44 d5 00                  add    QWORD PTR [r13+rdx*8+0x0],rax
         49 01 04 ce                     add    QWORD PTR [r14+rcx*8],rax
         49 01 04 c7                     add    QWORD PTR [r15+rax*8],rax
+        66 8c c1                        mov    cx,es
+        66 8c c9                        mov    cx,cs
+        66 8c d1                        mov    cx,ss
+        66 8c d9                        mov    cx,ds
+        66 8c e1                        mov    cx,fs
+        66 8c e9                        mov    cx,gs
         0f fc c0                        paddb  mm0,mm0
         0f fc c8                        paddb  mm1,mm0
         0f fc d0                        paddb  mm2,mm0

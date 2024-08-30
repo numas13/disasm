@@ -256,20 +256,20 @@ const BND_NAME: [&str; 4] = [
 
 #[rustfmt::skip]
 const SEGMENT_NAME: [&str; 6] = [
-    "%cs",
-    "%ds",
-    "%ss",
     "%es",
+    "%cs",
+    "%ss",
+    "%ds",
     "%fs",
     "%gs",
 ];
 
 #[rustfmt::skip]
 const SEGMENT_PREFIX: [&str; 6] = [
-    "cs",
-    "ds",
-    "ss",
     "es",
+    "cs",
+    "ss",
+    "ds",
     "fs",
     "gs",
 ];

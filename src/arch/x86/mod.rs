@@ -39,10 +39,10 @@ const INSN_REPZ: u32 = 2;
 const INSN_REPNZ: u32 = 3;
 
 const SEGMENT_NONE: u32 = 0;
-const SEGMENT_CS: u32 = 1;
-const SEGMENT_DS: u32 = 2;
+const SEGMENT_ES: u32 = 1;
+const SEGMENT_CS: u32 = 2;
 const SEGMENT_SS: u32 = 3;
-const SEGMENT_ES: u32 = 4;
+const SEGMENT_DS: u32 = 4;
 const SEGMENT_FS: u32 = 5;
 const SEGMENT_GS: u32 = 6;
 
@@ -1872,6 +1872,29 @@ impl SetValue for Inner<'_> {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
         self.set_gpr_reg(out, args.r, Access::Read, args.rsz)
+    }
+
+    fn set_args_rm_sr(&mut self, out: &mut Insn, args: args_rm_rr) -> Result {
+        let seg = args.r & 7;
+        if seg > 6 {
+            return Err(Error::Failed(0));
+        }
+        let access = access_from_mask(args.rw);
+        let reg = Reg::new(REG_CLASS_SEGMENT, seg as u64);
+        out.push_reg(reg.access(access));
+        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)
+    }
+
+    fn set_args_mr_rs(&mut self, out: &mut Insn, args: args_mr_rr) -> Result {
+        let seg = args.r & 7;
+        if seg > 6 {
+            return Err(Error::Failed(0));
+        }
+        let access = access_from_mask(args.rw);
+        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
+        let reg = Reg::new(REG_CLASS_SEGMENT, seg as u64);
+        out.push_reg(reg.access(Access::Read));
+        Ok(())
     }
 
     fn set_args_evex_rm_hv(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
