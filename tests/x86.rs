@@ -43,6 +43,7 @@ test!(nop, "x86/nop.test", "");
 test!(absolute_address, "x86/absolute_address.test", "");
 
 test!(i386_intel, "x86/i386_intel.test", "+i386 -amd64");
+test!(i386_att, "x86/i386_att.test", "+i386 -amd64 +att");
 
 test!(amd64_intel, "x86/amd64_intel.test", "+amd64");
 test!(amd64_att, "x86/amd64_att.test", "+amd64 +att");

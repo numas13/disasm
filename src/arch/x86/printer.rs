@@ -608,7 +608,7 @@ impl crate::printer::Printer for Printer {
                 _ => unreachable!("unexpected rounding mode {rm}"),
             }),
             OperandKind::ArchSpec(super::OP_MOFFSET, offset, _) => {
-                self.print_segment(fmt, operand, false)?;
+                self.print_segment(fmt, operand, self.is_intel())?;
                 write!(fmt, "{offset:#x}")
             }
             OperandKind::Indirect(base) if self.is_intel() => {

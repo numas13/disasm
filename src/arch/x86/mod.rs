@@ -1125,8 +1125,6 @@ impl<'a> Inner<'a> {
         if self.segment != SEGMENT_NONE {
             flags.field_set(OP_FIELD_SEGMENT, self.segment);
             self.segment = 0;
-        } else {
-            flags.field_set(OP_FIELD_SEGMENT, SEGMENT_DS);
         }
         flags
             .set(OP_NO_PTR)
