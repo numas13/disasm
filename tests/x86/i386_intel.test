@@ -68,6 +68,9 @@
         2e 66 a3 10 00 00 00            mov    cs:0x10,ax
         2e a3 10 00 00 00               mov    cs:0x10,eax
 
+        c2 01 00                        ret    0x1
+        66 c2 01 00                     retw   0x1
+
 # TODO: mem access is 16-bit but regs is 32-bits
 #       63 f9                           arpl        ecx,edi
 #       63 3f                           arpl        WORD PTR [edi],edi

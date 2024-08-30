@@ -1,6 +1,16 @@
         e8 00 00 00 00                  call            5
         ff 17                           call            *(%rdi)
 
+        c3                              ret
+        66 c3                           retw
+        c3                              retq            # +suffix
+        66 c3                           retw            # +suffix
+
+        c2 01 00                        ret    $0x1
+        66 c2 01 00                     retw   $0x1
+        c2 01 00                        retq   $0x1     # +suffix
+        66 c2 01 00                     retw   $0x1     # +suffix
+
         66 ff 20                        jmpw            *(%rax)
         ff 20                           jmp             *(%rax)
 

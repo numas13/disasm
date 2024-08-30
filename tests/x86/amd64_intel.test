@@ -12,6 +12,7 @@
         f3 c3                           "repz ret"
         cb                              retf
         c2 01 00                        ret    0x1
+        66 c2 01 00                     retw   0x1
         ca 01 00                        retf   0x1
 
         cf                              iret
