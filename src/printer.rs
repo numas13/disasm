@@ -218,23 +218,29 @@ pub trait Printer {
 
 pub trait PrinterInfo {
     /// Get symbol with address less then or equal to `address`.
-    #[allow(unused_variables)]
-    fn get_symbol(&self, address: u64) -> Option<(u64, &str)> {
+    fn get_symbol(&self, address: u64) -> Option<(u64, &str)>;
+
+    /// Get symbol with address greater then `address`.
+    fn get_symbol_after(&self, address: u64) -> Option<(u64, &str)>;
+}
+
+impl PrinterInfo for () {
+    fn get_symbol(&self, _: u64) -> Option<(u64, &str)> {
         None
     }
 
-    /// Get symbol with address greater then `address`.
-    #[allow(unused_variables)]
-    fn get_symbol_after(&self, address: u64) -> Option<(u64, &str)> {
+    fn get_symbol_after(&self, _: u64) -> Option<(u64, &str)> {
         None
     }
 }
 
-impl PrinterInfo for () {}
-
 impl<'a, T: PrinterInfo> PrinterInfo for &'a T {
     fn get_symbol(&self, address: u64) -> Option<(u64, &str)> {
         (*self).get_symbol(address)
+    }
+
+    fn get_symbol_after(&self, address: u64) -> Option<(u64, &str)> {
+        (*self).get_symbol_after(address)
     }
 }
 
