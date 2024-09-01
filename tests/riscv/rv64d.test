@@ -1,0 +1,40 @@
+# rounding mode
+        02208053                fadd.d  ft0,ft1,ft2,rne
+        02209053                fadd.d  ft0,ft1,ft2,rtz
+        0220a053                fadd.d  ft0,ft1,ft2,rdn
+        0220b053                fadd.d  ft0,ft1,ft2,rup
+        0220c053                fadd.d  ft0,ft1,ft2,rmm
+        0220d053                fadd.d  ft0,ft1,ft2,unknown
+        0220e053                fadd.d  ft0,ft1,ft2,unknown
+        0220f053                fadd.d  ft0,ft1,ft2
+
+# instructions
+        4d243507                fld             fa0,1234(s0)
+        4cb4b927                fsd             fa1,1234(s1)
+        02c5f553                fadd.d          fa0,fa1,fa2
+        0ac5f553                fsub.d          fa0,fa1,fa2
+        12c5f553                fmul.d          fa0,fa1,fa2
+        1ac5f553                fdiv.d          fa0,fa1,fa2
+        5a05f553                fsqrt.d         fa0,fa1
+        2ac58553                fmin.d          fa0,fa1,fa2
+        2ac59553                fmax.d          fa0,fa1,fa2
+        72c5f543                fmadd.d         fa0,fa1,fa2,fa4
+        72c5f547                fmsub.d         fa0,fa1,fa2,fa4
+        72c5f54f                fnmadd.d        fa0,fa1,fa2,fa4
+        72c5f54b                fnmsub.d        fa0,fa1,fa2,fa4
+        c205f553                fcvt.w.d        a0,fa1
+        c215f553                fcvt.wu.d       a0,fa1
+        c225f553                fcvt.l.d        a0,fa1
+        c235f553                fcvt.lu.d       a0,fa1
+        d2058553                fcvt.d.w        fa0,a1
+        d2158553                fcvt.d.wu       fa0,a1
+        d225f553                fcvt.d.l        fa0,a1
+        d235f553                fcvt.d.lu       fa0,a1
+        22c58553                fsgnj.d         fa0,fa1,fa2
+        22b58553                fmv.d           fa0,fa1 # +alias
+        e2058553                fmv.x.d         a0,fa1
+        f2058553                fmv.d.x         fa0,a1
+        a2c5a553                feq.d           a0,fa1,fa2
+        a2c59553                flt.d           a0,fa1,fa2
+        a2c58553                fle.d           a0,fa1,fa2
+        e2059553                fclass.d        a0,fa1

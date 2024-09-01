@@ -1,0 +1,4 @@
+        c025f553                fcvt.l.s        a0,fa1
+        c035f553                fcvt.lu.s       a0,fa1
+        d025f553                fcvt.s.l        fa0,a1
+        d035f553                fcvt.s.lu       fa0,a1

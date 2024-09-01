@@ -102,7 +102,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                         super::RM_RUP => "rup",
                         super::RM_RMM => "rmm",
                         super::RM_DYN => "dyn",
-                        _ => todo!(),
+                        _ => "unknown",
                     };
                     fmt.write_str(s)?;
                 }
