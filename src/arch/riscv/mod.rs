@@ -50,6 +50,7 @@ pub struct Extensions {
     pub zcb: bool,
     pub zfh: bool,
     pub zicsr: bool,
+    pub zihintpause: bool,
 }
 
 impl Extensions {
@@ -63,6 +64,7 @@ impl Extensions {
             zcb: true,
             zfh: true,
             zicsr: true,
+            zihintpause: true,
         }
     }
 }
@@ -372,6 +374,7 @@ impl RiscvDecode32 for Decoder {
         cond_m = m,
         cond_zfh = zfh,
         cond_zicsr = zicsr,
+        cond_zihintpause = zihintpause,
     }
 
     fn cond_is_same_rs1_rs2(&self, insn: u32) -> bool {
