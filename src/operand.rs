@@ -1,8 +1,6 @@
 use core::fmt;
 
 use crate::flags::Flags;
-#[cfg(feature = "print")]
-use crate::{Insn, PrinterExt};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Access {
@@ -211,31 +209,10 @@ impl Operand {
     pub(crate) fn flags_mut(&mut self) -> &mut Flags {
         &mut self.flags
     }
-
-    #[cfg(feature = "print")]
-    pub fn printer<'a, E: PrinterExt>(
-        &'a self,
-        printer: &'a crate::Printer<E>,
-        info: &'a E,
-        insn: &'a Insn,
-    ) -> Printer<'a, E> {
-        Printer(printer, info, insn, self)
-    }
 }
 
 impl From<OperandKind> for Operand {
     fn from(value: OperandKind) -> Self {
         Operand::new(value)
-    }
-}
-
-#[cfg(feature = "print")]
-pub struct Printer<'a, E: PrinterExt>(&'a crate::Printer<E>, &'a E, &'a Insn, &'a Operand);
-
-#[cfg(feature = "print")]
-impl<E: PrinterExt> fmt::Display for Printer<'_, E> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let Self(printer, info, insn, operand) = self;
-        printer.inner().print_operand(fmt, info, insn, operand)
     }
 }
