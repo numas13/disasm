@@ -26,6 +26,8 @@ pub struct Flags {
     raw: u32,
 }
 
+// TODO: delete me
+#[allow(dead_code)]
 impl Flags {
     pub fn empty() -> Self {
         Self { raw: 0 }

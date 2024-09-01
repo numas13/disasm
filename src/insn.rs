@@ -5,7 +5,7 @@ use core::ops::Deref;
 use alloc::vec::Vec;
 
 #[cfg(feature = "print")]
-use crate::printer::{FormatterFn, PrinterInfo};
+use crate::printer::{FormatterFn, PrinterExt};
 use crate::{flags::Flags, Operand, OperandKind, Reg};
 
 const INSN_ALIAS: u32 = 1 << 0;
@@ -61,11 +61,6 @@ impl Insn {
         self.opcode = opcode
     }
 
-    #[cfg(feature = "mnemonic")]
-    pub fn mnemonic(&self, disasm: &crate::Disasm) -> Option<(&'static str, &'static str)> {
-        disasm.decoder.mnemonic(self)
-    }
-
     pub fn operands(&self) -> &[Operand] {
         self.operands.as_slice()
     }
@@ -115,42 +110,41 @@ impl Insn {
     }
 
     #[cfg(feature = "print")]
-    pub fn printer<'a, I>(&'a self, disasm: &'a crate::Disasm, info: &'a I) -> Printer<'a, I>
+    pub fn printer<'a, E>(&'a self, printer: &'a crate::Printer<E>) -> Printer<'a, E>
     where
-        I: PrinterInfo,
+        E: PrinterExt,
     {
-        Printer(self, disasm, info)
+        Printer(self, printer)
     }
 }
 
 #[cfg(feature = "print")]
-pub struct Printer<'a, I: PrinterInfo>(&'a Insn, &'a crate::Disasm, &'a I);
+pub struct Printer<'a, E: PrinterExt>(&'a Insn, &'a crate::Printer<E>);
 
 #[cfg(feature = "print")]
-impl<'a, I: PrinterInfo> Printer<'a, I> {
+impl<'a, E: PrinterExt> Printer<'a, E> {
     pub fn mnemonic(&self) -> impl fmt::Display + '_ {
         FormatterFn(|fmt| {
-            let Printer(insn, disasm, _) = self;
-            disasm.printer.print_mnemonic(fmt, disasm, insn, false)
+            let Printer(insn, printer) = self;
+            printer
+                .inner()
+                .print_mnemonic(fmt, printer.ext(), insn, false)
         })
     }
 
     pub fn operands(&self) -> impl fmt::Display + '_ {
         FormatterFn(|fmt| {
-            let Printer(insn, disasm, info) = self;
-            disasm.printer.print_operands(fmt, disasm, info, insn)
+            let Printer(insn, printer) = self;
+            printer.inner().print_operands(fmt, printer.ext(), insn)
         })
     }
 }
 
 #[cfg(feature = "print")]
-impl<I> fmt::Display for Printer<'_, I>
-where
-    I: PrinterInfo,
-{
+impl<E: PrinterExt> fmt::Display for Printer<'_, E> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let Printer(insn, disasm, info) = self;
-        disasm.printer.print_insn(fmt, disasm, info, insn)
+        let Printer(insn, printer) = self;
+        printer.inner().print_insn(fmt, printer.ext(), insn)
     }
 }
 

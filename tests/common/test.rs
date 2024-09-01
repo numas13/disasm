@@ -1,6 +1,6 @@
 use std::{fmt, str::Lines};
 
-use disasm::{Arch, Bundle, Disasm, Options, Symbols};
+use disasm::{Arch, Bundle, Decoder, Options, Symbols};
 
 use super::Bytes;
 
@@ -260,10 +260,10 @@ where
     while parser.parse(&mut test)? {
         let expect = test.asm[0];
         let (arch, opts) = init(&test);
-        let mut disasm = Disasm::new(arch, test.address, opts);
+        let mut dis = Decoder::new(arch, test.address, opts).printer((), ".text");
         let report = ErrorReport::new(file, &test);
-        if let Ok(len) = disasm.decode(&test.bytes, &mut bundle) {
-            let printer = bundle[0].printer(&disasm, &());
+        if let Ok(len) = dis.decode(&test.bytes, &mut bundle) {
+            let printer = bundle[0].printer(&dis);
             let mnemonic = printer.mnemonic().to_string();
             let operands = printer.operands().to_string();
             let report = report.result(&mnemonic, &operands, len);

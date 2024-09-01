@@ -2,7 +2,7 @@ use core::fmt;
 
 use crate::flags::Flags;
 #[cfg(feature = "print")]
-use crate::{Disasm, Insn, PrinterInfo};
+use crate::{Insn, PrinterExt};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Access {
@@ -213,13 +213,13 @@ impl Operand {
     }
 
     #[cfg(feature = "print")]
-    pub fn printer<'a>(
+    pub fn printer<'a, E: PrinterExt>(
         &'a self,
-        disasm: &'a Disasm,
-        info: &'a dyn PrinterInfo,
+        printer: &'a crate::Printer<E>,
+        info: &'a E,
         insn: &'a Insn,
-    ) -> Printer<'a> {
-        Printer(disasm, info, insn, self)
+    ) -> Printer<'a, E> {
+        Printer(printer, info, insn, self)
     }
 }
 
@@ -230,14 +230,12 @@ impl From<OperandKind> for Operand {
 }
 
 #[cfg(feature = "print")]
-pub struct Printer<'a>(&'a Disasm, &'a dyn PrinterInfo, &'a Insn, &'a Operand);
+pub struct Printer<'a, E: PrinterExt>(&'a crate::Printer<E>, &'a E, &'a Insn, &'a Operand);
 
 #[cfg(feature = "print")]
-impl fmt::Display for Printer<'_> {
+impl<E: PrinterExt> fmt::Display for Printer<'_, E> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let Self(disasm, info, insn, operand) = self;
-        disasm
-            .printer
-            .print_operand(fmt, disasm, *info, insn, operand)
+        let Self(printer, info, insn, operand) = self;
+        printer.inner().print_operand(fmt, info, insn, operand)
     }
 }

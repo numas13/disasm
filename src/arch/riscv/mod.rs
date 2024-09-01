@@ -2,7 +2,7 @@ mod generated;
 #[cfg(feature = "print")]
 mod printer;
 
-use crate::{bytes::Bytes, Bundle, Error, Insn, Operand, Reg, RegClass};
+use crate::{bytes::Bytes, ArchDecoder, Bundle, Error, Insn, Operand, Reg, RegClass};
 
 use self::generated::{RiscvDecode16, RiscvDecode32, SetValue};
 
@@ -93,7 +93,7 @@ impl Decoder {
     }
 }
 
-impl super::Decoder for Decoder {
+impl ArchDecoder for Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error> {
         let mut bytes = Bytes::new(bytes);
         let len = bytes
@@ -119,31 +119,6 @@ impl super::Decoder for Decoder {
         } else {
             Err(Error::Failed(len))
         }
-    }
-
-    fn insn_size_min(&self) -> u16 {
-        if self.opts_arch.ext.c {
-            2
-        } else {
-            4
-        }
-    }
-
-    fn insn_size_max(&self) -> u16 {
-        4
-    }
-
-    #[cfg(feature = "mnemonic")]
-    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
-        let m = self::generated::opcode::mnemonic(insn.opcode())?;
-        let flags = insn.flags();
-        let s = match (flags.any(INSN_AQ), flags.any(INSN_RL)) {
-            (true, true) => "aqrl",
-            (true, false) => "aq",
-            (false, true) => "rl",
-            (false, false) => "",
-        };
-        Some((m, s))
     }
 }
 
@@ -431,6 +406,19 @@ fn rel_addr(address: u64, offset: i32) -> u64 {
     (address as i64).wrapping_add(offset as i64) as u64
 }
 
-pub(crate) fn decoder(opts: crate::Options, opts_arch: Options) -> Box<dyn crate::Decoder> {
+#[cfg(feature = "mnemonic")]
+fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
+    let m = self::generated::opcode::mnemonic(insn.opcode())?;
+    let flags = insn.flags();
+    let s = match (flags.any(INSN_AQ), flags.any(INSN_RL)) {
+        (true, true) => "aqrl",
+        (true, false) => "aq",
+        (false, true) => "rl",
+        (false, false) => "",
+    };
+    Some((m, s))
+}
+
+pub(crate) fn decoder(opts: crate::Options, opts_arch: Options) -> Box<dyn crate::ArchDecoder> {
     Box::new(Decoder::new(opts, opts_arch))
 }

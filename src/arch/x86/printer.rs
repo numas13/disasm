@@ -2,7 +2,10 @@ use core::fmt::{self, Write};
 
 use alloc::borrow::Cow;
 
-use crate::{printer::Separator, Disasm, Insn, Operand, OperandKind, PrinterInfo, Reg, RegClass};
+use crate::{
+    printer::{FormatterFn, Separator},
+    ArchPrinter, Insn, Operand, OperandKind, PrinterExt, Reg, RegClass,
+};
 
 use super::{opcode, Size};
 
@@ -279,7 +282,7 @@ struct Printer {
 }
 
 impl Printer {
-    fn new(_: crate::Options, opts_arch: super::Options) -> Self {
+    fn new(_: &crate::Options, opts_arch: &super::Options) -> Self {
         Self { att: opts_arch.att }
     }
 
@@ -299,20 +302,69 @@ impl Printer {
         }
     }
 
-    fn print_segment(
+    fn register_name(&self, reg: Reg) -> Cow<'static, str> {
+        match reg {
+            super::NONE => "".into(),
+            super::RIP if self.att => "%rip".into(),
+            super::RIP => "rip".into(),
+            _ => {
+                let index = reg.index();
+                match reg.class() {
+                    RegClass::INT => {
+                        let (size, rex, index) = Size::decode_gpr(index);
+                        let name = match size {
+                            Size::Byte if rex => GPR_NAME_BYTE_REX[index],
+                            Size::Byte => GPR_NAME_BYTE[index],
+                            Size::Word => GPR_NAME_WORD[index],
+                            Size::Long => GPR_NAME_LONG[index],
+                            Size::Quad => GPR_NAME_QUAD[index],
+                            _ => unreachable!(),
+                        };
+                        self.strip_prefix(name).into()
+                    }
+                    RegClass::VECTOR => {
+                        let (size, index) = Size::decode_vec(index);
+                        let name = match size {
+                            Size::Mm => MM_NAME[index],
+                            Size::Xmm => XMM_NAME[index],
+                            Size::Ymm => YMM_NAME[index],
+                            Size::Zmm => ZMM_NAME[index],
+                            _ => unreachable!(),
+                        };
+                        self.strip_prefix(name).into()
+                    }
+                    super::REG_CLASS_K | super::REG_CLASS_K_MASK => {
+                        let name = K_NAME[index as usize & 7];
+                        self.strip_prefix(name).into()
+                    }
+                    super::REG_CLASS_BND => {
+                        let name = BND_NAME[index as usize];
+                        self.strip_prefix(name).into()
+                    }
+                    super::REG_CLASS_SEGMENT => {
+                        let name = SEGMENT_NAME[index as usize];
+                        self.strip_prefix(name).into()
+                    }
+                    _ => todo!(),
+                }
+            }
+        }
+    }
+
+    fn print_segment<E: PrinterExt>(
         &self,
         fmt: &mut fmt::Formatter,
+        ext: &E,
         operand: &Operand,
         force_ds: bool,
     ) -> fmt::Result {
-        let segment = operand.flags().field(super::OP_FIELD_SEGMENT);
-        if segment != 0 {
-            let name = SEGMENT_NAME[segment as usize - 1];
-            fmt.write_str(self.strip_prefix(name))?;
-            fmt.write_char(':')?;
-        } else if force_ds {
-            let name = SEGMENT_NAME[super::SEGMENT_DS as usize - 1];
-            fmt.write_str(self.strip_prefix(name))?;
+        let name = match operand.flags().field(super::OP_FIELD_SEGMENT) {
+            s if s != 0 => Some(SEGMENT_NAME[s as usize - 1]),
+            0 if force_ds => Some(SEGMENT_NAME[super::SEGMENT_DS as usize - 1]),
+            _ => None,
+        };
+        if let Some(name) = name {
+            ext.print_register(fmt, self.strip_prefix(name))?;
             fmt.write_char(':')?;
         }
         Ok(())
@@ -371,10 +423,10 @@ impl Printer {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn print_mem_intel(
+    fn print_mem_intel<E: PrinterExt>(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
+        ext: &E,
         insn: &Insn,
         operand: &Operand,
         base: &Reg,
@@ -382,22 +434,27 @@ impl Printer {
         offset: Option<i64>,
     ) -> fmt::Result {
         self.print_mem_access_intel(fmt, insn, operand)?;
-        self.print_segment(fmt, operand, false)?;
-        let base_name = disasm.printer.register_name(*base);
-        write!(fmt, "[{base_name}")?;
+        self.print_segment(fmt, ext, operand, false)?;
+        let base_name = self.register_name(*base);
+        fmt.write_char('[')?;
+        ext.print_register(fmt, &base_name)?;
         if let Some((index, scale)) = index {
-            let index = disasm.printer.register_name(*index);
+            let index = self.register_name(*index);
             if !base_name.is_empty() {
                 fmt.write_char('+')?;
             }
-            write!(fmt, "{index}*{scale}")?;
+            ext.print_register(fmt, &index)?;
+            fmt.write_char('*')?;
+            ext.print_immediate(fmt, scale)?;
         }
         if let Some(offset) = offset {
-            if *base != super::RIP && offset < 0 {
-                write!(fmt, "-{:#x}", -offset)?;
+            let (c, offset) = if *base != super::RIP && offset < 0 {
+                ('-', -offset)
             } else {
-                write!(fmt, "+{offset:#x}")?;
-            }
+                ('+', offset)
+            };
+            fmt.write_char(c)?;
+            ext.print_address_offset(fmt, FormatterFn(|fmt| write!(fmt, "{offset:#x}")))?;
         }
         fmt.write_char(']')?;
         if operand.flags().any(super::OP_BCST_FORCE) {
@@ -407,29 +464,33 @@ impl Printer {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn print_mem_att(
+    fn print_mem_att<E: PrinterExt>(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        _: &Insn,
+        ext: &E,
         operand: &Operand,
         base: &Reg,
         index: Option<(&Reg, u8)>,
         offset: Option<i64>,
     ) -> fmt::Result {
-        self.print_segment(fmt, operand, false)?;
+        self.print_segment(fmt, ext, operand, false)?;
         if let Some(offset) = offset {
-            if offset < 0 {
-                write!(fmt, "-{:#x}", -offset)?;
+            let (s, offset) = if offset < 0 {
+                ("-", -offset)
             } else {
-                write!(fmt, "{offset:#x}")?;
-            }
+                ("", offset)
+            };
+            ext.print_address_offset(fmt, FormatterFn(|fmt| write!(fmt, "{s}{offset:#x}")))?;
         }
-        let base = disasm.printer.register_name(*base);
-        write!(fmt, "({base}")?;
+        let base = self.register_name(*base);
+        fmt.write_char('(')?;
+        ext.print_register(fmt, base)?;
         if let Some((index, scale)) = index {
-            let index = disasm.printer.register_name(*index);
-            write!(fmt, ",{index},{scale}")?;
+            let index = self.register_name(*index);
+            fmt.write_char(',')?;
+            ext.print_register(fmt, index)?;
+            fmt.write_char(',')?;
+            ext.print_immediate(fmt, scale)?;
         }
         fmt.write_char(')')?;
         self.print_broadcast(fmt, operand)?;
@@ -437,60 +498,19 @@ impl Printer {
     }
 }
 
-impl crate::printer::Printer for Printer {
+impl<E: PrinterExt> ArchPrinter<E> for Printer {
+    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
+        super::mnemonic(insn)
+    }
+
     fn register_name(&self, reg: Reg) -> Cow<'static, str> {
-        match reg {
-            super::NONE => "".into(),
-            super::RIP if self.att => "%rip".into(),
-            super::RIP => "rip".into(),
-            _ => {
-                let index = reg.index();
-                match reg.class() {
-                    RegClass::INT => {
-                        let (size, rex, index) = Size::decode_gpr(index);
-                        let name = match size {
-                            Size::Byte if rex => GPR_NAME_BYTE_REX[index],
-                            Size::Byte => GPR_NAME_BYTE[index],
-                            Size::Word => GPR_NAME_WORD[index],
-                            Size::Long => GPR_NAME_LONG[index],
-                            Size::Quad => GPR_NAME_QUAD[index],
-                            _ => unreachable!(),
-                        };
-                        self.strip_prefix(name).into()
-                    }
-                    RegClass::VECTOR => {
-                        let (size, index) = Size::decode_vec(index);
-                        let name = match size {
-                            Size::Mm => MM_NAME[index],
-                            Size::Xmm => XMM_NAME[index],
-                            Size::Ymm => YMM_NAME[index],
-                            Size::Zmm => ZMM_NAME[index],
-                            _ => unreachable!(),
-                        };
-                        self.strip_prefix(name).into()
-                    }
-                    super::REG_CLASS_K | super::REG_CLASS_K_MASK => {
-                        let name = K_NAME[index as usize & 7];
-                        self.strip_prefix(name).into()
-                    }
-                    super::REG_CLASS_BND => {
-                        let name = BND_NAME[index as usize];
-                        self.strip_prefix(name).into()
-                    }
-                    super::REG_CLASS_SEGMENT => {
-                        let name = SEGMENT_NAME[index as usize];
-                        self.strip_prefix(name).into()
-                    }
-                    _ => todo!(),
-                }
-            }
-        }
+        self.register_name(reg)
     }
 
     fn print_mnemonic(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
+        ext: &E,
         insn: &Insn,
         separator: bool,
     ) -> fmt::Result {
@@ -498,7 +518,7 @@ impl crate::printer::Printer for Printer {
 
         let mut print_prefix = |flag: u32, prefix: &str| {
             if insn.flags().any(flag) {
-                fmt.write_str(prefix)?;
+                ext.print_mnemonic(fmt, prefix)?;
                 len += prefix.len();
             }
             Ok(())
@@ -516,7 +536,7 @@ impl crate::printer::Printer for Printer {
             } else {
                 SEGMENT_PREFIX[segment as usize - 1]
             };
-            fmt.write_str(s)?;
+            ext.print_mnemonic(fmt, s)?;
             fmt.write_char(' ')?;
             len += s.len() + 1;
         }
@@ -529,12 +549,12 @@ impl crate::printer::Printer for Printer {
                 super::INSN_REPNZ => "repnz ",
                 _ => unreachable!("unexpected repeat {rep}"),
             };
-            fmt.write_str(s)?;
+            ext.print_mnemonic(fmt, s)?;
             len += s.len();
         }
 
-        let (mnemonic, _) = insn.mnemonic(disasm).unwrap_or(("<invalid>", ""));
-        fmt.write_str(mnemonic)?;
+        let (mnemonic, _) = super::mnemonic(insn).unwrap_or(("<invalid>", ""));
+        ext.print_mnemonic(fmt, mnemonic)?;
         len += mnemonic.len();
 
         if self.is_att() && insn.flags().any(super::INSN_SUFFIX) {
@@ -548,12 +568,12 @@ impl crate::printer::Printer for Printer {
                 super::SUFFIX_FP_LL => "ll",
                 _ => unreachable!(),
             };
-            fmt.write_str(suffix)?;
-            len += 1;
+            ext.print_mnemonic(fmt, suffix)?;
+            len += suffix.len();
         }
 
         if separator && !insn.operands().is_empty() {
-            self.insn_separator().print(fmt, len)?;
+            <Self as ArchPrinter<E>>::insn_separator(self).print(fmt, len)?;
         }
 
         Ok(())
@@ -574,8 +594,7 @@ impl crate::printer::Printer for Printer {
     fn print_operand(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
+        ext: &E,
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
@@ -586,19 +605,24 @@ impl crate::printer::Printer for Printer {
         match operand.kind() {
             OperandKind::Reg(reg) => match reg.class() {
                 super::REG_CLASS_K_MASK => {
-                    let name = disasm.printer.register_name(*reg);
-                    write!(fmt, "{{{name}}}")?;
+                    let name = self.register_name(*reg);
+                    fmt.write_char('{')?;
+                    ext.print_register(fmt, name)?;
+                    fmt.write_char('}')?;
                     if reg.index() >= 8 {
                         fmt.write_str("{z}")?;
                     }
                     Ok(())
                 }
-                _ => self.print_operand_default(fmt, disasm, info, insn, operand),
+                _ => self.print_operand_default(fmt, ext, insn, operand),
             },
-            OperandKind::ArchSpec(super::OP_ST, _, _) if self.is_att() => write!(fmt, "%st"),
-            OperandKind::ArchSpec(super::OP_STI, i, _) if self.is_att() => write!(fmt, "%st({i})"),
-            OperandKind::ArchSpec(super::OP_ST, _, _) => write!(fmt, "st"),
-            OperandKind::ArchSpec(super::OP_STI, i, _) => write!(fmt, "st({i})"),
+            OperandKind::ArchSpec(super::OP_ST, _, _) => {
+                ext.print_register(fmt, self.strip_prefix("%st"))
+            }
+            OperandKind::ArchSpec(super::OP_STI, i, _) => ext.print_register(
+                fmt,
+                FormatterFn(|fmt| write!(fmt, "{}({i})", self.strip_prefix("%st"))),
+            ),
             OperandKind::ArchSpec(super::OP_SAE, _, _) => fmt.write_str("{sae}"),
             OperandKind::ArchSpec(super::OP_ER_SAE, rm, _) => fmt.write_str(match rm {
                 0 => "{rn-sae}",
@@ -608,29 +632,22 @@ impl crate::printer::Printer for Printer {
                 _ => unreachable!("unexpected rounding mode {rm}"),
             }),
             OperandKind::ArchSpec(super::OP_MOFFSET, offset, _) => {
-                self.print_segment(fmt, operand, self.is_intel())?;
-                write!(fmt, "{offset:#x}")
+                self.print_segment(fmt, ext, operand, self.is_intel())?;
+                ext.print_address(fmt, FormatterFn(|fmt| write!(fmt, "{offset:#x}")))
             }
             OperandKind::Indirect(base) if self.is_intel() => {
-                self.print_mem_intel(fmt, disasm, insn, operand, base, None, None)
+                self.print_mem_intel(fmt, ext, insn, operand, base, None, None)
             }
             OperandKind::Relative(base, offset) if self.is_intel() => {
-                self.print_mem_intel(fmt, disasm, insn, operand, base, None, Some(*offset))
+                self.print_mem_intel(fmt, ext, insn, operand, base, None, Some(*offset))
             }
-            OperandKind::ScaledIndex(base, index, scale) if self.is_intel() => self
-                .print_mem_intel(
-                    fmt,
-                    disasm,
-                    insn,
-                    operand,
-                    base,
-                    Some((index, *scale)),
-                    None,
-                ),
+            OperandKind::ScaledIndex(base, index, scale) if self.is_intel() => {
+                self.print_mem_intel(fmt, ext, insn, operand, base, Some((index, *scale)), None)
+            }
             OperandKind::ScaledIndexRelative(base, index, scale, offset) if self.is_intel() => self
                 .print_mem_intel(
                     fmt,
-                    disasm,
+                    ext,
                     insn,
                     operand,
                     base,
@@ -641,36 +658,42 @@ impl crate::printer::Printer for Printer {
                 let only_addr = operand.flags().any(super::OP_NO_PTR);
                 if self.is_intel() {
                     self.print_mem_access_intel(fmt, insn, operand)?;
-                    self.print_segment(fmt, operand, !only_addr)?;
+                    self.print_segment(fmt, ext, operand, !only_addr)?;
                 } else {
-                    self.print_segment(fmt, operand, false)?;
+                    self.print_segment(fmt, ext, operand, false)?;
                 }
-                if only_addr {
-                    write!(fmt, "{addr:x}")?;
-                } else {
-                    write!(fmt, "{addr:#x}")?;
-                }
-                self.print_symbol(fmt, info, *addr)
+                ext.print_immediate(
+                    fmt,
+                    FormatterFn(|fmt| {
+                        if only_addr {
+                            write!(fmt, "{addr:x}")
+                        } else {
+                            write!(fmt, "{addr:#x}")
+                        }
+                    }),
+                )?;
+                self.print_symbol(fmt, ext, *addr)
             }
-            OperandKind::Indirect(base) => {
-                self.print_mem_att(fmt, disasm, insn, operand, base, None, None)
-            }
+            OperandKind::Indirect(base) => self.print_mem_att(fmt, ext, operand, base, None, None),
             OperandKind::Relative(base, offset) => {
-                self.print_mem_att(fmt, disasm, insn, operand, base, None, Some(*offset))
+                self.print_mem_att(fmt, ext, operand, base, None, Some(*offset))
             }
             OperandKind::ScaledIndexRelative(base, index, scale, offset) if self.is_att() => self
                 .print_mem_att(
                     fmt,
-                    disasm,
-                    insn,
+                    ext,
                     operand,
                     base,
                     Some((index, *scale)),
                     Some(*offset as i64),
                 ),
-            OperandKind::Imm(imm) if self.is_att() => write!(fmt, "${imm}"),
-            OperandKind::Uimm(imm) if self.is_att() => write!(fmt, "${imm:#x}"),
-            _ => self.print_operand_default(fmt, disasm, info, insn, operand),
+            OperandKind::Imm(imm) if self.is_att() => {
+                ext.print_immediate(fmt, FormatterFn(|fmt| write!(fmt, "${imm}")))
+            }
+            OperandKind::Uimm(imm) if self.is_att() => {
+                ext.print_immediate(fmt, FormatterFn(|fmt| write!(fmt, "${imm:#x}")))
+            }
+            _ => self.print_operand_default(fmt, ext, insn, operand),
         }
     }
 
@@ -683,6 +706,9 @@ impl crate::printer::Printer for Printer {
     }
 }
 
-pub fn printer(opts: crate::Options, opts_arch: super::Options) -> Box<dyn crate::Printer> {
+pub fn printer<E: PrinterExt>(
+    opts: &crate::Options,
+    opts_arch: &super::Options,
+) -> Box<dyn ArchPrinter<E>> {
     Box::new(Printer::new(opts, opts_arch))
 }

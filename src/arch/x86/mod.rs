@@ -6,8 +6,8 @@ mod printer;
 use core::ops::{Deref, DerefMut};
 
 use crate::{
-    bytes::Bytes, flags::Field, utils::zextract, Access, Bundle, Error, Insn, Operand, OperandKind,
-    Reg, RegClass,
+    bytes::Bytes, flags::Field, utils::zextract, Access, ArchDecoder, Bundle, Error, Insn, Operand,
+    OperandKind, Reg, RegClass,
 };
 
 use self::generated::*;
@@ -16,7 +16,6 @@ pub use self::generated::opcode;
 
 const GPR_MASK: u64 = 15;
 
-const INSN_MIN: usize = 1;
 const INSN_MAX: usize = 15;
 
 #[cfg(feature = "print")]
@@ -3093,7 +3092,7 @@ impl Decoder {
     }
 }
 
-impl super::Decoder for Decoder {
+impl ArchDecoder for Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error> {
         Inner {
             opts: &self.opts,
@@ -3103,20 +3102,6 @@ impl super::Decoder for Decoder {
             state: State::default(),
         }
         .decode(out)
-    }
-
-    fn insn_size_min(&self) -> u16 {
-        INSN_MIN as u16
-    }
-
-    fn insn_size_max(&self) -> u16 {
-        INSN_MAX as u16
-    }
-
-    #[cfg(feature = "mnemonic")]
-    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
-        let m = self::opcode::mnemonic(insn.opcode())?;
-        Some((m, ""))
     }
 }
 
@@ -3134,6 +3119,12 @@ fn sign_extend(value: u64, from: usize, to: usize) -> u64 {
     ((((value << shift) as i64) >> shift) as u64) & (!0 >> (64 - to))
 }
 
-pub(crate) fn decoder(opts: crate::Options, opts_arch: Options) -> Box<dyn crate::Decoder> {
+#[cfg(feature = "mnemonic")]
+fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
+    let m = self::opcode::mnemonic(insn.opcode())?;
+    Some((m, ""))
+}
+
+pub(crate) fn decoder(opts: crate::Options, opts_arch: Options) -> Box<dyn crate::ArchDecoder> {
     Box::new(Decoder::new(opts, opts_arch))
 }

@@ -68,7 +68,7 @@ impl fmt::Display for Escape<'_> {
 #[rustfmt::skip]
 fn diff(file: &str, left: &str, right: &str) {
     use diff::Result as E;
-    let w = std::cmp::max(left.lines().count(), right.lines().count()).ilog10() as usize + 2;
+    let w = 5;
     eprintln!("{:w$}--> {file}", ' ');
     let mut ln = 1;
     for diff in diff::lines(left, right) {

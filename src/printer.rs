@@ -1,8 +1,12 @@
-use core::fmt::{self, Write};
+use std::{
+    borrow::Cow,
+    fmt::{self, Write as _},
+    io::{self, Write},
+    ops::{Deref, DerefMut},
+    string::FromUtf8Error,
+};
 
-use alloc::borrow::Cow;
-
-use crate::{Disasm, Insn, Operand, OperandKind, Reg};
+use crate::{Arch, Bundle, Decoder, Error, Insn, Operand, OperandKind, Reg};
 
 pub struct FormatterFn<F>(pub F)
 where
@@ -36,7 +40,9 @@ impl Separator {
     }
 }
 
-pub trait Printer {
+pub trait ArchPrinter<E: PrinterExt> {
+    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)>;
+
     fn register_name(&self, reg: Reg) -> Cow<'static, str>;
 
     fn insn_separator(&self) -> Separator {
@@ -50,18 +56,22 @@ pub trait Printer {
     fn print_mnemonic(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
+        ext: &E,
         insn: &Insn,
         separator: bool,
     ) -> fmt::Result {
-        let (mnemonic, sub) = insn.mnemonic(disasm).unwrap_or(("<invalid>", ""));
-        fmt.write_str(mnemonic)?;
+        let (mnemonic, sub) = self.mnemonic(insn).unwrap_or(("<invalid>", ""));
+        ext.print_mnemonic(fmt, mnemonic)?;
         let mut len = mnemonic.len();
         if !sub.is_empty() {
-            fmt.write_char('.')?;
-            len += 1;
-            fmt.write_str(sub)?;
-            len += sub.len();
+            ext.print_sub_mnemonic(
+                fmt,
+                FormatterFn(|fmt| {
+                    fmt.write_char('.')?;
+                    fmt.write_str(sub)
+                }),
+            )?;
+            len += sub.len() + 1;
         }
         if separator && !insn.operands().is_empty() {
             self.insn_separator().print(fmt, len)?;
@@ -69,17 +79,14 @@ pub trait Printer {
         Ok(())
     }
 
-    fn print_symbol(
-        &self,
-        fmt: &mut fmt::Formatter,
-        info: &dyn PrinterInfo,
-        addr: u64,
-    ) -> fmt::Result {
-        if let Some((sym_addr, sym_name)) = info.get_symbol(addr) {
-            write!(fmt, " <{sym_name}")?;
+    fn print_symbol(&self, fmt: &mut fmt::Formatter, ext: &E, addr: u64) -> fmt::Result {
+        if let Some((sym_addr, sym_name)) = ext.get_symbol(addr) {
+            fmt.write_str(" <")?;
+            ext.print_symbol(fmt, sym_name)?;
             let diff = addr - sym_addr;
             if diff != 0 {
-                write!(fmt, "+{diff:#x}")?;
+                fmt.write_char('+')?;
+                ext.print_address_offset(fmt, FormatterFn(|fmt| write!(fmt, "{diff:#x}")))?;
             }
             fmt.write_char('>')?;
         }
@@ -89,53 +96,69 @@ pub trait Printer {
     fn print_operand_default(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
-        _insn: &Insn,
+        ext: &E,
+        _: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
         match operand.kind() {
             OperandKind::Reg(reg) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                fmt.write_str(&reg_name)?;
+                let reg_name = self.register_name(*reg);
+                ext.print_register(fmt, reg_name)?;
             }
             OperandKind::Imm(imm) => {
-                write!(fmt, "{imm}")?;
+                ext.print_immediate(fmt, imm)?;
             }
             OperandKind::Uimm(imm) => {
-                write!(fmt, "{imm:#x}")?;
+                ext.print_immediate(fmt, FormatterFn(|fmt| write!(fmt, "{imm:#x}")))?;
             }
             OperandKind::Indirect(reg) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                write!(fmt, "({reg_name})")?;
+                fmt.write_char('(')?;
+                ext.print_register(fmt, self.register_name(*reg))?;
+                fmt.write_char(')')?;
             }
             OperandKind::Relative(reg, offset) => {
-                let reg_name = disasm.printer.register_name(*reg);
-                write!(fmt, "{offset}({reg_name})")?;
+                ext.print_address_offset(fmt, offset)?;
+                fmt.write_char('(')?;
+                ext.print_register(fmt, self.register_name(*reg))?;
+                fmt.write_char(')')?;
             }
             OperandKind::Indexed(base, index) => {
-                let base = disasm.printer.register_name(*base);
-                let index = disasm.printer.register_name(*index);
-                write!(fmt, "({base},{index})")?;
+                fmt.write_char('(')?;
+                ext.print_register(fmt, self.register_name(*base))?;
+                fmt.write_char(',')?;
+                ext.print_register(fmt, self.register_name(*index))?;
+                fmt.write_char(')')?;
             }
             OperandKind::IndexedRelative(base, index, offset) => {
-                let base = disasm.printer.register_name(*base);
-                let index = disasm.printer.register_name(*index);
-                write!(fmt, "{offset:#x}({base},{index})")?;
+                ext.print_address_offset(fmt, FormatterFn(|fmt| write!(fmt, "{offset:#x}")))?;
+                fmt.write_char('(')?;
+                ext.print_register(fmt, self.register_name(*base))?;
+                fmt.write_char(',')?;
+                ext.print_register(fmt, self.register_name(*index))?;
+                fmt.write_char(')')?;
             }
             OperandKind::ScaledIndex(base, index, scale) => {
-                let base = disasm.printer.register_name(*base);
-                let index = disasm.printer.register_name(*index);
-                write!(fmt, "({base},{index},{scale})")?;
+                fmt.write_char('(')?;
+                ext.print_register(fmt, self.register_name(*base))?;
+                fmt.write_char(',')?;
+                ext.print_register(fmt, self.register_name(*index))?;
+                fmt.write_char(',')?;
+                ext.print_immediate(fmt, scale)?;
+                fmt.write_char(')')?;
             }
             OperandKind::ScaledIndexRelative(base, index, scale, offset) => {
-                let base = disasm.printer.register_name(*base);
-                let index = disasm.printer.register_name(*index);
-                write!(fmt, "{offset:#x}({base},{index},{scale})")?;
+                ext.print_address_offset(fmt, FormatterFn(|fmt| write!(fmt, "{offset:#x}")))?;
+                fmt.write_char('(')?;
+                ext.print_register(fmt, self.register_name(*base))?;
+                fmt.write_char(',')?;
+                ext.print_register(fmt, self.register_name(*index))?;
+                fmt.write_char(',')?;
+                ext.print_immediate(fmt, scale)?;
+                fmt.write_char(')')?;
             }
             OperandKind::Absolute(addr) => {
-                write!(fmt, "{addr:x}")?;
-                self.print_symbol(fmt, info, *addr)?;
+                ext.print_address(fmt, FormatterFn(|fmt| write!(fmt, "{addr:x}")))?;
+                self.print_symbol(fmt, ext, *addr)?;
             }
             OperandKind::PcRelative(_) => {
                 todo!()
@@ -152,15 +175,14 @@ pub trait Printer {
     fn print_operand(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
+        ext: &E,
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
-        self.print_operand_default(fmt, disasm, info, insn, operand)
+        self.print_operand_default(fmt, ext, insn, operand)
     }
 
-    fn need_operand_separator(&self, i: usize, _operand: &Operand) -> bool {
+    fn need_operand_separator(&self, i: usize, _: &Operand) -> bool {
         i != 0
     }
 
@@ -171,8 +193,7 @@ pub trait Printer {
     fn print_operands_default(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
+        ext: &E,
         insn: &Insn,
     ) -> fmt::Result {
         let operands = insn.operands().iter().filter(|i| i.is_printable());
@@ -180,7 +201,7 @@ pub trait Printer {
             if self.need_operand_separator(i, operand) {
                 self.operand_separator().print(fmt, 0)?;
             }
-            self.print_operand(fmt, disasm, info, insn, operand)
+            self.print_operand(fmt, ext, insn, operand)
         };
         if self.reverse_operands() {
             for (i, operand) in operands.rev().enumerate() {
@@ -194,37 +215,99 @@ pub trait Printer {
         Ok(())
     }
 
-    fn print_operands(
-        &self,
-        fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
-        insn: &Insn,
-    ) -> fmt::Result {
-        self.print_operands_default(fmt, disasm, info, insn)
+    fn print_operands(&self, fmt: &mut fmt::Formatter, ext: &E, insn: &Insn) -> fmt::Result {
+        self.print_operands_default(fmt, ext, insn)
     }
 
-    fn print_insn(
-        &self,
-        fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
-        insn: &Insn,
-    ) -> fmt::Result {
-        self.print_mnemonic(fmt, disasm, insn, true)?;
-        self.print_operands(fmt, disasm, info, insn)
+    fn print_insn(&self, fmt: &mut fmt::Formatter, ext: &E, insn: &Insn) -> fmt::Result {
+        self.print_mnemonic(fmt, ext, insn, true)?;
+        self.print_operands(fmt, ext, insn)
     }
 }
 
-pub trait PrinterInfo {
+pub enum Style {
+    Slot,
+    Mnemonic,
+    SubMnemonic,
+    Register,
+    Immediate,
+    Address,
+    AddressOffset,
+    Symbol,
+    Comment,
+    AssemblerDirective,
+}
+
+pub trait PrinterExt {
     /// Get symbol with address less then or equal to `address`.
     fn get_symbol(&self, address: u64) -> Option<(u64, &str)>;
 
     /// Get symbol with address greater then `address`.
     fn get_symbol_after(&self, address: u64) -> Option<(u64, &str)>;
+
+    fn print_styled(
+        &self,
+        fmt: &mut fmt::Formatter,
+        #[allow(unused_variables)] style: Style,
+        display: impl fmt::Display,
+    ) -> fmt::Result {
+        display.fmt(fmt)
+    }
+
+    fn print_slot(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Slot, display)
+    }
+
+    fn print_mnemonic(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Mnemonic, display)
+    }
+
+    fn print_sub_mnemonic(
+        &self,
+        fmt: &mut fmt::Formatter,
+        display: impl fmt::Display,
+    ) -> fmt::Result {
+        self.print_styled(fmt, Style::SubMnemonic, display)
+    }
+
+    fn print_register(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Register, display)
+    }
+
+    fn print_immediate(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Immediate, display)
+    }
+
+    fn print_address(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Address, display)
+    }
+
+    fn print_address_offset(
+        &self,
+        fmt: &mut fmt::Formatter,
+        display: impl fmt::Display,
+    ) -> fmt::Result {
+        self.print_styled(fmt, Style::AddressOffset, display)
+    }
+
+    fn print_symbol(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Symbol, display)
+    }
+
+    fn print_comment(&self, fmt: &mut fmt::Formatter, display: impl fmt::Display) -> fmt::Result {
+        self.print_styled(fmt, Style::Comment, display)
+    }
+
+    fn print_assembler_directive(
+        &self,
+        fmt: &mut fmt::Formatter,
+        display: impl fmt::Display,
+    ) -> fmt::Result {
+        self.print_styled(fmt, Style::AssemblerDirective, display)
+    }
 }
 
-impl PrinterInfo for () {
+impl PrinterExt for () {
     fn get_symbol(&self, _: u64) -> Option<(u64, &str)> {
         None
     }
@@ -234,7 +317,7 @@ impl PrinterInfo for () {
     }
 }
 
-impl<'a, T: PrinterInfo> PrinterInfo for &'a T {
+impl<'a, T: PrinterExt> PrinterExt for &'a T {
     fn get_symbol(&self, address: u64) -> Option<(u64, &str)> {
         (*self).get_symbol(address)
     }
@@ -273,7 +356,7 @@ pub struct SymbolsInfo<'a> {
     list: &'a [(u64, String)],
 }
 
-impl PrinterInfo for SymbolsInfo<'_> {
+impl PrinterExt for SymbolsInfo<'_> {
     fn get_symbol(&self, address: u64) -> Option<(u64, &str)> {
         let index = match self.list.binary_search_by_key(&address, |(addr, _)| *addr) {
             Ok(index) => index,
@@ -294,5 +377,239 @@ impl PrinterInfo for SymbolsInfo<'_> {
             Err(index) => self.list.get(index),
         };
         symbol.map(|(addr, name)| (*addr, name.as_str()))
+    }
+}
+
+pub struct Printer<E: PrinterExt = ()> {
+    decoder: Decoder,
+    bundle: Bundle,
+    printer: Box<dyn ArchPrinter<E>>,
+    ext: E,
+    section_name: Box<str>,
+}
+
+impl<E: PrinterExt> Printer<E> {
+    pub(crate) fn new(decoder: Decoder, ext: E, section_name: &str) -> Self {
+        use crate::arch::*;
+
+        let opts = &decoder.opts;
+        let printer = match &decoder.arch {
+            #[cfg(feature = "riscv")]
+            Arch::Riscv(arch_opts) => riscv::printer(opts, arch_opts),
+            #[cfg(feature = "x86")]
+            Arch::X86(arch_opts) => x86::printer(opts, arch_opts),
+        };
+
+        Self {
+            decoder,
+            bundle: Bundle::empty(),
+            printer,
+            ext,
+            section_name: section_name.to_owned().into_boxed_str(),
+        }
+    }
+
+    pub(crate) fn inner(&self) -> &dyn ArchPrinter<E> {
+        self.printer.as_ref()
+    }
+
+    pub(crate) fn ext(&self) -> &E {
+        &self.ext
+    }
+
+    fn print_impl<W: Write>(
+        &mut self,
+        out: &mut W,
+        data: &[u8],
+        first: bool,
+        has_more: bool,
+    ) -> io::Result<(usize, usize)> {
+        let address = self.address();
+        let mut next_symbol = self.ext.get_symbol_after(address);
+        let mut first_symbol = match self.ext.get_symbol(address) {
+            Some((addr, name)) if address == addr => Some((name, 0)),
+            _ if first => match next_symbol {
+                Some((addr, name)) => Some((name, addr - address)),
+                _ => Some((self.section_name.as_ref(), 0)),
+            },
+            _ => None,
+        };
+
+        let width = self.arch.addr_size() / 4;
+        let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<()> {
+            if let Some((name, offset)) = first_symbol.take() {
+                if offset != 0 {
+                    writeln!(out, "\n{address:0width$x} <{name}-{offset:#x}>:")?;
+                } else {
+                    writeln!(out, "\n{address:0width$x} <{name}>:")?;
+                }
+            } else if let Some((addr, name)) = *next_symbol {
+                if addr == address {
+                    writeln!(out, "\n{address:0width$x} <{name}>:")?;
+                    *next_symbol = self.ext.get_symbol_after(address);
+                }
+            }
+            Ok(())
+        };
+
+        let bytes_per_line = self.arch.bytes_per_line();
+        let min_len = self.arch.insn_size_min();
+        let skip_zeroes = self.arch.skip_zeroes();
+
+        let mut cur = data;
+        while has_more || cur.len() >= min_len {
+            let address = self.address();
+
+            let zeroes = if self.opts.decode_zeroes {
+                // do not skip zeroes
+                None
+            } else if has_more {
+                let offset = data.len() - cur.len();
+                if cur.len() < skip_zeroes {
+                    return Ok((offset, skip_zeroes));
+                }
+                if cur.iter().take(skip_zeroes).all(|i| *i == 0) {
+                    let len = self
+                        .ext
+                        .get_symbol_after(address)
+                        .map(|(addr, _)| (addr - address) as usize)
+                        .unwrap_or(cur.len());
+                    match cur.iter().take(len).position(|i| *i != 0) {
+                        Some(i) => Some((len, i)),
+                        None => return Ok((offset, len + 1)),
+                    }
+                } else {
+                    None
+                }
+            } else if cur.len() >= skip_zeroes && cur.iter().take(skip_zeroes).all(|i| *i == 0) {
+                let len = self
+                    .ext
+                    .get_symbol_after(address)
+                    .map(|(addr, _)| (addr - address) as usize)
+                    .unwrap_or(cur.len());
+                let zeroes = cur.iter().take(len).position(|i| *i != 0).unwrap_or(len);
+                Some((len, zeroes))
+            } else {
+                None
+            };
+
+            if let Some((len, zeroes)) = zeroes {
+                if (len != 0 && zeroes == len) || zeroes >= (skip_zeroes * 2 - 1) {
+                    print_symbol(out, address, &mut next_symbol)?;
+                    writeln!(out, "\t...")?;
+                    let skip = zeroes & !(skip_zeroes - 1);
+                    self.decoder.skip(skip as u64);
+                    cur = &cur[skip..];
+                    continue;
+                }
+            }
+
+            let (len, is_ok, mut err_msg) = match self.decoder.decode(cur, &mut self.bundle) {
+                Ok(len) => (len, true, None),
+                Err(err) => {
+                    let len = match err {
+                        Error::More(bits) if has_more => {
+                            let offset = data.len() - cur.len();
+                            return Ok((offset, (bits + 7) / 8));
+                        }
+                        Error::More(_) => cur.len(),
+                        Error::Failed(len) => len,
+                    };
+                    (len, false, Some("failed to decode"))
+                }
+            };
+
+            print_symbol(out, address, &mut next_symbol)?;
+
+            // TODO: address width based on end address?
+            let addr_width = if address >= 0x1000 { 8 } else { 4 };
+            let bytes_per_chunk = self.arch.bytes_per_chunk(len);
+            let mut insns = self.bundle.iter();
+            let mut chunks = cur[..len].chunks(bytes_per_chunk);
+            let mut l = 0;
+            loop {
+                let insn = if is_ok { insns.next() } else { None };
+                if l >= len && insn.is_none() {
+                    break;
+                }
+                write!(out, "{:addr_width$x}:\t", address + l as u64)?;
+
+                let mut p = 0;
+                let mut c = 0;
+                if l < len {
+                    for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
+                        c += 1;
+                        if let Some(chunk) = chunks.next() {
+                            for i in chunk.iter().rev() {
+                                write!(out, "{i:02x}")?;
+                            }
+                            out.write_all(b" ")?;
+                            p += chunk.len();
+                            l += chunk.len();
+                            c -= 1;
+                        }
+                    }
+                }
+
+                let width = (bytes_per_line - p) * 2 + c;
+
+                if let Some(insn) = insn {
+                    write!(out, "{:width$}\t{}", "", insn.printer(self))?;
+                }
+
+                if let Some(err) = err_msg.take() {
+                    write!(out, "{:width$}\t{err}", "")?;
+                }
+
+                writeln!(out)?;
+            }
+            cur = &cur[len..];
+        }
+
+        Ok((data.len() - cur.len(), 0))
+    }
+
+    pub fn print<W>(&mut self, out: &mut W, data: &[u8], first: bool) -> io::Result<()>
+    where
+        W: Write,
+    {
+        self.print_impl(out, data, first, false).map(|_| ())
+    }
+
+    pub fn print_streaming<W>(
+        &mut self,
+        out: &mut W,
+        data: &[u8],
+        first: bool,
+    ) -> Result<(usize, usize), io::Error>
+    where
+        W: Write,
+    {
+        self.print_impl(out, data, first, true)
+    }
+
+    pub fn print_to_vec(&mut self, data: &[u8], first: bool) -> Vec<u8> {
+        use std::io::Cursor;
+        let mut cur = Cursor::default();
+        self.print(&mut cur, data, first).unwrap();
+        cur.into_inner()
+    }
+
+    pub fn print_to_string(&mut self, data: &[u8], first: bool) -> Result<String, FromUtf8Error> {
+        String::from_utf8(self.print_to_vec(data, first))
+    }
+}
+
+impl<E: PrinterExt> Deref for Printer<E> {
+    type Target = Decoder;
+
+    fn deref(&self) -> &Self::Target {
+        &self.decoder
+    }
+}
+
+impl<E: PrinterExt> DerefMut for Printer<E> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.decoder
     }
 }

@@ -44,14 +44,13 @@ test!(zicsr, "riscv/zicsr.test", false);
 mod print {
     use std::io::Cursor;
 
-    use disasm::{arch::riscv, Arch, Disasm, Options, PrintError};
+    use disasm::{arch::riscv, Arch, Decoder, Options};
 
     use crate::common::{test::Parser, utils::check};
 
     fn run_test(expect: &str) -> Result<(), String> {
         let section_name = ".text";
         let (address, data, mut symbols) = Parser::parse_all(expect)?;
-        let info = symbols.as_info();
         let arch = Arch::Riscv(riscv::Options {
             xlen: riscv::Xlen::X64,
             ext: riscv::Extensions::all(),
@@ -60,13 +59,13 @@ mod print {
             alias: true,
             ..Options::default()
         };
-        let mut dis = Disasm::new(arch, address, opts);
-        let result = dis
-            .print_to_string(&data, section_name, &info, true)
+        let result = Decoder::new(arch, address, opts)
+            .printer(symbols.as_info(), section_name)
+            .print_to_string(&data, true)
             .unwrap();
         let res_complete = check("complete", expect, &result);
 
-        let mut dis = Disasm::new(arch, address, opts);
+        let mut dis = Decoder::new(arch, address, opts).printer(symbols.as_info(), section_name);
         let mut cur = Cursor::new(Vec::new());
         let mut offset = 0;
         let mut len = 0;
@@ -74,13 +73,11 @@ mod print {
 
         // print body
         while len < data.len() {
-            match dis.print_streaming(&mut cur, &data[offset..len], section_name, &info, first) {
-                Err(PrintError::More(done, more)) => {
+            match dis.print_streaming(&mut cur, &data[offset..len], first) {
+                Ok((done, more)) => {
                     offset += done;
                     len += more;
                 }
-                // TODO: make no sense for streaming, needs refactoring...
-                Ok(_) => panic!(),
                 Err(err) => panic!("error: {err}"),
             }
             if first {
@@ -90,8 +87,7 @@ mod print {
 
         // print tail
         if offset < data.len() {
-            dis.print(&mut cur, &data[offset..], section_name, &info, first)
-                .unwrap();
+            dis.print(&mut cur, &data[offset..], first).unwrap();
         }
 
         let result = String::from_utf8(cur.into_inner()).unwrap();

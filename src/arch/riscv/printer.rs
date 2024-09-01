@@ -1,8 +1,8 @@
-use core::fmt;
+use core::fmt::{self, Write};
 
 use alloc::borrow::Cow;
 
-use crate::{Disasm, Insn, Operand, OperandKind, PrinterInfo, Reg, RegClass};
+use crate::{ArchPrinter, Insn, Operand, OperandKind, PrinterExt, Reg, RegClass};
 
 use super::Options;
 
@@ -43,14 +43,18 @@ struct Printer {
 }
 
 impl Printer {
-    fn new(opts: crate::Options, _: Options) -> Self {
+    fn new(opts: &crate::Options, _: &Options) -> Self {
         Self {
             abi_regs: opts.abi_regs,
         }
     }
 }
 
-impl crate::printer::Printer for Printer {
+impl<E: PrinterExt> ArchPrinter<E> for Printer {
+    fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
+        super::mnemonic(insn)
+    }
+
     fn register_name(&self, reg: Reg) -> Cow<'static, str> {
         let index = reg.index() as usize;
         match reg.class() {
@@ -76,8 +80,7 @@ impl crate::printer::Printer for Printer {
     fn print_operand(
         &self,
         fmt: &mut fmt::Formatter,
-        disasm: &Disasm,
-        info: &dyn PrinterInfo,
+        ext: &E,
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
@@ -87,7 +90,7 @@ impl crate::printer::Printer for Printer {
                     let fence = ['w', 'r', 'o', 'i'];
                     for i in (0..4).rev() {
                         if value & (1 << i) != 0 {
-                            write!(fmt, "{}", fence[i])?;
+                            fmt.write_char(fence[i])?;
                         }
                     }
                 }
@@ -107,11 +110,14 @@ impl crate::printer::Printer for Printer {
             }
             Ok(())
         } else {
-            self.print_operand_default(fmt, disasm, info, insn, operand)
+            self.print_operand_default(fmt, ext, insn, operand)
         }
     }
 }
 
-pub fn printer(opts: crate::Options, opts_arch: super::Options) -> Box<dyn crate::Printer> {
+pub fn printer<E: PrinterExt>(
+    opts: &crate::Options,
+    opts_arch: &super::Options,
+) -> Box<dyn ArchPrinter<E>> {
     Box::new(Printer::new(opts, opts_arch))
 }
