@@ -35,11 +35,13 @@ macro_rules! test {
 test!(rv32i, "riscv/rv32i.test", false);
 test!(rv32m, "riscv/rv32m.test", false);
 test!(rv32f, "riscv/rv32f.test", false);
+test!(rv32a, "riscv/rv32a.test", false);
 
 test!(rv64i, "riscv/rv64i.test", false);
 test!(rv64m, "riscv/rv64m.test", false);
 test!(rv64f, "riscv/rv64f.test", false);
 test!(rv64d, "riscv/rv64d.test", false);
+test!(rv64a, "riscv/rv64a.test", false);
 
 test!(zicsr, "riscv/zicsr.test", false);
 

@@ -1,0 +1,19 @@
+# instructions
+        1004252f    lr.w    a0,(s0)
+        18a422af    sc.w    t0,a0,(s0)
+        08a422af    amoswap.w       t0,a0,(s0)
+        00a422af    amoadd.w        t0,a0,(s0)
+        60a422af    amoand.w        t0,a0,(s0)
+        40a422af    amoor.w t0,a0,(s0)
+        a0a422af    amomax.w        t0,a0,(s0)
+        e0a422af    amomaxu.w       t0,a0,(s0)
+        80a422af    amomin.w        t0,a0,(s0)
+        c0a422af    amominu.w       t0,a0,(s0)
+
+# ordering
+        1404252f    lr.w.aq a0,(s0)
+        1204252f    lr.w.rl a0,(s0)
+        1604252f    lr.w.aqrl       a0,(s0)
+        1ca422af    sc.w.aq t0,a0,(s0)
+        1aa422af    sc.w.rl t0,a0,(s0)
+        1ea422af    sc.w.aqrl       t0,a0,(s0)

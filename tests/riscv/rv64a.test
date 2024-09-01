@@ -1,0 +1,19 @@
+# instructions
+        1004352f    lr.d            a0,(s0)
+        18a432af    sc.d            t0,a0,(s0)
+        08a432af    amoswap.d       t0,a0,(s0)
+        00a432af    amoadd.d        t0,a0,(s0)
+        60a432af    amoand.d        t0,a0,(s0)
+        40a432af    amoor.d         t0,a0,(s0)
+        a0a432af    amomax.d        t0,a0,(s0)
+        e0a432af    amomaxu.d       t0,a0,(s0)
+        80a432af    amomin.d        t0,a0,(s0)
+        c0a432af    amominu.d       t0,a0,(s0)
+
+# ordering
+        1404352f    lr.d.aq         a0,(s0)
+        1204352f    lr.d.rl         a0,(s0)
+        1604352f    lr.d.aqrl       a0,(s0)
+        1ca432af    sc.d.aq         t0,a0,(s0)
+        1aa432af    sc.d.rl         t0,a0,(s0)
+        1ea432af    sc.d.aqrl       t0,a0,(s0)
