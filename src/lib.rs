@@ -20,7 +20,10 @@ pub use crate::insn::{Bundle, Insn, Opcode};
 pub use crate::operand::{Access, Operand, OperandKind, Reg, RegClass};
 
 #[cfg(feature = "print")]
-pub use crate::printer::{ArchPrinter, Printer, PrinterExt, Style, Symbols};
+pub use crate::printer::{Printer, PrinterExt, Style, Symbols};
+
+#[cfg(feature = "print")]
+use crate::printer::ArchPrinter;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
