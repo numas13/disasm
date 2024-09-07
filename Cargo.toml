@@ -20,9 +20,11 @@ print = ["std", "mnemonic"]
 mnemonic = []
 
 # architectures
+e2k = []
 riscv = []
 x86 = []
 all-arch = [
+    "e2k",
     "riscv",
     "x86",
 ]

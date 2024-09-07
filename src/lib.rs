@@ -48,6 +48,8 @@ impl std::error::Error for Error {}
 #[non_exhaustive]
 #[derive(Copy, Clone)]
 pub enum Arch {
+    #[cfg(feature = "e2k")]
+    E2K(crate::arch::e2k::Options),
     #[cfg(feature = "riscv")]
     Riscv(crate::arch::riscv::Options),
     #[cfg(feature = "x86")]
@@ -57,6 +59,8 @@ pub enum Arch {
 impl Arch {
     pub fn bytes_per_line(&self) -> usize {
         match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => 8,
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => 8,
             #[cfg(feature = "x86")]
@@ -67,6 +71,8 @@ impl Arch {
     #[allow(unused_variables)]
     pub fn bytes_per_chunk(&self, len: usize) -> usize {
         match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => 4,
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => len,
             #[cfg(feature = "x86")]
@@ -76,6 +82,8 @@ impl Arch {
 
     pub fn skip_zeroes(&self) -> usize {
         match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => 8,
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => 2,
             #[cfg(feature = "x86")]
@@ -85,6 +93,8 @@ impl Arch {
 
     pub fn addr_size(&self) -> usize {
         match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => 64, // TODO:
             #[cfg(feature = "riscv")]
             Arch::Riscv(opts) => match opts.xlen {
                 arch::riscv::Xlen::X32 => 32,
@@ -104,6 +114,8 @@ impl Arch {
 
     pub fn insn_size_min(&self) -> usize {
         match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => 8,
             #[cfg(feature = "riscv")]
             Arch::Riscv(opts) => {
                 if opts.ext.c {
@@ -119,6 +131,8 @@ impl Arch {
 
     pub fn insn_size_max(&self) -> usize {
         match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => 64,
             #[cfg(feature = "riscv")]
             Arch::Riscv(..) => 4,
             #[cfg(feature = "x86")]
@@ -165,6 +179,8 @@ impl Decoder {
         use crate::arch::*;
 
         let decoder = match arch {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(arch_opts) => e2k::decoder(opts, arch_opts),
             #[cfg(feature = "riscv")]
             Arch::Riscv(arch_opts) => riscv::decoder(opts, arch_opts),
             #[cfg(feature = "x86")]

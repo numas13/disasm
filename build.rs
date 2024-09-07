@@ -496,6 +496,17 @@ impl Arch {
 
 fn generate() {
     let arch_list: Vec<Arch> = vec![
+        #[cfg(feature = "e2k")]
+        Arch::new("e2k").value_type("i32").decode(
+            "alop.decode",
+            "generated_decode_alop.rs",
+            DecodeOptions {
+                trait_name: "E2KDecodeAlop",
+                insn_size: &[32 + 16 + 3 + 7],
+                insn_type: "u64",
+                ..DecodeOptions::default()
+            },
+        ),
         #[cfg(feature = "riscv")]
         Arch::new("riscv")
             .value_type("i32")

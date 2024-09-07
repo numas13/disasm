@@ -436,6 +436,8 @@ impl<E: PrinterExt> Printer<E> {
 
         let opts = &decoder.opts;
         let printer = match &decoder.arch {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(arch_opts) => e2k::printer(opts, arch_opts),
             #[cfg(feature = "riscv")]
             Arch::Riscv(arch_opts) => riscv::printer(opts, arch_opts),
             #[cfg(feature = "x86")]
