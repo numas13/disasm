@@ -557,6 +557,10 @@ impl<E: PrinterExt> Printer<E> {
                         Error::More(_) => cur.len(),
                         Error::Failed(len) => len,
                     };
+
+                    // make sure a user will see that failed bytes are handled
+                    self.decoder.skip(len as u64);
+
                     (len, false, Some("failed to decode"))
                 }
             };
