@@ -21,12 +21,33 @@ impl std::ops::Add<u32> for Opcode {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Slot(u16);
+
+impl Default for Slot {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
+impl Slot {
+    pub const NONE: Self = Self::new(0xffff);
+
+    pub(crate) const fn new(id: u16) -> Self {
+        Self(id)
+    }
+
+    pub(crate) const fn raw(&self) -> u16 {
+        self.0
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct Insn {
     opcode: Opcode,
     flags: Flags,
     operands: Vec<Operand>,
-    slot: u16,
+    slot: Slot,
 }
 
 impl Insn {
@@ -34,7 +55,7 @@ impl Insn {
         self.opcode = Opcode(0);
         self.flags = Flags::empty();
         self.operands.clear();
-        self.slot = 0;
+        self.slot = Slot::NONE;
     }
 
     pub(crate) fn flags(&self) -> &Flags {
@@ -53,12 +74,20 @@ impl Insn {
         self.flags.set(INSN_ALIAS);
     }
 
+    pub fn slot(&self) -> Slot {
+        self.slot
+    }
+
+    pub(crate) fn set_slot(&mut self, slot: Slot) {
+        self.slot = slot;
+    }
+
     pub fn opcode(&self) -> Opcode {
         self.opcode
     }
 
     pub(crate) fn set_opcode(&mut self, opcode: Opcode) {
-        self.opcode = opcode
+        self.opcode = opcode;
     }
 
     pub fn operands(&self) -> &[Operand] {
@@ -184,6 +213,20 @@ impl Bundle {
     /// Previous peek was succesfull, advance to next instruction
     pub(crate) fn next(&mut self) {
         self.len += 1;
+    }
+
+    pub(crate) fn push_with<F>(&mut self, opcode: Opcode, mut f: F)
+    where
+        F: FnMut(&mut Insn),
+    {
+        let insn = self.peek();
+        insn.set_opcode(opcode);
+        f(insn);
+        self.next();
+    }
+
+    pub(crate) fn push(&mut self, opcode: Opcode) {
+        self.push_with(opcode, |_| ());
     }
 }
 

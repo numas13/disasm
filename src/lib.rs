@@ -16,7 +16,7 @@ use core::fmt;
 
 use alloc::boxed::Box;
 
-pub use crate::insn::{Bundle, Insn, Opcode};
+pub use crate::insn::{Bundle, Insn, Opcode, Slot};
 pub use crate::operand::{Access, Operand, OperandKind, Reg, RegClass};
 
 #[cfg(feature = "print")]
