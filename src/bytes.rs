@@ -13,6 +13,17 @@ impl<'a> Bytes<'a> {
         Self { data, offset: 0 }
     }
 
+    pub fn truncate(&self, len: usize) -> Option<Bytes<'a>> {
+        if self.len() >= len {
+            Some(Bytes {
+                data: &self.data[..len],
+                offset: self.offset,
+            })
+        } else {
+            None
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.data.len()
     }
