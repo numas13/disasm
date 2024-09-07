@@ -550,9 +550,9 @@ impl<E: PrinterExt> Printer<E> {
                 Ok(len) => (len, true, None),
                 Err(err) => {
                     let len = match err {
-                        Error::More(bits) if has_more => {
+                        Error::More(len) if has_more => {
                             let offset = data.len() - cur.len();
-                            return Ok((offset, (bits + 7) / 8));
+                            return Ok((offset, len));
                         }
                         Error::More(_) => cur.len(),
                         Error::Failed(len) => len,
