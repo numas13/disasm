@@ -194,14 +194,14 @@ impl Decoder {
     pub fn decode(&mut self, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error> {
         match self.decoder.decode(self.address, bytes, out) {
             Ok(bits) => {
-                assert!(bits & 7 == 0);
+                debug_assert!(bits & 7 == 0);
                 let len = bits / 8;
                 self.address += len as u64;
                 Ok(len)
             }
             Err(Error::More(bits)) => Err(Error::More((bits + 7) / 8)),
             Err(Error::Failed(bits)) => {
-                assert!(bits & 7 == 0);
+                debug_assert!(bits & 7 == 0);
                 Err(Error::Failed(bits / 8))
             }
         }
@@ -236,7 +236,7 @@ impl Decoder {
                 Err(Error::Failed(bits)) => bits,
                 Err(Error::More(_)) => break,
             };
-            assert!(bits & 7 == 0);
+            debug_assert!(bits & 7 == 0);
             let len = bits / 8;
             cur = &cur[len..];
             address += len as u64;
