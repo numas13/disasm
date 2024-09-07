@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    cmp,
     fmt::{self, Write as _},
     io::{self, Write},
     ops::{Deref, DerefMut},
@@ -40,6 +41,26 @@ impl Separator {
     }
 }
 
+trait WriteExt: Write {
+    fn write_u8_hex(&mut self, byte: u8) -> io::Result<()> {
+        const MAP: [u8; 16] = *b"0123456789abcdef";
+        let buf = [MAP[(byte >> 4) as usize & 15], MAP[byte as usize & 15]];
+        self.write_all(&buf)
+    }
+
+    fn write_spaces(&mut self, mut width: usize) -> io::Result<()> {
+        while width > 0 {
+            const FILL: [u8; 32] = [b' '; 32];
+            let len = cmp::min(width, FILL.len());
+            self.write_all(&FILL[..len])?;
+            width -= len;
+        }
+        Ok(())
+    }
+}
+
+impl<T: Write> WriteExt for T {}
+
 pub trait ArchPrinter<E: PrinterExt> {
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)>;
 
@@ -49,11 +70,11 @@ pub trait ArchPrinter<E: PrinterExt> {
         Separator::Tab
     }
 
-    fn operand_separator(&self) -> Separator {
+    fn operand_separator(&self, _operand: &Operand) -> Separator {
         Separator::Char(',')
     }
 
-    fn print_mnemonic(
+    fn print_mnemonic_default(
         &self,
         fmt: &mut fmt::Formatter,
         ext: &E,
@@ -77,6 +98,16 @@ pub trait ArchPrinter<E: PrinterExt> {
             self.insn_separator().print(fmt, len)?;
         }
         Ok(())
+    }
+
+    fn print_mnemonic(
+        &self,
+        fmt: &mut fmt::Formatter,
+        ext: &E,
+        insn: &Insn,
+        separator: bool,
+    ) -> fmt::Result {
+        self.print_mnemonic_default(fmt, ext, insn, separator)
     }
 
     fn print_symbol(&self, fmt: &mut fmt::Formatter, ext: &E, addr: u64) -> fmt::Result {
@@ -199,7 +230,7 @@ pub trait ArchPrinter<E: PrinterExt> {
         let operands = insn.operands().iter().filter(|i| i.is_printable());
         let mut print = |i: usize, operand: &Operand| {
             if self.need_operand_separator(i, operand) {
-                self.operand_separator().print(fmt, 0)?;
+                self.operand_separator(operand).print(fmt, 0)?;
             }
             self.print_operand(fmt, ext, insn, operand)
         };
@@ -219,9 +250,20 @@ pub trait ArchPrinter<E: PrinterExt> {
         self.print_operands_default(fmt, ext, insn)
     }
 
+    fn print_insn_start(&self, _fmt: &mut fmt::Formatter, _ext: &E, _insn: &Insn) -> fmt::Result {
+        Ok(())
+    }
+
+    fn print_insn_end(&self, _fmt: &mut fmt::Formatter, _ext: &E, _insn: &Insn) -> fmt::Result {
+        Ok(())
+    }
+
     fn print_insn(&self, fmt: &mut fmt::Formatter, ext: &E, insn: &Insn) -> fmt::Result {
+        self.print_insn_start(fmt, ext, insn)?;
         self.print_mnemonic(fmt, ext, insn, true)?;
-        self.print_operands(fmt, ext, insn)
+        self.print_operands(fmt, ext, insn)?;
+        self.print_insn_end(fmt, ext, insn)?;
+        Ok(())
     }
 }
 
@@ -499,7 +541,7 @@ impl<E: PrinterExt> Printer<E> {
                     writeln!(out, "\t...")?;
                     let skip = zeroes & !(skip_zeroes - 1);
                     self.decoder.skip(skip as u64);
-                    cur = &cur[skip..];
+                    cur = &cur[cmp::min(skip, cur.len())..];
                     continue;
                 }
             }
@@ -532,16 +574,16 @@ impl<E: PrinterExt> Printer<E> {
                 if l >= len && insn.is_none() {
                     break;
                 }
-                write!(out, "{:addr_width$x}:\t", address + l as u64)?;
-
                 let mut p = 0;
                 let mut c = 0;
                 if l < len {
+                    write!(out, "{:addr_width$x}:\t", address + l as u64)?;
+
                     for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
                         c += 1;
                         if let Some(chunk) = chunks.next() {
                             for i in chunk.iter().rev() {
-                                write!(out, "{i:02x}")?;
+                                out.write_u8_hex(*i)?;
                             }
                             out.write_all(b" ")?;
                             p += chunk.len();
@@ -549,19 +591,21 @@ impl<E: PrinterExt> Printer<E> {
                             c -= 1;
                         }
                     }
+                } else {
+                    out.write_spaces(addr_width + 1)?;
+                    out.write_all(b"\t")?;
                 }
 
                 let width = (bytes_per_line - p) * 2 + c;
-
                 if let Some(insn) = insn {
-                    write!(out, "{:width$}\t{}", "", insn.printer(self))?;
+                    out.write_spaces(width)?;
+                    write!(out, "\t{}", insn.printer(self))?;
+                } else if let Some(err) = err_msg.take() {
+                    out.write_spaces(width)?;
+                    write!(out, "\t{err}")?;
                 }
 
-                if let Some(err) = err_msg.take() {
-                    write!(out, "{:width$}\t{err}", "")?;
-                }
-
-                writeln!(out)?;
+                out.write_all(b"\n")?;
             }
             cur = &cur[len..];
         }
