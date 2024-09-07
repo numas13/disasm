@@ -539,9 +539,9 @@ impl<E: PrinterExt> Printer<E> {
                 if (len != 0 && zeroes == len) || zeroes >= (skip_zeroes * 2 - 1) {
                     print_symbol(out, address, &mut next_symbol)?;
                     writeln!(out, "\t...")?;
-                    let skip = zeroes & !(skip_zeroes - 1);
+                    let skip = cmp::min(zeroes & !(skip_zeroes - 1), cur.len());
                     self.decoder.skip(skip as u64);
-                    cur = &cur[cmp::min(skip, cur.len())..];
+                    cur = &cur[skip..];
                     continue;
                 }
             }
