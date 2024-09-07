@@ -1321,8 +1321,11 @@ impl ArchDecoder for Decoder {
             }
             Err(_) => {
                 if bytes.len() >= 16 {
+                    out.clear();
+                    // TODO: decode apb instructions
                     out.push(opcode::APB);
                     out.push(opcode::APB);
+                    self.end(out);
                     Ok(128)
                 } else {
                     Err(Error::Failed(bytes.len() * 8))
@@ -1863,6 +1866,7 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
         opcode::MOVAD => ("movad", mova_sub(insn)),
         opcode::MOVAQ => ("movaq", mova_sub(insn)),
         opcode::MOVAQP => ("movaqp", mova_sub(insn)),
+        opcode::APB => ("apb", ""),
         opcode => (self::opcode::mnemonic(opcode)?, ""),
     })
 }
