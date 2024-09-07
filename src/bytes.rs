@@ -1,3 +1,5 @@
+use core::cmp;
+
 use crate::Error;
 
 pub struct Bytes<'a> {
@@ -41,7 +43,7 @@ impl<'a> Bytes<'a> {
 
     /// Returns a slice up to `max_len` bytes.
     pub fn peek_slice(&self, max_len: usize) -> &'a [u8] {
-        let len = std::cmp::min(max_len, self.remaining());
+        let len = cmp::min(max_len, self.remaining());
         &self.tail()[..len]
     }
 

@@ -16,9 +16,6 @@ use decodetree::{
     Parser, Pattern, ValueKind,
 };
 
-#[cfg(not(any(feature = "riscv", feature = "x86")))]
-compile_error!("enable at least one arch");
-
 #[derive(Debug)]
 enum ErrorKind {
     SourceFile(io::Error),
@@ -498,7 +495,7 @@ impl Arch {
 }
 
 fn generate() {
-    let arch_list = vec![
+    let arch_list: Vec<Arch> = vec![
         #[cfg(feature = "riscv")]
         Arch::new("riscv")
             .value_type("i32")
@@ -559,6 +556,10 @@ fn generate() {
                 },
             ),
     ];
+
+    if arch_list.is_empty() {
+        return;
+    }
 
     let mut failed = false;
     for arch in arch_list {

@@ -1,8 +1,8 @@
 #[cfg(feature = "print")]
 use core::fmt;
-use core::ops::Deref;
+use core::ops::{Add, Deref};
 
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 
 #[cfg(feature = "print")]
 use crate::printer::{FormatterFn, PrinterExt};
@@ -13,7 +13,7 @@ const INSN_ALIAS: u32 = 1 << 0;
 #[derive(Copy, Clone, Default, Debug, PartialEq, Eq)]
 pub struct Opcode(pub(crate) u32);
 
-impl std::ops::Add<u32> for Opcode {
+impl Add<u32> for Opcode {
     type Output = Self;
 
     fn add(self, rhs: u32) -> Self {
@@ -202,7 +202,7 @@ impl Bundle {
     pub(crate) fn peek(&mut self) -> &mut Insn {
         if self.insn.len() <= self.len {
             let mut vec = core::mem::take(&mut self.insn).into_vec();
-            vec.resize(self.len + 1, Insn::default());
+            vec.resize(self.len + 4, Insn::default());
             self.insn = vec.into_boxed_slice();
         }
         let insn = &mut self.insn[self.len];

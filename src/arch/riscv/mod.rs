@@ -2,7 +2,7 @@ mod generated;
 #[cfg(feature = "print")]
 mod printer;
 
-use crate::{bytes::Bytes, ArchDecoder, Bundle, Error, Insn, Operand, Reg, RegClass};
+use crate::{bytes::Bytes, ArchDecoder, Box, Bundle, Error, Insn, Operand, Reg, RegClass};
 
 use self::generated::{RiscvDecode16, RiscvDecode32, SetValue};
 

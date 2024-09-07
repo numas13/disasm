@@ -6,8 +6,8 @@ mod printer;
 use core::ops::{Deref, DerefMut};
 
 use crate::{
-    bytes::Bytes, flags::Field, utils::zextract, Access, ArchDecoder, Bundle, Error, Insn, Operand,
-    OperandKind, Reg, RegClass,
+    bytes::Bytes, flags::Field, utils::zextract, Access, ArchDecoder, Box, Bundle, Error, Insn,
+    Operand, OperandKind, Reg, RegClass,
 };
 
 use self::generated::*;
