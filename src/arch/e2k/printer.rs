@@ -698,7 +698,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
     ) -> fmt::Result {
         let slot = insn.slot();
         let mut print_slot = |first: Slot, name| {
-            ext.print_mnemonic(
+            ext.print_slot(
                 fmt,
                 FormatterFn(|fmt| {
                     let id = slot.raw() - first.raw();
