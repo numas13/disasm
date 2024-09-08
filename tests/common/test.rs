@@ -277,7 +277,7 @@ where
             }
 
             let diff = Diff::new(file, test.line, &test.bytes, &expect, &result);
-            eprint!("{diff}");
+            eprintln!("{diff}");
         }
     }
     if failed == 0 {
