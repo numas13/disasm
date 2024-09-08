@@ -1,0 +1,358 @@
+# global GPRs
+            fc000036 00c0c0e0       alc0    andw    g0, 0, 0
+            00c0c0e1 00c0c0e2       alc1    andw    g1, 0, 0
+            00c0c0e3 00c0c0e4       alc2    andw    g2, 0, 0
+            00c0c0e5 00000000       alc3    andw    g3, 0, 0
+                                    alc4    andw    g4, 0, 0
+                                    alc5    andw    g5, 0, 0
+                                            --
+            fc000036 00c0c0e6       alc0    andw    g6, 0, 0
+            00c0c0e7 00c0c0e8       alc1    andw    g7, 0, 0
+            00c0c0e9 00c0c0ea       alc2    andw    g8, 0, 0
+            00c0c0eb 00000000       alc3    andw    g9, 0, 0
+                                    alc4    andw    g10, 0, 0
+                                    alc5    andw    g11, 0, 0
+                                            --
+            fc000036 00c0c0ec       alc0    andw    g12, 0, 0
+            00c0c0ed 00c0c0ee       alc1    andw    g13, 0, 0
+            00c0c0ef 00c0c0f0       alc2    andw    g14, 0, 0
+            00c0c0f1 00000000       alc3    andw    g15, 0, 0
+                                    alc4    andw    g16, 0, 0
+                                    alc5    andw    g17, 0, 0
+                                            --
+            fc000036 00c0c0f2       alc0    andw    g18, 0, 0
+            00c0c0f3 00c0c0f4       alc1    andw    g19, 0, 0
+            00c0c0f5 00c0c0f6       alc2    andw    g20, 0, 0
+            00c0c0f7 00000000       alc3    andw    g21, 0, 0
+                                    alc4    andw    g22, 0, 0
+                                    alc5    andw    g23, 0, 0
+                                            --
+            fc000036 00c0c0f8       alc0    andw    g24, 0, 0
+            00c0c0f9 00c0c0fa       alc1    andw    g25, 0, 0
+            00c0c0fb 00c0c0fc       alc2    andw    g26, 0, 0
+            00c0c0fd 00000000       alc3    andw    g27, 0, 0
+                                    alc4    andw    g28, 0, 0
+                                    alc5    andw    g29, 0, 0
+                                            --
+            0c000012 00c0c0fe       alc0    andw    g30, 0, 0
+            00c0c0ff 00000000       alc1    andw    g31, 0, 0
+                                            --
+
+# window GPRs
+            fc000036 00c0c080       alc0    andw    r0, 0, 0
+            00c0c081 00c0c082       alc1    andw    r1, 0, 0
+            00c0c083 00c0c084       alc2    andw    r2, 0, 0
+            00c0c085 00000000       alc3    andw    r3, 0, 0
+                                    alc4    andw    r4, 0, 0
+                                    alc5    andw    r5, 0, 0
+                                            --
+            fc000036 00c0c086       alc0    andw    r6, 0, 0
+            00c0c087 00c0c088       alc1    andw    r7, 0, 0
+            00c0c089 00c0c08a       alc2    andw    r8, 0, 0
+            00c0c08b 00000000       alc3    andw    r9, 0, 0
+                                    alc4    andw    r10, 0, 0
+                                    alc5    andw    r11, 0, 0
+                                            --
+            fc000036 00c0c08c       alc0    andw    r12, 0, 0
+            00c0c08d 00c0c08e       alc1    andw    r13, 0, 0
+            00c0c08f 00c0c090       alc2    andw    r14, 0, 0
+            00c0c091 00000000       alc3    andw    r15, 0, 0
+                                    alc4    andw    r16, 0, 0
+                                    alc5    andw    r17, 0, 0
+                                            --
+            fc000036 00c0c092       alc0    andw    r18, 0, 0
+            00c0c093 00c0c094       alc1    andw    r19, 0, 0
+            00c0c095 00c0c096       alc2    andw    r20, 0, 0
+            00c0c097 00000000       alc3    andw    r21, 0, 0
+                                    alc4    andw    r22, 0, 0
+                                    alc5    andw    r23, 0, 0
+                                            --
+            fc000036 00c0c098       alc0    andw    r24, 0, 0
+            00c0c099 00c0c09a       alc1    andw    r25, 0, 0
+            00c0c09b 00c0c09c       alc2    andw    r26, 0, 0
+            00c0c09d 00000000       alc3    andw    r27, 0, 0
+                                    alc4    andw    r28, 0, 0
+                                    alc5    andw    r29, 0, 0
+                                            --
+            fc000036 00c0c09e       alc0    andw    r30, 0, 0
+            00c0c09f 00c0c0a0       alc1    andw    r31, 0, 0
+            00c0c0a1 00c0c0a2       alc2    andw    r32, 0, 0
+            00c0c0a3 00000000       alc3    andw    r33, 0, 0
+                                    alc4    andw    r34, 0, 0
+                                    alc5    andw    r35, 0, 0
+                                            --
+            fc000036 00c0c0a4       alc0    andw    r36, 0, 0
+            00c0c0a5 00c0c0a6       alc1    andw    r37, 0, 0
+            00c0c0a7 00c0c0a8       alc2    andw    r38, 0, 0
+            00c0c0a9 00000000       alc3    andw    r39, 0, 0
+                                    alc4    andw    r40, 0, 0
+                                    alc5    andw    r41, 0, 0
+                                            --
+            fc000036 00c0c0aa       alc0    andw    r42, 0, 0
+            00c0c0ab 00c0c0ac       alc1    andw    r43, 0, 0
+            00c0c0ad 00c0c0ae       alc2    andw    r44, 0, 0
+            00c0c0af 00000000       alc3    andw    r45, 0, 0
+                                    alc4    andw    r46, 0, 0
+                                    alc5    andw    r47, 0, 0
+                                            --
+            fc000036 00c0c0b0       alc0    andw    r48, 0, 0
+            00c0c0b1 00c0c0b2       alc1    andw    r49, 0, 0
+            00c0c0b3 00c0c0b4       alc2    andw    r50, 0, 0
+            00c0c0b5 00000000       alc3    andw    r51, 0, 0
+                                    alc4    andw    r52, 0, 0
+                                    alc5    andw    r53, 0, 0
+                                            --
+            fc000036 00c0c0b6       alc0    andw    r54, 0, 0
+            00c0c0b7 00c0c0b8       alc1    andw    r55, 0, 0
+            00c0c0b9 00c0c0ba       alc2    andw    r56, 0, 0
+            00c0c0bb 00000000       alc3    andw    r57, 0, 0
+                                    alc4    andw    r58, 0, 0
+                                    alc5    andw    r59, 0, 0
+                                            --
+            3c000024 00c0c0bc       alc0    andw    r60, 0, 0
+            00c0c0bd 00c0c0be       alc1    andw    r61, 0, 0
+            00c0c0bf 00000000       alc2    andw    r62, 0, 0
+                                    alc3    andw    r63, 0, 0
+                                            --
+
+# based GPRs
+            fc000036 00c0c000       alc0    andw    b0, 0, 0
+            00c0c001 00c0c002       alc1    andw    b1, 0, 0
+            00c0c003 00c0c004       alc2    andw    b2, 0, 0
+            00c0c005 00000000       alc3    andw    b3, 0, 0
+                                    alc4    andw    b4, 0, 0
+                                    alc5    andw    b5, 0, 0
+                                            --
+            fc000036 00c0c006       alc0    andw    b6, 0, 0
+            00c0c007 00c0c008       alc1    andw    b7, 0, 0
+            00c0c009 00c0c00a       alc2    andw    b8, 0, 0
+            00c0c00b 00000000       alc3    andw    b9, 0, 0
+                                    alc4    andw    b10, 0, 0
+                                    alc5    andw    b11, 0, 0
+                                            --
+            fc000036 00c0c00c       alc0    andw    b12, 0, 0
+            00c0c00d 00c0c00e       alc1    andw    b13, 0, 0
+            00c0c00f 00c0c010       alc2    andw    b14, 0, 0
+            00c0c011 00000000       alc3    andw    b15, 0, 0
+                                    alc4    andw    b16, 0, 0
+                                    alc5    andw    b17, 0, 0
+                                            --
+            fc000036 00c0c012       alc0    andw    b18, 0, 0
+            00c0c013 00c0c014       alc1    andw    b19, 0, 0
+            00c0c015 00c0c016       alc2    andw    b20, 0, 0
+            00c0c017 00000000       alc3    andw    b21, 0, 0
+                                    alc4    andw    b22, 0, 0
+                                    alc5    andw    b23, 0, 0
+                                            --
+            fc000036 00c0c018       alc0    andw    b24, 0, 0
+            00c0c019 00c0c01a       alc1    andw    b25, 0, 0
+            00c0c01b 00c0c01c       alc2    andw    b26, 0, 0
+            00c0c01d 00000000       alc3    andw    b27, 0, 0
+                                    alc4    andw    b28, 0, 0
+                                    alc5    andw    b29, 0, 0
+                                            --
+            fc000036 00c0c01e       alc0    andw    b30, 0, 0
+            00c0c01f 00c0c020       alc1    andw    b31, 0, 0
+            00c0c021 00c0c022       alc2    andw    b32, 0, 0
+            00c0c023 00000000       alc3    andw    b33, 0, 0
+                                    alc4    andw    b34, 0, 0
+                                    alc5    andw    b35, 0, 0
+                                            --
+            fc000036 00c0c024       alc0    andw    b36, 0, 0
+            00c0c025 00c0c026       alc1    andw    b37, 0, 0
+            00c0c027 00c0c028       alc2    andw    b38, 0, 0
+            00c0c029 00000000       alc3    andw    b39, 0, 0
+                                    alc4    andw    b40, 0, 0
+                                    alc5    andw    b41, 0, 0
+                                            --
+            fc000036 00c0c02a       alc0    andw    b42, 0, 0
+            00c0c02b 00c0c02c       alc1    andw    b43, 0, 0
+            00c0c02d 00c0c02e       alc2    andw    b44, 0, 0
+            00c0c02f 00000000       alc3    andw    b45, 0, 0
+                                    alc4    andw    b46, 0, 0
+                                    alc5    andw    b47, 0, 0
+                                            --
+            fc000036 00c0c030       alc0    andw    b48, 0, 0
+            00c0c031 00c0c032       alc1    andw    b49, 0, 0
+            00c0c033 00c0c034       alc2    andw    b50, 0, 0
+            00c0c035 00000000       alc3    andw    b51, 0, 0
+                                    alc4    andw    b52, 0, 0
+                                    alc5    andw    b53, 0, 0
+                                            --
+            fc000036 00c0c036       alc0    andw    b54, 0, 0
+            00c0c037 00c0c038       alc1    andw    b55, 0, 0
+            00c0c039 00c0c03a       alc2    andw    b56, 0, 0
+            00c0c03b 00000000       alc3    andw    b57, 0, 0
+                                    alc4    andw    b58, 0, 0
+                                    alc5    andw    b59, 0, 0
+                                            --
+            fc000036 00c0c03c       alc0    andw    b60, 0, 0
+            00c0c03d 00c0c03e       alc1    andw    b61, 0, 0
+            00c0c03f 00c0c040       alc2    andw    b62, 0, 0
+            00c0c041 00000000       alc3    andw    b63, 0, 0
+                                    alc4    andw    b64, 0, 0
+                                    alc5    andw    b65, 0, 0
+                                            --
+            fc000036 00c0c042       alc0    andw    b66, 0, 0
+            00c0c043 00c0c044       alc1    andw    b67, 0, 0
+            00c0c045 00c0c046       alc2    andw    b68, 0, 0
+            00c0c047 00000000       alc3    andw    b69, 0, 0
+                                    alc4    andw    b70, 0, 0
+                                    alc5    andw    b71, 0, 0
+                                            --
+            fc000036 00c0c048       alc0    andw    b72, 0, 0
+            00c0c049 00c0c04a       alc1    andw    b73, 0, 0
+            00c0c04b 00c0c04c       alc2    andw    b74, 0, 0
+            00c0c04d 00000000       alc3    andw    b75, 0, 0
+                                    alc4    andw    b76, 0, 0
+                                    alc5    andw    b77, 0, 0
+                                            --
+            fc000036 00c0c04e       alc0    andw    b78, 0, 0
+            00c0c04f 00c0c050       alc1    andw    b79, 0, 0
+            00c0c051 00c0c052       alc2    andw    b80, 0, 0
+            00c0c053 00000000       alc3    andw    b81, 0, 0
+                                    alc4    andw    b82, 0, 0
+                                    alc5    andw    b83, 0, 0
+                                            --
+            fc000036 00c0c054       alc0    andw    b84, 0, 0
+            00c0c055 00c0c056       alc1    andw    b85, 0, 0
+            00c0c057 00c0c058       alc2    andw    b86, 0, 0
+            00c0c059 00000000       alc3    andw    b87, 0, 0
+                                    alc4    andw    b88, 0, 0
+                                    alc5    andw    b89, 0, 0
+                                            --
+            fc000036 00c0c05a       alc0    andw    b90, 0, 0
+            00c0c05b 00c0c05c       alc1    andw    b91, 0, 0
+            00c0c05d 00c0c05e       alc2    andw    b92, 0, 0
+            00c0c05f 00000000       alc3    andw    b93, 0, 0
+                                    alc4    andw    b94, 0, 0
+                                    alc5    andw    b95, 0, 0
+                                            --
+            fc000036 00c0c060       alc0    andw    b96, 0, 0
+            00c0c061 00c0c062       alc1    andw    b97, 0, 0
+            00c0c063 00c0c064       alc2    andw    b98, 0, 0
+            00c0c065 00000000       alc3    andw    b99, 0, 0
+                                    alc4    andw    b100, 0, 0
+                                    alc5    andw    b101, 0, 0
+                                            --
+            fc000036 00c0c066       alc0    andw    b102, 0, 0
+            00c0c067 00c0c068       alc1    andw    b103, 0, 0
+            00c0c069 00c0c06a       alc2    andw    b104, 0, 0
+            00c0c06b 00000000       alc3    andw    b105, 0, 0
+                                    alc4    andw    b106, 0, 0
+                                    alc5    andw    b107, 0, 0
+                                            --
+            fc000036 00c0c06c       alc0    andw    b108, 0, 0
+            00c0c06d 00c0c06e       alc1    andw    b109, 0, 0
+            00c0c06f 00c0c070       alc2    andw    b110, 0, 0
+            00c0c071 00000000       alc3    andw    b111, 0, 0
+                                    alc4    andw    b112, 0, 0
+                                    alc5    andw    b113, 0, 0
+                                            --
+            fc000036 00c0c072       alc0    andw    b114, 0, 0
+            00c0c073 00c0c074       alc1    andw    b115, 0, 0
+            00c0c075 00c0c076       alc2    andw    b116, 0, 0
+            00c0c077 00000000       alc3    andw    b117, 0, 0
+                                    alc4    andw    b118, 0, 0
+                                    alc5    andw    b119, 0, 0
+                                            --
+            fc000036 00c0c078       alc0    andw    b120, 0, 0
+            00c0c079 00c0c07a       alc1    andw    b121, 0, 0
+            00c0c07b 00c0c07c       alc2    andw    b122, 0, 0
+            00c0c07d 00000000       alc3    andw    b123, 0, 0
+                                    alc4    andw    b124, 0, 0
+                                    alc5    andw    b125, 0, 0
+                                            --
+            0c000012 00c0c07e       alc0    andw    b126, 0, 0
+            00c0c07f 00000000       alc1    andw    b127, 0, 0
+                                            --
+
+# predicate registers
+            6c000024 21c0c040       alc0    cmpedb  p0, 0, 0
+            21c0c041 21c0c042       alc1    cmpedb  p1, 0, 0
+            21c0c043 00000000       alc3    cmpedb  p2, 0, 0
+                                    alc4    cmpedb  p3, 0, 0
+                                            --
+            6c000024 21c0c044       alc0    cmpedb  p4, 0, 0
+            21c0c045 21c0c046       alc1    cmpedb  p5, 0, 0
+            21c0c047 00000000       alc3    cmpedb  p6, 0, 0
+                                    alc4    cmpedb  p7, 0, 0
+                                            --
+            6c000024 21c0c048       alc0    cmpedb  p8, 0, 0
+            21c0c049 21c0c04a       alc1    cmpedb  p9, 0, 0
+            21c0c04b 00000000       alc3    cmpedb  p10, 0, 0
+                                    alc4    cmpedb  p11, 0, 0
+                                            --
+            6c000024 21c0c04c       alc0    cmpedb  p12, 0, 0
+            21c0c04d 21c0c04e       alc1    cmpedb  p13, 0, 0
+            21c0c04f 00000000       alc3    cmpedb  p14, 0, 0
+                                    alc4    cmpedb  p15, 0, 0
+                                            --
+            6c000024 21c0c050       alc0    cmpedb  p16, 0, 0
+            21c0c051 21c0c052       alc1    cmpedb  p17, 0, 0
+            21c0c053 00000000       alc3    cmpedb  p18, 0, 0
+                                    alc4    cmpedb  p19, 0, 0
+                                            --
+            6c000024 21c0c054       alc0    cmpedb  p20, 0, 0
+            21c0c055 21c0c056       alc1    cmpedb  p21, 0, 0
+            21c0c057 00000000       alc3    cmpedb  p22, 0, 0
+                                    alc4    cmpedb  p23, 0, 0
+                                            --
+            6c000024 21c0c058       alc0    cmpedb  p24, 0, 0
+            21c0c059 21c0c05a       alc1    cmpedb  p25, 0, 0
+            21c0c05b 00000000       alc3    cmpedb  p26, 0, 0
+                                    alc4    cmpedb  p27, 0, 0
+                                            --
+            6c000024 21c0c05c       alc0    cmpedb  p28, 0, 0
+            21c0c05d 21c0c05e       alc1    cmpedb  p29, 0, 0
+            21c0c05f 00000000       alc3    cmpedb  p30, 0, 0
+                                    alc4    cmpedb  p31, 0, 0
+                                            --
+
+# CTPRs
+            04000001 61c0c0d1       alc0    movtd   ctpr1, 0
+                                            --
+            04000001 61c0c0d2       alc0    movtd   ctpr2, 0
+                                            --
+            04000001 61c0c0d3       alc0    movtd   ctpr3, 0
+                                            --
+
+# prologue predicates
+            fc030046 00c0c0df       alc0    andw    _, 0, 0 ? pcnt0
+            00c0c0df 00c0c0df       alc1    andw    _, 0, 0 ? pcnt1
+            00c0c0df 00c0c0df       alc2    andw    _, 0, 0 ? pcnt2
+            00c0c0df 48445045       alc3    andw    _, 0, 0 ? pcnt3
+            10424443 04400841       alc4    andw    _, 0, 0 ? pcnt4
+                                    alc5    andw    _, 0, 0 ? pcnt5
+                                            --
+            fc030046 00c0c0df       alc0    andw    _, 0, 0 ? pcnt6
+            00c0c0df 00c0c0df       alc1    andw    _, 0, 0 ? pcnt7
+            00c0c0df 00c0c0df       alc2    andw    _, 0, 0 ? pcnt8
+            00c0c0df 484a504b       alc3    andw    _, 0, 0 ? pcnt9
+            10484449 04460847       alc4    andw    _, 0, 0 ? pcnt10
+                                    alc5    andw    _, 0, 0 ? pcnt11
+                                            --
+            fc030046 00c0c0df       alc0    andw    _, 0, 0 ? pcnt12
+            00c0c0df 00c0c0df       alc1    andw    _, 0, 0 ? pcnt13
+            00c0c0df 00c0c0df       alc2    andw    _, 0, 0 ? pcnt14
+            00c0c0df 48505051       alc3    andw    _, 0, 0 ? pcnt15
+            104e444f 044c084d       alc4    andw    _, 0, 0 ? pcnt16
+                                    alc5    andw    _, 0, 0 ? pcnt17
+                                            --
+            fc030046 00c0c0df       alc0    andw    _, 0, 0 ? pcnt18
+            00c0c0df 00c0c0df       alc1    andw    _, 0, 0 ? pcnt19
+            00c0c0df 00c0c0df       alc2    andw    _, 0, 0 ? pcnt20
+            00c0c0df 48565057       alc3    andw    _, 0, 0 ? pcnt21
+            10544455 04520853       alc4    andw    _, 0, 0 ? pcnt22
+                                    alc5    andw    _, 0, 0 ? pcnt23
+                                            --
+            fc030046 00c0c0df       alc0    andw    _, 0, 0 ? pcnt24
+            00c0c0df 00c0c0df       alc1    andw    _, 0, 0 ? pcnt25
+            00c0c0df 00c0c0df       alc2    andw    _, 0, 0 ? pcnt26
+            00c0c0df 485c505d       alc3    andw    _, 0, 0 ? pcnt27
+            105a445b 04580859       alc4    andw    _, 0, 0 ? pcnt28
+                                    alc5    andw    _, 0, 0 ? pcnt29
+                                            --
+            0c010012 00c0c0df       alc0    andw    _, 0, 0 ? pcnt30
+            00c0c0df 045e085f       alc1    andw    _, 0, 0 ? pcnt31
+                                            --

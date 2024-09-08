@@ -727,8 +727,8 @@ impl UnpackedBundle {
         if isa >= 4 && cur.offset() + if hs.has_cs(1) { 8 } else { 4 } == offset_half {
             // ALES2 and ALES5 become a real half-syllables only in elbrus-v4. The encoding
             // differs from other half-syllables for backward compatibility.
-            for i in [5, 2] {
-                let tmp = cur.read_half_if(true)?.map(Ales);
+            for i in [2, 5] {
+                let tmp = Some(cur.read_half().map(Ales)?);
                 if hs.has_ales(i) {
                     ales[i] = tmp;
                 }
