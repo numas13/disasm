@@ -29,3 +29,19 @@
             08048404 0cf00cf1       alc3    fmul_adds       b3, b3, r3, g19
             0cf30cf4 00000000       alc4    fmul_adds       b4, b4, r4, g20
                                             --
+            6c000044 10c0c000       alc0    movw            b0, 0
+            10c0d401 10c0db02       alc1    movw            b1, 0x7fff
+            10c0de03 00000000       alc3    movw            b2, 0x7fffffff
+            7fffffff ffffffff       alc4    movw            b3, 0x7fffffffffffffff
+            00000000 7fff0000               --
+            0c000012 10c08000       alc0    movw            b0, r0
+            1080c001 00000000       alc1    movw            b1, r0
+                                            --
+            6c000034 11c0c000       alc0    movd            b0, 0
+            11c0d501 11c0d902       alc1    movd            b1, 0x7fff
+            11c0dc03 00000000       alc3    movd            b2, 0x7fffffff
+            7fffffff ffffffff       alc4    movd            b3, 0x7fffffffffffffff
+                                            --
+            0c000012 11c08000       alc0    movd            b0, r0
+            1180c001 00000000       alc1    movd            b1, r0
+                                            --

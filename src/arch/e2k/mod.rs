@@ -1561,6 +1561,12 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
+    fn set_args_alf4(&mut self, out: &mut Insn, args: generated::args_alf4) {
+        out.push_dst(args.dst);
+        self.set_src1(out, args.src1);
+        self.set_pred(out);
+    }
+
     fn set_args_alf7(&mut self, out: &mut Insn, args: generated::args_alf7) {
         out.push_dst_preg(args.dst);
         self.set_src1(out, args.src1);
