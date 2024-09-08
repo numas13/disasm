@@ -2,13 +2,13 @@
         90                              nop    # +att
         66 90                           xchg   ax,ax
         66 90                           xchg   %ax,%ax # +att
-        66 67 90                        "addr32 xchg" ax,ax
-        66 67 90                        "addr32 xchg" %ax,%ax # +att
-        66 66 67 90                     "data16 addr32 xchg" ax,ax
-        66 66 67 90                     "data16 addr32 xchg" %ax,%ax # +att
+        66 67 90                        addr32 xchg ax,ax
+        66 67 90                        addr32 xchg %ax,%ax # +att
+        66 66 67 90                     data16 addr32 xchg ax,ax
+        66 66 67 90                     data16 addr32 xchg %ax,%ax # +att
 
         0f 1f c0                        nop    eax
         66 0f 1f 84 f7 ff ff ff 7f      nop    WORD PTR [rdi+rsi*8+0x7fffffff]
-        66 66 0f 1f 84 f7 ff ff ff 7f   "data16 nop" WORD PTR [rdi+rsi*8+0x7fffffff]
-        66 66 2e 0f 1f 84 00 00 00 00 00    "data16 cs nop" WORD PTR [rax+rax*1+0x0]
-        66 66 2e 0f 1f 84 00 00 00 00 00    "data16 cs nopw" 0x0(%rax,%rax,1) # +att
+        66 66 0f 1f 84 f7 ff ff ff 7f   data16 nop WORD PTR [rdi+rsi*8+0x7fffffff]
+        66 66 2e 0f 1f 84 00 00 00 00 00    data16 cs nop WORD PTR [rax+rax*1+0x0]
+        66 66 2e 0f 1f 84 00 00 00 00 00    data16 cs nopw 0x0(%rax,%rax,1) # +att

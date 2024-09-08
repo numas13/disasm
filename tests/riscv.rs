@@ -8,7 +8,7 @@ macro_rules! test {
             use self::common::test;
             use disasm::{arch::riscv, Arch, Options};
 
-            test::run($file, include_str!($file), |test| {
+            test::run($file, include_str!($file), "", |test| {
                 let arch = Arch::Riscv(riscv::Options {
                     xlen: riscv::Xlen::X64,
                     ext: riscv::Extensions::all(),
@@ -68,7 +68,7 @@ mod print {
             .printer(symbols.as_info(), section_name)
             .print_to_string(&data, true)
             .unwrap();
-        let res_complete = check("complete", expect, &result);
+        let res_complete = check("complete", 0, expect, &result);
 
         let mut dis = Decoder::new(arch, address, opts).printer(symbols.as_info(), section_name);
         let mut cur = Cursor::new(Vec::new());
@@ -96,7 +96,7 @@ mod print {
         }
 
         let result = String::from_utf8(cur.into_inner()).unwrap();
-        let res_streaming = check("streaming", expect, &result);
+        let res_streaming = check("streaming", 0, expect, &result);
 
         if res_complete.is_ok() && res_streaming.is_ok() {
             Ok(())

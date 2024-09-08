@@ -20,10 +20,10 @@ fn parse() -> Result<(), String> {
         1000: 00 00     ud # comment
         1000: 00 01     insn1 a,b # +alias
         1004: 00 02     insn2 a,b,c
-              00 03     "prefix insn3" a,b,c,d
+              00 03     prefix insn3 a,b,c,d
               03020100  nop
         100b     <label_a>  :
-              00        "aa"
+              00        aa
         0000100c <label_b>:
               00        aax
     "#;
@@ -35,36 +35,36 @@ fn parse() -> Result<(), String> {
     assert_eq!(test.line, 2);
     assert_eq!(test.address, 0x1000);
     assert_eq!(test.bytes, &[0x00, 0x00]);
-    assert_eq!(test.asm[0], ("ud", ""));
+    assert_eq!(test.asm[0], "ud");
 
     assert!(parser.parse(&mut test)?);
     assert_eq!(test.line, 3);
     assert_eq!(test.address, 0x1000);
     assert_eq!(test.bytes, &[0x00, 0x01]);
-    assert_eq!(test.asm[0], ("insn1", "a,b"));
+    assert_eq!(test.asm[0], "insn1 a,b");
     assert_eq!(test.comment, "+alias");
 
     assert!(parser.parse(&mut test)?);
     assert_eq!(test.line, 4);
     assert_eq!(test.address, 0x1004);
     assert_eq!(test.bytes, &[0x00, 0x02]);
-    assert_eq!(test.asm[0], ("insn2", "a,b,c"));
+    assert_eq!(test.asm[0], "insn2 a,b,c");
 
     assert!(parser.parse(&mut test)?);
     assert_eq!(test.bytes, &[0x00, 0x03]);
-    assert_eq!(test.asm[0], ("prefix insn3", "a,b,c,d"));
+    assert_eq!(test.asm[0], "prefix insn3 a,b,c,d");
 
     assert!(parser.parse(&mut test)?);
     assert_eq!(test.bytes, &[0x00, 0x01, 0x02, 0x03]);
-    assert_eq!(test.asm[0], ("nop", ""));
+    assert_eq!(test.asm[0], "nop");
 
     assert!(parser.parse(&mut test)?);
     assert_eq!(test.bytes, &[0x00]);
-    assert_eq!(test.asm[0], ("aa", ""));
+    assert_eq!(test.asm[0], "aa");
 
     assert!(parser.parse(&mut test)?);
     assert_eq!(test.bytes, &[0x00]);
-    assert_eq!(test.asm[0], ("aax", ""));
+    assert_eq!(test.asm[0], "aax");
 
     assert!(!parser.parse(&mut test)?);
 

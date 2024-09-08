@@ -8,7 +8,7 @@ macro_rules! test {
             use self::common::test;
             use disasm::{arch::x86, Arch, Options};
 
-            test::run($file, include_str!($file), |test| {
+            test::run($file, include_str!($file), "", |test| {
                 let mut opts_arch = x86::Options {
                     ext: x86::Extensions::all(),
                     ..x86::Options::default()

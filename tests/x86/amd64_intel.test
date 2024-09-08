@@ -1,15 +1,15 @@
         e8 00 00 00 00                  call            5
         66 e8 00 00                     callw           4
-        48 e8 00 00 00 00               "rex.W call"    6
-        66 48 e8 00 00 00 00            "rex.W call"    7
+        48 e8 00 00 00 00               rex.W call    6
+        66 48 e8 00 00 00 00            rex.W call    7
         66 ff 17                        call            WORD PTR [rdi]
         ff 17                           call            QWORD PTR [rdi]
         66 ff 1f                        call            DWORD PTR [rdi]
         ff 1f                           call            FWORD PTR [rdi]
-        48 ff 1f                        "rex.W call"    FWORD PTR [rdi]
+        48 ff 1f                        rex.W call    FWORD PTR [rdi]
 
         c3                              ret
-        f3 c3                           "repz ret"
+        f3 c3                           repz ret
         cb                              retf
         c2 01 00                        ret    0x1
         66 c2 01 00                     retw   0x1
@@ -25,7 +25,7 @@
         e9 00 00 00 00                  jmp    5
         ff e7                           jmp    rdi
         ff 27                           jmp    QWORD PTR [rdi]
-        48 ff 2f                        "rex.W jmp" FWORD PTR [rdi]
+        48 ff 2f                        rex.W jmp FWORD PTR [rdi]
         66 ff 2f                        jmp    DWORD PTR [rdi]
         ff 27                           jmp    QWORD PTR [rdi]
 
@@ -741,16 +741,16 @@
         e1 00                           loope  2
         e0 00                           loopne 2
 
-        f3 a4                           "rep movs" BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
-        f2 a4                           "repnz movs" BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
-        f3 a6                           "repz cmps" BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
-        f2 a6                           "repnz cmps" BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
-        f3 aa                           "rep stos" BYTE PTR es:[rdi],al
-        f2 aa                           "repnz stos" BYTE PTR es:[rdi],al
-        f3 ac                           "rep lods" al,BYTE PTR ds:[rsi]
-        f2 ac                           "repnz lods" al,BYTE PTR ds:[rsi]
-        f3 ae                           "repz scas" al,BYTE PTR es:[rdi]
-        f2 ae                           "repnz scas" al,BYTE PTR es:[rdi]
+        f3 a4                           rep movs BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
+        f2 a4                           repnz movs BYTE PTR es:[rdi],BYTE PTR ds:[rsi]
+        f3 a6                           repz cmps BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
+        f2 a6                           repnz cmps BYTE PTR ds:[rsi],BYTE PTR es:[rdi]
+        f3 aa                           rep stos BYTE PTR es:[rdi],al
+        f2 aa                           repnz stos BYTE PTR es:[rdi],al
+        f3 ac                           rep lods al,BYTE PTR ds:[rsi]
+        f2 ac                           repnz lods al,BYTE PTR ds:[rsi]
+        f3 ae                           repz scas al,BYTE PTR es:[rdi]
+        f2 ae                           repnz scas al,BYTE PTR es:[rdi]
 
         70 00                           jo     2
         71 00                           jno    2
@@ -867,22 +867,22 @@
         6c                              ins    BYTE PTR es:[rdi],dx
         66 6d                           ins    WORD PTR es:[rdi],dx
         6d                              ins    DWORD PTR es:[rdi],dx
-        f3 6c                           "rep ins" BYTE PTR es:[rdi],dx
-        66 f3 6d                        "rep ins" WORD PTR es:[rdi],dx
-        f3 6d                           "rep ins" DWORD PTR es:[rdi],dx
-        f2 6c                           "repnz ins" BYTE PTR es:[rdi],dx
-        66 f2 6d                        "repnz ins" WORD PTR es:[rdi],dx
-        f2 6d                           "repnz ins" DWORD PTR es:[rdi],dx
+        f3 6c                           rep ins BYTE PTR es:[rdi],dx
+        66 f3 6d                        rep ins WORD PTR es:[rdi],dx
+        f3 6d                           rep ins DWORD PTR es:[rdi],dx
+        f2 6c                           repnz ins BYTE PTR es:[rdi],dx
+        66 f2 6d                        repnz ins WORD PTR es:[rdi],dx
+        f2 6d                           repnz ins DWORD PTR es:[rdi],dx
 
         6e                              outs   dx,BYTE PTR ds:[rsi]
         66 6f                           outs   dx,WORD PTR ds:[rsi]
         6f                              outs   dx,DWORD PTR ds:[rsi]
-        f3 6e                           "rep outs" dx,BYTE PTR ds:[rsi]
-        66 f3 6f                        "rep outs" dx,WORD PTR ds:[rsi]
-        f3 6f                           "rep outs" dx,DWORD PTR ds:[rsi]
-        f2 6e                           "repnz outs" dx,BYTE PTR ds:[rsi]
-        66 f2 6f                        "repnz outs" dx,WORD PTR ds:[rsi]
-        f2 6f                           "repnz outs" dx,DWORD PTR ds:[rsi]
+        f3 6e                           rep outs dx,BYTE PTR ds:[rsi]
+        66 f3 6f                        rep outs dx,WORD PTR ds:[rsi]
+        f3 6f                           rep outs dx,DWORD PTR ds:[rsi]
+        f2 6e                           repnz outs dx,BYTE PTR ds:[rsi]
+        66 f2 6f                        repnz outs dx,WORD PTR ds:[rsi]
+        f2 6f                           repnz outs dx,DWORD PTR ds:[rsi]
 
         66 0f b2 0f                     lss    cx,DWORD PTR [rdi]
         0f b2 0f                        lss    ecx,FWORD PTR [rdi]
@@ -1102,7 +1102,7 @@
         0f 01 d1                        xsetbv
 
         d7                              xlat   BYTE PTR ds:[rbx]
-        48 d7                           "rex.W xlat" BYTE PTR ds:[rbx]
+        48 d7                           rex.W xlat BYTE PTR ds:[rbx]
 
         66 0f 40 cb                     cmovo  cx,bx
         66 0f 41 cb                     cmovno cx,bx

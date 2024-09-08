@@ -1,17 +1,16 @@
-use std::fmt;
+use std::fmt::{self, Write as _};
 
-pub struct Bytes<'a>(pub &'a [u8]);
+struct Bytes<'a>(pub &'a [u8]);
 
 impl fmt::Display for Bytes<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        fmt.write_str("[")?;
         for (i, b) in self.0.iter().enumerate() {
             if i != 0 {
-                fmt.write_str(", ")?;
+                fmt.write_char(' ')?;
             }
             write!(fmt, "{b:02x}")?;
         }
-        fmt.write_str("]")
+        Ok(())
     }
 }
 
@@ -65,30 +64,66 @@ impl fmt::Display for Escape<'_> {
     }
 }
 
-#[rustfmt::skip]
-fn diff(file: &str, left: &str, right: &str) {
-    use diff::Result as E;
-    let w = 5;
-    eprintln!("{:w$}--> {file}", ' ');
-    let mut ln = 1;
-    for diff in diff::lines(left, right) {
-        match diff {
-            E::Left(l)    => eprintln!("{ln:w$} -{}↴", Escape(l)),
-            E::Both(l, _) => eprintln!("{ln:w$} |{}↴", Escape(l)),
-            E::Right(r)   => eprintln!("{ln:w$} +{}↴", Escape(r)),
-        }
-        if matches!(diff, E::Both(..) | E::Right(_)) {
-            ln += 1;
+pub struct Diff<'a> {
+    file: &'a str,
+    line: usize,
+    bytes: &'a [u8],
+    expect: &'a str,
+    result: &'a str,
+}
+
+impl<'a> Diff<'a> {
+    pub fn new(
+        file: &'a str,
+        line: usize,
+        bytes: &'a [u8],
+        expect: &'a str,
+        result: &'a str,
+    ) -> Self {
+        Self {
+            file,
+            line,
+            bytes,
+            expect,
+            result,
         }
     }
 }
 
-pub fn check(file: &str, left: &str, right: &str) -> Result<(), String> {
+impl fmt::Display for Diff<'_> {
+    fn fmt(&self, out: &mut fmt::Formatter) -> fmt::Result {
+        use diff::Result as E;
+        let w = 5;
+        if !self.file.is_empty() {
+            writeln!(out, "{:w$}--> {}", ' ', self.file)?;
+        }
+        if !self.bytes.is_empty() {
+            for (i, chunk) in self.bytes.chunks(8).enumerate() {
+                let prefix = if i == 0 { "raw | " } else { "| " };
+                writeln!(out, "{prefix:>8}{}", Bytes(chunk))?;
+            }
+            writeln!(out, "{:7}{:-<24}", ' ', ' ')?;
+        }
+        let mut ln = std::cmp::max(self.line, 1);
+        for diff in diff::lines(self.expect, self.result) {
+            match diff {
+                E::Left(l) => writeln!(out, "{ln:w$} - {}↴", Escape(l))?,
+                E::Both(l, _) => writeln!(out, "{ln:w$} | {}↴", Escape(l))?,
+                E::Right(r) => writeln!(out, "{:w$} + {}↴", ln - 1, Escape(r))?,
+            }
+            if matches!(diff, E::Both(..) | E::Left(_)) {
+                ln += 1;
+            }
+        }
+        Ok(())
+    }
+}
+
+pub fn check(file: &str, line: usize, left: &str, right: &str) -> Result<(), String> {
     if left != right {
         let err = "invalid result";
         eprintln!("error: {err}");
-        diff(file, left, &right);
-        eprintln!();
+        eprintln!("{}", Diff::new(file, line, &[], left, right));
         return Err(err.to_string());
     }
     Ok(())

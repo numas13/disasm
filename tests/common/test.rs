@@ -1,8 +1,11 @@
-use std::{fmt, str::Lines};
+use std::{
+    fmt::{self, Write},
+    str::Lines,
+};
 
-use disasm::{Arch, Bundle, Decoder, Options, Symbols};
+use disasm::{Arch, Bundle, Decoder, Options, Printer, Symbols};
 
-use super::Bytes;
+use super::utils::Diff;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct ParserError {
@@ -33,7 +36,7 @@ pub struct Test<'a> {
     pub comment: &'a str,
     pub address: u64,
     pub bytes: Vec<u8>,
-    pub asm: Vec<(&'a str, &'a str)>,
+    pub asm: Vec<&'a str>,
 }
 
 pub struct Parser<'a> {
@@ -41,6 +44,7 @@ pub struct Parser<'a> {
     lines: Lines<'a>,
     line: usize,
     symbols: Symbols,
+    bundle_end: &'a str,
 }
 
 impl<'a> Parser<'a> {
@@ -50,7 +54,13 @@ impl<'a> Parser<'a> {
             lines: input.lines(),
             line: 0,
             symbols: Symbols::default(),
+            bundle_end: "",
         }
+    }
+
+    pub fn set_bundle_end(mut self, s: &'a str) -> Self {
+        self.bundle_end = s;
+        self
     }
 
     fn error<T>(&self, msg: String) -> Result<T, String> {
@@ -66,14 +76,30 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self, output: &mut Test<'a>) -> Result<bool, String> {
+        output.bytes.clear();
+        output.asm.clear();
+
+        let mut empty_lines = true;
+        let mut first = true;
         while let Some(line) = self.lines.next().map(|l| l.trim()) {
             self.line += 1;
 
             let (line, comment) = line.split_once('#').unwrap_or((line, ""));
 
             let mut cur = line.trim();
-            if cur.is_empty() || cur == "..." {
+            if empty_lines && (cur.is_empty() || cur == "...") {
                 continue;
+            }
+            empty_lines = false;
+
+            if !self.bundle_end.is_empty() && cur.is_empty() {
+                return Ok(true);
+            }
+
+            if first {
+                first = false;
+                output.comment = comment.trim();
+                output.line = self.line;
             }
 
             // parse address
@@ -96,6 +122,7 @@ impl<'a> Parser<'a> {
                     }
                     let tail = &tail[1..tail.len() - 1];
                     self.symbols.push(address, tail);
+                    empty_lines = true;
                     continue;
                 }
                 if head.chars().count() < 17 {
@@ -109,61 +136,45 @@ impl<'a> Parser<'a> {
                 }
             }
 
-            // parse bytes
-            output.bytes.clear();
-            while !cur.is_empty() {
-                let stop = cur.chars().take_while(|c| c.is_whitespace()).count() > 1;
-                cur = cur.trim_start();
-                if stop {
-                    break;
-                }
-                match cur.find(|c: char| !c.is_ascii_hexdigit()) {
-                    Some(pos) if pos >= 2 => {
-                        let (head, tail) = cur.split_at(pos);
-                        if head.is_empty() {
-                            break;
-                        }
-                        let raw = u64::from_str_radix(head, 16).unwrap();
-                        let raw = &raw.to_le_bytes()[..(head.len() + 1) / 2];
-                        output.bytes.extend_from_slice(raw);
-                        cur = tail;
+            // '\' is an escape to asm
+            if cur.starts_with('\\') {
+                cur = cur.trim_start_matches('\\');
+            } else {
+                // parse bytes
+                while !cur.is_empty() {
+                    let stop = cur.chars().take_while(|c| c.is_whitespace()).count() > 1;
+                    cur = cur.trim_start();
+                    if stop {
+                        break;
                     }
-                    _ => break,
+                    match cur.find(|c: char| !c.is_ascii_hexdigit()) {
+                        Some(pos) if pos >= 2 => {
+                            let (head, tail) = cur.split_at(pos);
+                            if head.is_empty() {
+                                break;
+                            }
+                            let raw = u64::from_str_radix(head, 16).unwrap();
+                            let raw = &raw.to_le_bytes()[..(head.len() + 1) / 2];
+                            output.bytes.extend_from_slice(raw);
+                            cur = tail;
+                        }
+                        _ => break,
+                    }
                 }
             }
 
-            if output.bytes.is_empty() {
+            if self.bundle_end.is_empty() && output.bytes.is_empty() {
                 return self.error(format!("no instruction bytes"));
             }
 
-            // parse mnemonic
-            let mnemonic = if cur.starts_with('"') {
-                match cur[1..].split_once('"') {
-                    Some((head, tail)) => {
-                        cur = tail.trim_start();
-                        head
-                    }
-                    None => {
-                        return self.error(format!("missing closing '\"'"));
-                    }
-                }
-            } else {
-                let (head, tail) = cur
-                    .split_once(|c: char| c.is_whitespace())
-                    .unwrap_or((cur, ""));
-                cur = tail.trim_start();
-                head
-            };
+            output.asm.push(cur);
 
-            output.comment = comment.trim();
-            output.line = self.line;
-            output.asm.clear();
-            output.asm.push((mnemonic, cur));
-
-            return Ok(true);
+            if self.bundle_end.is_empty() || self.bundle_end == cur.trim() {
+                return Ok(true);
+            }
         }
 
-        Ok(false)
+        Ok(!output.bytes.is_empty())
     }
 
     pub fn parse_all(src: &str) -> Result<(u64, Vec<u8>, Symbols), String> {
@@ -196,90 +207,77 @@ impl<'a> Parser<'a> {
     }
 }
 
-struct ErrorReport<'a> {
-    file: &'a str,
-    test: &'a Test<'a>,
-    msg: &'a str,
-    result: Option<(&'a str, &'a str, usize)>,
-}
-
-impl<'a> ErrorReport<'a> {
-    fn new(file: &'a str, test: &'a Test) -> Self {
-        Self {
-            file,
-            test,
-            msg: "unspecified fail",
-            result: None,
+fn push_insn(out: &mut String, s: &str) {
+    for (i, s) in s.split_whitespace().enumerate() {
+        if i != 0 {
+            out.push(' ');
         }
-    }
-
-    fn result(self, mnemonic: &'a str, operands: &'a str, len: usize) -> Self {
-        Self {
-            result: Some((mnemonic, operands, len)),
-            ..self
-        }
-    }
-
-    fn msg(self, msg: &'a str) -> Self {
-        Self { msg, ..self }
+        out.push_str(&s);
     }
 }
 
-impl fmt::Display for ErrorReport<'_> {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        let raw = Bytes(&self.test.bytes);
-        let (m, o) = self.test.asm[0];
-        let l1 = self.test.bytes.len();
-        let match_len = self.result.map(|(_, _, l2)| l1 == l2).unwrap_or(true);
-        writeln!(fmt, "error: {}, {}:{}", self.msg, self.file, self.test.line)?;
-        writeln!(fmt, "    raw: {raw}")?;
-        write!(fmt, "    expect: {m:?} {o:?}")?;
-        if !match_len {
-            write!(fmt, " ({l1} bytes)")?;
+fn bundle_to_string(dis: &mut Printer, bundle: &Bundle) -> String {
+    let mut out = String::new();
+    for (i, insn) in bundle.iter().enumerate() {
+        if i != 0 {
+            out.push('\n');
         }
-        writeln!(fmt)?;
-        if let Some((m, o, l2)) = self.result {
-            write!(fmt, "    result: {m:?} {o:?}")?;
-            if !match_len {
-                write!(fmt, " ({l2} bytes)")?;
-            }
-            writeln!(fmt)?;
-        }
-        fmt.write_str("\n")
+        let printer = insn.printer(&dis);
+        let mut s = printer.mnemonic().to_string();
+        write!(&mut s, " {}", printer.operands()).unwrap();
+        push_insn(&mut out, &s);
     }
+    out
 }
 
-pub fn run<F>(file: &str, tests: &str, init: F) -> Result<(), String>
+fn expect_to_string(expect: &[&str]) -> String {
+    let mut out = String::new();
+    for (i, asm) in expect.iter().enumerate() {
+        if i != 0 {
+            out.push('\n');
+        }
+        push_insn(&mut out, asm);
+    }
+    out
+}
+
+pub fn run<F>(file: &str, tests: &str, bundle_end: &str, init: F) -> Result<(), String>
 where
     F: Fn(&Test) -> (Arch, Options),
 {
     let mut bundle = Bundle::empty();
     let mut test = Test::default();
-    let mut parser = Parser::new(file, tests);
+    let mut parser = Parser::new(file, tests).set_bundle_end(bundle_end);
     let mut failed = 0;
     while parser.parse(&mut test)? {
-        let expect = test.asm[0];
         let (arch, opts) = init(&test);
         let mut dis = Decoder::new(arch, test.address, opts).printer((), ".text");
-        let report = ErrorReport::new(file, &test);
-        if let Ok(len) = dis.decode(&test.bytes, &mut bundle) {
-            let printer = bundle[0].printer(&dis);
-            let mnemonic = printer.mnemonic().to_string();
-            let operands = printer.operands().to_string();
-            let report = report.result(&mnemonic, &operands, len);
-            if mnemonic != expect.0 {
-                eprint!("{}", report.msg("invalid mnemonic"));
-                failed += 1;
-            } else if operands != expect.1 {
-                eprint!("{}", report.msg("invalid operands"));
-                failed += 1;
-            } else if len != test.bytes.len() {
-                eprint!("{}", report.msg("invalid length"));
-                failed += 1;
-            }
-        } else {
-            eprint!("{}", report.msg("failed to decode"));
+
+        let (len, result) = match dis.decode(&test.bytes, &mut bundle) {
+            Ok(len) => (len, bundle_to_string(&mut dis, &bundle)),
+            Err(_) => (0, String::new()),
+        };
+
+        let expect_len = test.bytes.len();
+        let expect = expect_to_string(&test.asm);
+        if len == 0 || len != expect_len || result != expect {
             failed += 1;
+
+            if len == 0 {
+                eprintln!("error: failed to decode, {}:{}", file, test.line);
+            } else {
+                if len != expect_len {
+                    eprintln!("error: invalid length, {}:{}", file, test.line);
+                    eprintln!("  expect: {expect_len}");
+                    eprintln!("  result: {len}");
+                }
+                if result != expect {
+                    eprintln!("error: invalid output, {}:{}", file, test.line);
+                }
+            }
+
+            let diff = Diff::new(file, test.line, &test.bytes, &expect, &result);
+            eprint!("{diff}");
         }
     }
     if failed == 0 {
