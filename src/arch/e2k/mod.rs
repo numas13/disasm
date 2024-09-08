@@ -84,6 +84,7 @@ pub const OP_TRAR: u64 = 13;
 pub const OP_LOOP_END: u64 = 14;
 pub const OP_CT_COND: u64 = 15;
 pub const OP_AREA: u64 = 16;
+pub const OP_NO_SS: u64 = 17;
 
 pub const PSRC_INVERT: u8 = 0x80;
 
@@ -938,18 +939,26 @@ impl Decoder {
                 out.push(opcode::EAP);
             }
         }
-
-        // TODO: ipd
     }
 
     fn decode_ct(&mut self, out: &mut Bundle) {
         let ss = self.unpacked.ss;
-        let cond = ss.ct_cond();
-        if ss.is_empty() || self.ct_decoded || cond == CT_COND_NONE {
+        let mut cond = ss.ct_cond();
+        if ss.is_empty() || cond == CT_COND_NONE {
             return;
         }
+
+        out.push_with(opcode::IPD, |insn| {
+            insn.push_uimm_short(ss.ipd());
+        });
+
+        if self.ct_decoded {
+            return;
+        }
+
         let insn = out.peek();
         let ctpr = ss.ct_ctpr();
+        let pred = ss.ct_pred();
         insn.set_opcode(opcode::INVALID_CT);
         if ctpr > 0 {
             if let Some((cs1, true)) = self.unpacked.cs1.map(|i| (i, i.is_call())) {
@@ -964,7 +973,12 @@ impl Decoder {
                 insn.set_opcode(opcode::ICALL);
                 insn.push_uimm_short(cs1.call_wbs());
             } else {
-                insn.set_opcode(opcode::IBRANCH);
+                if self.alias && cond == CT_COND_MLOCK_OR_DTAL && pred == 0 {
+                    cond = CT_COND_ALWAYS; // do not print mlock
+                    insn.set_opcode(opcode::RBRANCH);
+                } else {
+                    insn.set_opcode(opcode::IBRANCH);
+                }
             }
             insn.push_absolute(self.disp_to_absolute(cs0.disp()));
         } else if let Some((cs0, true)) = self.unpacked.cs0.map(|i| (i, i.is_done_base())) {
@@ -976,18 +990,18 @@ impl Decoder {
                 if cs0.done_trar() {
                     insn.push_arch_spec(OP_TRAR, 0, 0);
                 }
-            } else if cs0.is_done_iret() {
+            } else if self.isa >= 7 && cs0.is_done_iret() {
                 insn.set_opcode(opcode::IRET);
-            } else if cs0.is_done_hret() {
+            } else if self.isa >= 7 && cs0.is_done_hret() {
                 insn.set_opcode(opcode::HRET);
-            } else if cs0.is_done_glaunch() {
+            } else if self.isa >= 7 && cs0.is_done_glaunch() {
                 insn.set_opcode(opcode::GLAUNCH);
             }
         }
 
         if cond != CT_COND_ALWAYS {
             insn.push_arch_spec(OP_COND_START, 0, 0);
-            insn.push_arch_spec(OP_CT_COND, cond as u64, ss.ct_pred() as u64);
+            insn.push_arch_spec(OP_CT_COND, cond as u64, pred as u64);
         }
 
         // TODO: jump target hints
@@ -1483,11 +1497,13 @@ impl Decoder {
         self.ct_decoded = true;
         let ss = self.unpacked.ss;
         let cond = ss.ct_cond();
-        if ss.is_empty() || cond == CT_COND_NONE || cond == CT_COND_ALWAYS {
-            return;
+        if ss.is_empty() {
+            insn.push_arch_spec(OP_COND_START, 0, 0);
+            insn.push_arch_spec(OP_NO_SS, 0, 0);
+        } else if cond != CT_COND_NONE && cond != CT_COND_ALWAYS {
+            insn.push_arch_spec(OP_COND_START, 0, 0);
+            insn.push_arch_spec(OP_CT_COND, cond as u64, ss.ct_pred() as u64);
         }
-        insn.push_arch_spec(OP_COND_START, 0, 0);
-        insn.push_arch_spec(OP_CT_COND, cond as u64, ss.ct_pred() as u64);
     }
 
     fn set_am(&mut self, insn: &mut Insn) {
@@ -1847,6 +1863,7 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
         opcode::PREP_SYS => ("prep", "sys"),
         opcode::PREP_RET => ("prep", "ret"),
         opcode::IBRANCH => ("ibranch", ""),
+        opcode::RBRANCH => ("rbranch", ""),
         opcode::PREF => ("pref", ""),
         opcode::PUTTSD => ("puttsd", ""),
         opcode::GETTSD => ("gettsd", ""),
@@ -1867,6 +1884,7 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
         opcode::MOVAQ => ("movaq", mova_sub(insn)),
         opcode::MOVAQP => ("movaqp", mova_sub(insn)),
         opcode::APB => ("apb", ""),
+        opcode::IPD => ("ipd", ""),
         opcode => (self::opcode::mnemonic(opcode)?, ""),
     })
 }

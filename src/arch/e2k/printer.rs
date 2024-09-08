@@ -395,6 +395,22 @@ fn print_plu_cond(fmt: &mut fmt::Formatter, ext: &impl PrinterExt, pred: u8) -> 
     Ok(())
 }
 
+fn print_dt_al(fmt: &mut fmt::Formatter, ext: &impl PrinterExt, pred: u8) -> fmt::Result {
+    ext.print_register(
+        fmt,
+        FormatterFn(|fmt| {
+            let map = ['0', '1', '3', '4'];
+            fmt.write_str("dt_al")?;
+            for (i, c) in map.iter().enumerate() {
+                if pred & (1 << i) != 0 {
+                    fmt.write_char(*c)?;
+                }
+            }
+            Ok(())
+        }),
+    )
+}
+
 fn print_ct_cond(
     fmt: &mut fmt::Formatter,
     ext: &impl PrinterExt,
@@ -434,19 +450,7 @@ fn print_ct_cond(
             ext.print_register(fmt, "mlock")?;
             if pred != 0 {
                 fmt.write_str(" || ")?;
-                ext.print_register(
-                    fmt,
-                    FormatterFn(|fmt| {
-                        let map = ['0', '1', '3', '4'];
-                        fmt.write_str("dt_al")?;
-                        for (i, c) in map.iter().enumerate() {
-                            if pred & (1 << i) != 0 {
-                                fmt.write_char(*c)?;
-                            }
-                        }
-                        Ok(())
-                    }),
-                )?;
+                print_dt_al(fmt, ext, pred)?;
             }
         }
         super::CT_COND_MLOCK_OR_CMP => {
@@ -639,6 +643,9 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                 }
                 super::OP_IPD => {
                     fmt.write_str("ipd")?;
+                }
+                super::OP_NO_SS => {
+                    fmt.write_str("<missing ss>")?;
                 }
                 super::OP_NO_MRGC => {
                     fmt.write_str("<missing mrgc>")?;

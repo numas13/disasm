@@ -1,3 +1,5 @@
+# elbrus-v4 tests
+
             92400013 08028202       alc2    fmul_adds       b2, b2, r2, g18
             08058505 0cf20cf5       alc5    fmul_adds       b5, b5, r5, g21
                                             --
@@ -35,5 +37,6 @@
                                     apb1    movaw.am        b11, 16(1)
                                     apb2    movaw.be        b12, 20(2)
                                     apb3    movaw.be.am     b13, 24(3)
+                                            ipd             3
                                             ct              ctpr1 ? ~loop_end
                                             --

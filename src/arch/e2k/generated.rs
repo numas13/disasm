@@ -63,6 +63,8 @@ pub mod opcode {
     pub const MOVAD: Opcode = Opcode(55);
     pub const MOVAQ: Opcode = Opcode(56);
     pub const MOVAQP: Opcode = Opcode(57);
+    pub const IPD: Opcode = Opcode(58);
+    pub const RBRANCH: Opcode = Opcode(59);
 
     pub(super) const BASE_OPCODE: u32 = 4096;
 
