@@ -9,7 +9,7 @@ use crate::{
     Insn, OperandKind, Reg, RegClass, Slot,
 };
 
-use super::Options;
+use super::{opcode, Options};
 
 #[rustfmt::skip]
 const GPR_NAME: [&str; 256] = [
@@ -732,7 +732,11 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             fmt.write_str("    ")?;
         }
 
-        self.print_mnemonic_default(fmt, ext, insn, separator)
+        match insn.opcode() {
+            // do not print with color for better readability
+            opcode::BUNDLE_END => fmt.write_str("--"),
+            _ => self.print_mnemonic_default(fmt, ext, insn, separator),
+        }
     }
 
     fn print_operands(&self, fmt: &mut fmt::Formatter, ext: &E, insn: &Insn) -> fmt::Result {
