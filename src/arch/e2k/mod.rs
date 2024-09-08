@@ -972,13 +972,11 @@ impl Decoder {
             if let Some((cs1, true)) = self.unpacked.cs1.map(|i| (i, i.is_icall())) {
                 insn.set_opcode(opcode::ICALL);
                 insn.push_uimm_short(cs1.call_wbs());
+            } else if self.alias && cond == CT_COND_MLOCK_OR_DTAL && pred == 0 {
+                cond = CT_COND_ALWAYS; // do not print mlock
+                insn.set_opcode(opcode::RBRANCH);
             } else {
-                if self.alias && cond == CT_COND_MLOCK_OR_DTAL && pred == 0 {
-                    cond = CT_COND_ALWAYS; // do not print mlock
-                    insn.set_opcode(opcode::RBRANCH);
-                } else {
-                    insn.set_opcode(opcode::IBRANCH);
-                }
+                insn.set_opcode(opcode::IBRANCH);
             }
             insn.push_absolute(self.disp_to_absolute(cs0.disp()));
         } else if let Some((cs0, true)) = self.unpacked.cs0.map(|i| (i, i.is_done_base())) {
