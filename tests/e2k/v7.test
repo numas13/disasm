@@ -9,3 +9,39 @@
             00005012 c0000020               ipd             3
             30000003 00000000               hret
                                             --
+
+# local conditions for control transter
+            04001012 c0000560       alc0    cmpedb          p0, r0, 0
+            2180c040 00000000               ipd             3
+                                            ct              ctpr1 ? alc0
+                                            --
+            08001012 c0000562       alc1    cmpedb          p0, r0, 0
+            2180c040 00000000               ipd             3
+                                            ct              ctpr1 ? alc1
+                                            --
+            20001012 c0000564       alc3    cmpedb          p0, r0, 0
+            2180c040 00000000               ipd             3
+                                            ct              ctpr1 ? alc3
+                                            --
+            40001012 c0000566       alc4    cmpedb          p0, r0, 0
+            2180c040 00000000               ipd             3
+                                            ct              ctpr1 ? alc4
+                                            --
+            00041011 c0000570       plu0    andp            p0, p0, p1
+            00000000 60610060               ipd             3
+                                            ct              ctpr1 ? plu0
+                                            --
+            0c001013 c0000528       alc0    cmpedb          p0, r0, 0
+            2180c040 2181c041       alc1    cmpedb          p1, r1, 0
+                                            ipd             3
+                                            ct              ctpr1 ? mlock || alc0 || alc1
+                                            --
+            60001013 c000052c       alc3    cmpedb          p0, r0, 0
+            2180c040 2181c041       alc4    cmpedb          p1, r1, 0
+                                            ipd             3
+                                            ct              ctpr1 ? mlock || alc3 || alc4
+                                            --
+            00041011 c0000530       plu0    andp            p0, p0, p1
+            00000000 60610060               ipd             3
+                                            ct              ctpr1 ? mlock || plu0
+                                            --

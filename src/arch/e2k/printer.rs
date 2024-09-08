@@ -377,7 +377,6 @@ const PRND_NAME: [&str; 32] = [
   "rndpred28",  "rndpred29",  "rndpred30",  "rndpred31"
 ];
 
-const CMP_NAME: [&str; 4] = ["cmp0", "cmp1", "cmp3", "cmp4"];
 const ALC_NAME: [&str; 6] = ["alc0", "alc1", "alc2", "alc3", "alc4", "alc5"];
 
 fn invert(c: bool) -> impl fmt::Display {
@@ -393,6 +392,16 @@ fn print_plu_cond(fmt: &mut fmt::Formatter, ext: &impl PrinterExt, pred: u8) -> 
         _ => write!(fmt, "<invalid plu cond:{pred:02x}>")?,
     }
     Ok(())
+}
+
+fn print_cmp_cond(
+    fmt: &mut fmt::Formatter,
+    ext: &impl PrinterExt,
+    index: usize,
+    inv: bool,
+) -> fmt::Result {
+    invert(inv).fmt(fmt)?;
+    ext.print_register(fmt, ALC_NAME[[0, 1, 3, 4][index]])
 }
 
 fn print_dt_al(fmt: &mut fmt::Formatter, ext: &impl PrinterExt, pred: u8) -> fmt::Result {
@@ -458,16 +467,14 @@ fn print_ct_cond(
             fmt.write_str(" || ")?;
             match pred & 0x18 {
                 0x00 => {
-                    invert(pred & 1 != 0).fmt(fmt)?;
                     let index = zextract(pred, 1, 2) as usize;
-                    ext.print_register(fmt, CMP_NAME[index])?;
+                    print_cmp_cond(fmt, ext, index, pred & 1 != 0)?;
                 }
                 0x08 => {
-                    let index = if pred & 4 != 0 { 3 } else { 0 };
-                    invert(pred & 2 != 0).fmt(fmt)?;
-                    ext.print_register(fmt, ALC_NAME[index])?;
-                    invert(pred & 1 != 0).fmt(fmt)?;
-                    ext.print_register(fmt, ALC_NAME[index + 1])?;
+                    let index = if pred & 4 != 0 { 2 } else { 0 };
+                    print_cmp_cond(fmt, ext, index, pred & 2 != 0)?;
+                    fmt.write_str(" || ")?;
+                    print_cmp_cond(fmt, ext, index + 1, pred & 1 != 0)?;
                 }
                 0x10 => print_plu_cond(fmt, ext, pred)?,
                 _ => write!(fmt, "<invalid cond:{cond}:{pred:02x}>")?,
@@ -477,10 +484,8 @@ fn print_ct_cond(
             if pred & 0x10 != 0 {
                 print_plu_cond(fmt, ext, pred)?;
             } else {
-                let map = [0, 1, 3, 4];
                 let index = zextract(pred, 1, 2) as usize;
-                invert(pred & 1 != 0).fmt(fmt)?;
-                ext.print_register(fmt, ALC_NAME[index])?;
+                print_cmp_cond(fmt, ext, index, pred & 1 != 0)?;
             }
         }
         super::CT_COND_NOT_PREG_OR_LOOP_END => {
