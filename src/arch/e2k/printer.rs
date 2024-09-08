@@ -745,7 +745,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         for operand in iter.by_ref() {
             match operand.kind() {
                 OperandKind::ArchSpec(super::OP_COND_START, ..) => {
-                    fmt.write_str(" ? ")?;
+                    fmt.write_str(if first { "? " } else { " ? " })?;
                     break;
                 }
                 _ => {
