@@ -12,7 +12,7 @@ use core::{
 
 use crate::{
     bytes::Bytes,
-    macros::impl_arch_operands,
+    macros::{impl_arch_operands, impl_field, impl_opcode_check},
     utils::{zextract, ZExtract},
     Access, ArchDecoder, Bundle, Error, Insn, Reg, RegClass, Slot,
 };
@@ -288,74 +288,6 @@ impl<'a> Cursor<'a> {
             Ok(None)
         }
     }
-}
-
-macro_rules! impl_opcode_check {
-    ($($mask:expr, $opcode:expr, $name:ident;)*) => ($(
-        #[inline]
-        fn $name(&self) -> bool {
-            self.raw() & $mask == $opcode
-        }
-    )*);
-}
-
-// !!!! CAUTION !!!!
-// !---------------!
-// !  DANGER ZONE  !
-// !---------------!
-// ! HIGH RISK  OF !
-// ! BRAIN DAMAGE  !
-// !---------------!
-// !   KEEP OUT    !
-// !!!!!!!!!!!!!!!!!
-macro_rules! impl_field {
-    ($($name:ident =
-        $pos:expr,
-        $len:expr,
-        $ret:tt $(: $cast:ty)?
-        $(,$map:expr $(, $arg:ident: $arg_ty:ty)*)?
-    ;)*) => ($(
-        impl_field!(impl $name, $ret $(: $cast)?, $pos, $len $(,$map $(, $arg: $arg_ty)*)?);
-    )*);
-    (impl
-         $name:ident,
-         bool $(: $cast:ty)?,
-         $pos:expr,
-         $len:expr
-         $(,$map:expr $(, $arg:ident: $arg_ty:ty)*)?
-    ) => (
-        fn $name(&self $($(, $arg: $arg_ty)*)?) -> bool {
-            let ret = zextract(self.raw(), $pos, $len) $(as $cast)?;
-            $(let ret = $map(ret $(, $arg)?);)?
-            ret != 0
-        }
-    );
-    (impl
-        $name:ident,
-        $ret:ty,
-        $pos:expr,
-        $len:expr
-        $(,$map:expr $(, $arg:ident: $arg_ty:ty)*)?
-    ) => (
-        fn $name(&self $($(, $arg: $arg_ty)*)?) -> $ret {
-            let ret = zextract(self.raw(), $pos, $len);
-            $(let ret = $map(ret $(, $arg)?);)?
-            ret as $ret
-        }
-    );
-    (impl
-        $name:ident,
-        $ret:ty: $cast:ty,
-        $pos:expr,
-        $len:expr
-        $(,$map:expr $(, $arg:ident: $arg_ty:ty)*)?
-    ) => (
-        fn $name(&self $($(, $arg: $arg_ty)*)?) -> $ret {
-            let ret = zextract(self.raw(), $pos, $len) as $cast;
-            $(let ret = $map(ret $(, $arg)?);)?
-            ret
-        }
-    );
 }
 
 fn get_bit<U, T: ZExtract<U>>(mask: T, pos: usize) -> U {
