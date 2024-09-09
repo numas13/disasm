@@ -7,7 +7,7 @@ use crate::{
     ArchPrinter, Insn, Operand, OperandKind, PrinterExt, Reg, RegClass,
 };
 
-use super::{opcode, Size};
+use super::{opcode, Size, X86Operand};
 
 #[rustfmt::skip]
 const GPR_NAME_BYTE: [&str; 16] = [
@@ -275,6 +275,18 @@ const SEGMENT_PREFIX: [&str; 6] = [
     "ds",
     "fs",
     "gs",
+];
+
+#[rustfmt::skip]
+const ST_NAME: [&str; 8] = [
+    "%st(0)",
+    "%st(1)",
+    "%st(2)",
+    "%st(3)",
+    "%st(4)",
+    "%st(5)",
+    "%st(6)",
+    "%st(7)",
 ];
 
 struct Printer {
@@ -584,8 +596,13 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             OperandKind::Reg(reg) if reg.class() == super::REG_CLASS_K_MASK => {
                 return false;
             }
-            OperandKind::ArchSpec(super::OP_SAE, ..) if self.is_intel() => return false,
-            OperandKind::ArchSpec(super::OP_ER_SAE, ..) if self.is_intel() => return false,
+            OperandKind::ArchSpec(id, ..) if self.is_intel() => {
+                match X86Operand::from_u64(*id).unwrap() {
+                    X86Operand::Sae => return false,
+                    X86Operand::SaeEr => return false,
+                    _ => {}
+                }
+            }
             _ => {}
         }
         i != 0
@@ -616,25 +633,25 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                 }
                 _ => self.print_operand_default(fmt, ext, insn, operand),
             },
-            OperandKind::ArchSpec(super::OP_ST, _, _) => {
-                ext.print_register(fmt, self.strip_prefix("%st"))
-            }
-            OperandKind::ArchSpec(super::OP_STI, i, _) => ext.print_register(
-                fmt,
-                FormatterFn(|fmt| write!(fmt, "{}({i})", self.strip_prefix("%st"))),
-            ),
-            OperandKind::ArchSpec(super::OP_SAE, _, _) => fmt.write_str("{sae}"),
-            OperandKind::ArchSpec(super::OP_ER_SAE, rm, _) => fmt.write_str(match rm {
-                0 => "{rn-sae}",
-                1 => "{rd-sae}",
-                2 => "{ru-sae}",
-                3 => "{rz-sae}",
-                _ => unreachable!("unexpected rounding mode {rm}"),
-            }),
-            OperandKind::ArchSpec(super::OP_MOFFSET, offset, _) => {
-                self.print_segment(fmt, ext, operand, self.is_intel())?;
-                ext.print_address(fmt, FormatterFn(|fmt| write!(fmt, "{offset:#x}")))
-            }
+            OperandKind::ArchSpec(id, x, _) => match X86Operand::from_u64(*id).unwrap() {
+                X86Operand::ST => ext.print_register(fmt, self.strip_prefix("%st")),
+                X86Operand::STI => ext.print_register(fmt, self.strip_prefix(ST_NAME[*x as usize])),
+                X86Operand::Sae => fmt.write_str("{sae}"),
+                X86Operand::SaeEr => {
+                    let s = match x {
+                        0 => "{rn-sae}",
+                        1 => "{rd-sae}",
+                        2 => "{ru-sae}",
+                        3 => "{rz-sae}",
+                        _ => unreachable!("unexpected rounding mode {x}"),
+                    };
+                    fmt.write_str(s)
+                }
+                X86Operand::MemOffset => {
+                    self.print_segment(fmt, ext, operand, self.is_intel())?;
+                    ext.print_address(fmt, FormatterFn(|fmt| write!(fmt, "{x:#x}")))
+                }
+            },
             OperandKind::Indirect(base) if self.is_intel() => {
                 self.print_mem_intel(fmt, ext, insn, operand, base, None, None)
             }

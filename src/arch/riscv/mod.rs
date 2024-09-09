@@ -2,7 +2,10 @@ mod generated;
 #[cfg(feature = "print")]
 mod printer;
 
-use crate::{bytes::Bytes, ArchDecoder, Box, Bundle, Error, Insn, Operand, Reg, RegClass};
+use crate::{
+    bytes::Bytes, macros::impl_arch_operands, ArchDecoder, Box, Bundle, Error, Insn, Operand, Reg,
+    RegClass,
+};
 
 use self::generated::{RiscvDecode16, RiscvDecode32, SetValue};
 
@@ -11,21 +14,28 @@ pub use self::generated::opcode;
 #[cfg(feature = "print")]
 pub(crate) use self::printer::printer;
 
-pub const REG_CLASS_CSR: RegClass = RegClass::arch(0);
-
+// Custom instruction flags
 const INSN_AQ: u32 = 1 << 16;
 const INSN_RL: u32 = 1 << 17;
 
+// Custom register classes
+pub const REG_CLASS_CSR: RegClass = RegClass::arch(0);
+
+// Custom operands
+impl_arch_operands! {
+    pub enum RiscvOperand {
+        Fence = 0,
+        RM = 1,
+    }
+}
+
+// rm values for fops
 pub const RM_RNE: u8 = 0;
 pub const RM_RTZ: u8 = 1;
 pub const RM_RDN: u8 = 2;
 pub const RM_RUP: u8 = 3;
 pub const RM_RMM: u8 = 4;
 pub const RM_DYN: u8 = 7;
-
-const OPERAND_FENCE: u64 = 0;
-
-const OPERAND_RM: u64 = 1;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Xlen {
@@ -197,9 +207,8 @@ impl SetValue for Decoder {
     }
 
     fn set_rm(&mut self, out: &mut Insn, value: i32) {
-        out.push_operand(
-            Operand::arch(OPERAND_RM, value as u64, 0).non_printable(value as u8 == RM_DYN),
-        )
+        let rm = Operand::arch2(RiscvOperand::RM, value as u64);
+        out.push_operand(rm.non_printable(value as u8 == RM_DYN))
     }
 
     fn set_vm(&mut self, _: &mut Insn, _: i32) {
@@ -266,8 +275,8 @@ impl SetValue for Decoder {
     fn set_args_fence(&mut self, insn: &mut Insn, args: generated::args_fence) {
         // TODO: non_printable
         if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
-            insn.push_arch_spec(OPERAND_FENCE, args.pred as u64, 0);
-            insn.push_arch_spec(OPERAND_FENCE, args.succ as u64, 0);
+            insn.push_arch_spec2(RiscvOperand::Fence, args.pred as u64);
+            insn.push_arch_spec2(RiscvOperand::Fence, args.succ as u64);
         }
     }
 

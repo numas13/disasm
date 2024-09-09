@@ -4,7 +4,7 @@ use alloc::borrow::Cow;
 
 use crate::{ArchPrinter, Insn, Operand, OperandKind, PrinterExt, Reg, RegClass};
 
-use super::Options;
+use super::{Options, RiscvOperand};
 
 #[rustfmt::skip]
 const X_NAME: [&str; 32] = [
@@ -84,9 +84,9 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
-        if let &OperandKind::ArchSpec(ty, value, _) = operand.kind() {
-            match ty {
-                super::OPERAND_FENCE => {
+        if let &OperandKind::ArchSpec(id, value, _) = operand.kind() {
+            match RiscvOperand::from_u64(id).unwrap() {
+                RiscvOperand::Fence => {
                     let fence = ['w', 'r', 'o', 'i'];
                     for i in (0..4).rev() {
                         if value & (1 << i) != 0 {
@@ -94,7 +94,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                         }
                     }
                 }
-                super::OPERAND_RM => {
+                RiscvOperand::RM => {
                     let s = match value as u8 {
                         super::RM_RNE => "rne",
                         super::RM_RTZ => "rtz",
@@ -106,7 +106,6 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                     };
                     fmt.write_str(s)?;
                 }
-                _ => todo!(),
             }
             Ok(())
         } else {

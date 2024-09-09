@@ -6,8 +6,8 @@ mod printer;
 use core::ops::{Deref, DerefMut};
 
 use crate::{
-    bytes::Bytes, flags::Field, utils::zextract, Access, ArchDecoder, Box, Bundle, Error, Insn,
-    Operand, OperandKind, Reg, RegClass,
+    bytes::Bytes, flags::Field, macros::impl_arch_operands, utils::zextract, Access, ArchDecoder,
+    Box, Bundle, Error, Insn, Operand, OperandKind, Reg, RegClass,
 };
 
 use self::generated::*;
@@ -23,6 +23,7 @@ pub(crate) use self::printer::printer;
 
 type Result<T = (), E = Error> = core::result::Result<T, E>;
 
+// Custom instruction flags
 const INSN_FIELD_SUFFIX: Field = Field::new(16, 3);
 const INSN_FIELD_REP: Field = Field::new(19, 2);
 const INSN_FIELD_SEGMENT: Field = Field::new(21, 3);
@@ -31,6 +32,14 @@ const INSN_ADDR32: u32 = 1 << 28;
 const INSN_DATA16: u32 = 1 << 29;
 const INSN_LOCK: u32 = 1 << 30;
 const INSN_SUFFIX: u32 = 1 << 31;
+
+const SUFFIX_B: u32 = 0;
+const SUFFIX_W: u32 = 1;
+const SUFFIX_L: u32 = 2;
+const SUFFIX_Q: u32 = 3;
+const SUFFIX_FP_S: u32 = 4;
+const SUFFIX_FP_L: u32 = 5;
+const SUFFIX_FP_LL: u32 = 6;
 
 const INSN_REP_NONE: u32 = 0;
 const INSN_REP: u32 = 1;
@@ -45,32 +54,28 @@ const SEGMENT_DS: u32 = 4;
 const SEGMENT_FS: u32 = 5;
 const SEGMENT_GS: u32 = 6;
 
-const OP_INDIRECT: u32 = 8;
-
-const PREFIX_OPERAND_SIZE: u8 = 0x66;
-const PREFIX_ADDRESS_SIZE: u8 = 0x67;
-const PREFIX_CS: u8 = 0x2e;
-const PREFIX_ES: u8 = 0x26;
-const PREFIX_SS: u8 = 0x36;
-const PREFIX_DS: u8 = 0x3e;
-const PREFIX_FS: u8 = 0x64;
-const PREFIX_GS: u8 = 0x65;
-const PREFIX_LOCK: u8 = 0xf0;
-const PREFIX_REPNZ: u8 = 0xf2;
-const PREFIX_REPZ: u8 = 0xf3;
-const PREFIX_REX: u8 = 0x40;
-const PREFIX_REX_MASK: u8 = 0xf0;
-
-const MODE_REGISTER_DIRECT: u8 = 3;
+// Custom register classes
+const REG_CLASS_K: RegClass = RegClass::arch(0);
+const REG_CLASS_K_MASK: RegClass = RegClass::arch(1);
+const REG_CLASS_BND: RegClass = RegClass::arch(2);
+const REG_CLASS_SEGMENT: RegClass = RegClass::arch(3);
 
 const NONE: Reg = Reg::new(RegClass::INT, 0x1000);
 const RIP: Reg = Reg::new(RegClass::INT, 0x1001);
 
-const OP_ST: u64 = 0;
-const OP_STI: u64 = 1;
-const OP_SAE: u64 = 2;
-const OP_ER_SAE: u64 = 3;
-const OP_MOFFSET: u64 = 4;
+// Custom operands
+impl_arch_operands! {
+    pub enum X86Operand {
+        ST = 0,
+        STI = 1,
+        Sae = 2,
+        SaeEr = 3,
+        MemOffset = 4,
+    }
+}
+
+// Custom operand flags
+const OP_INDIRECT: u32 = 8;
 
 const OP_FIELD_MEM: Field = Field::new(16, 4);
 const OP_FIELD_BCST: Field = Field::new(20, 3);
@@ -99,29 +104,36 @@ const BROADCAST_1TO32: u8 = 5;
 const OP_BCST_FORCE: u32 = 1 << 30;
 const OP_NO_PTR: u32 = 1 << 31;
 
+// mapping for escape bytes
 const OPCODE_MAP_0F: u8 = 0x01;
 const OPCODE_MAP_0F_38: u8 = 0x02;
 const OPCODE_MAP_0F_3A: u8 = 0x03;
 
-const SUFFIX_B: u32 = 0;
-const SUFFIX_W: u32 = 1;
-const SUFFIX_L: u32 = 2;
-const SUFFIX_Q: u32 = 3;
-const SUFFIX_FP_S: u32 = 4;
-const SUFFIX_FP_L: u32 = 5;
-const SUFFIX_FP_LL: u32 = 6;
-
+// length of a fixed prefix for legacy encodings
 const FIXED_PREFIX: usize = 2;
 
-const REG_CLASS_K: RegClass = RegClass::arch(0);
-const REG_CLASS_K_MASK: RegClass = RegClass::arch(1);
-const REG_CLASS_BND: RegClass = RegClass::arch(2);
-const REG_CLASS_SEGMENT: RegClass = RegClass::arch(3);
+// x86 prefixes
+const PREFIX_OPERAND_SIZE: u8 = 0x66;
+const PREFIX_ADDRESS_SIZE: u8 = 0x67;
+const PREFIX_CS: u8 = 0x2e;
+const PREFIX_ES: u8 = 0x26;
+const PREFIX_SS: u8 = 0x36;
+const PREFIX_DS: u8 = 0x3e;
+const PREFIX_FS: u8 = 0x64;
+const PREFIX_GS: u8 = 0x65;
+const PREFIX_LOCK: u8 = 0xf0;
+const PREFIX_REPNZ: u8 = 0xf2;
+const PREFIX_REPZ: u8 = 0xf3;
+const PREFIX_REX: u8 = 0x40;
+const PREFIX_REX_MASK: u8 = 0xf0;
 
+// legacy_fixed_prefix.pp, vex.pp and evex.pp values
 const PP_NONE: u8 = 0b00;
 const PP_66: u8 = 0b01;
 const PP_F3: u8 = 0b10;
 const PP_F2: u8 = 0b11;
+
+const MODE_REGISTER_DIRECT: u8 = 3;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum Repeat {
@@ -314,11 +326,11 @@ trait InsnExt {
 
 impl InsnExt for Insn {
     fn push_st(&mut self) {
-        self.push_arch_spec(OP_ST, 0, 0);
+        self.push_arch_spec1(X86Operand::ST);
     }
 
     fn push_sti(&mut self, value: u64) {
-        self.push_arch_spec(OP_STI, value, 0);
+        self.push_arch_spec2(X86Operand::STI, value);
     }
 }
 
@@ -1118,8 +1130,7 @@ impl<'a> Inner<'a> {
             Size::Quad => self.bytes.read_u64()?,
             _ => unreachable!("unexpected address size {:?}", self.addr_size),
         };
-        let kind = OperandKind::ArchSpec(OP_MOFFSET, offset, 0);
-        let mut op = Operand::new(kind);
+        let mut op = Operand::arch2(X86Operand::MemOffset, offset);
         let flags = op.flags_mut();
         if self.segment != SEGMENT_NONE {
             flags.field_set(OP_FIELD_SEGMENT, self.segment);
@@ -1256,7 +1267,7 @@ impl<'a> Inner<'a> {
 
     fn get_sae(&self, mode: i32) -> Option<Operand> {
         if self.broadcast && mode == MODE_REGISTER_DIRECT as i32 {
-            Some(Operand::arch(OP_SAE, self.vl as u64, 0))
+            Some(Operand::arch2(X86Operand::Sae, self.vl))
         } else {
             None
         }
@@ -1264,7 +1275,7 @@ impl<'a> Inner<'a> {
 
     fn get_er_sae(&self, mode: i32) -> Option<Operand> {
         if self.broadcast && mode == MODE_REGISTER_DIRECT as i32 {
-            Some(Operand::arch(OP_ER_SAE, self.vl as u64, 0))
+            Some(Operand::arch2(X86Operand::SaeEr, self.vl as u64))
         } else {
             None
         }

@@ -138,6 +138,23 @@ impl Insn {
         self.push_operand(OperandKind::ArchSpec(a, b, c));
     }
 
+    pub(crate) fn push_arch_spec3(
+        &mut self,
+        a: impl Into<u64>,
+        b: impl Into<u64>,
+        c: impl Into<u64>,
+    ) {
+        self.push_arch_spec(a.into(), b.into(), c.into());
+    }
+
+    pub(crate) fn push_arch_spec2(&mut self, a: impl Into<u64>, b: impl Into<u64>) {
+        self.push_arch_spec3(a, b, 0_u64);
+    }
+
+    pub(crate) fn push_arch_spec1(&mut self, a: impl Into<u64>) {
+        self.push_arch_spec2(a, 0_u64);
+    }
+
     #[cfg(feature = "print")]
     pub fn printer<'a, E>(&'a self, printer: &'a crate::Printer<E>) -> Printer<'a, E>
     where

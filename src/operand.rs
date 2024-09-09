@@ -189,6 +189,18 @@ impl Operand {
         Self::new(OperandKind::ArchSpec(a, b, c))
     }
 
+    pub(crate) fn arch3(a: impl Into<u64>, b: impl Into<u64>, c: impl Into<u64>) -> Self {
+        Self::arch(a.into(), b.into(), c.into())
+    }
+
+    pub(crate) fn arch2(a: impl Into<u64>, b: impl Into<u64>) -> Self {
+        Self::arch3(a, b, 0_u64)
+    }
+
+    pub(crate) fn arch1(a: impl Into<u64>) -> Self {
+        Self::arch2(a, 0_u64)
+    }
+
     pub(crate) fn non_printable(mut self, non_printable: bool) -> Self {
         self.flags.set_if(Self::NO_PRINT, non_printable);
         self

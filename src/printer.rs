@@ -359,16 +359,6 @@ impl PrinterExt for () {
     }
 }
 
-impl<'a, T: PrinterExt> PrinterExt for &'a T {
-    fn get_symbol(&self, address: u64) -> Option<(u64, &str)> {
-        (*self).get_symbol(address)
-    }
-
-    fn get_symbol_after(&self, address: u64) -> Option<(u64, &str)> {
-        (*self).get_symbol_after(address)
-    }
-}
-
 #[derive(Clone, Default)]
 pub struct Symbols {
     sorted: bool,

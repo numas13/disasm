@@ -9,7 +9,7 @@ use crate::{
     Insn, OperandKind, Reg, RegClass, Slot,
 };
 
-use super::{opcode, Options};
+use super::{opcode, E2KOperand, Options};
 
 #[rustfmt::skip]
 const GPR_NAME: [&str; 256] = [
@@ -507,6 +507,36 @@ fn print_ct_cond(
     Ok(())
 }
 
+fn print_cond(
+    fmt: &mut fmt::Formatter,
+    ext: &impl PrinterExt,
+    inv: bool,
+    cond: impl fmt::Display,
+) -> fmt::Result {
+    invert(inv).fmt(fmt)?;
+    ext.print_register(fmt, cond)
+}
+
+fn print_named(
+    fmt: &mut fmt::Formatter,
+    ext: &impl PrinterExt,
+    name: &'static str,
+    value: impl fmt::Display,
+) -> fmt::Result {
+    fmt.write_str(name)?;
+    fmt.write_char('=')?;
+    ext.print_immediate(fmt, value)
+}
+
+fn print_named_hex(
+    fmt: &mut fmt::Formatter,
+    ext: &impl PrinterExt,
+    name: &'static str,
+    value: impl fmt::LowerHex,
+) -> fmt::Result {
+    print_named(fmt, ext, name, FormatterFn(|fmt| write!(fmt, "{value:#x}")))
+}
+
 struct Printer {}
 
 impl Printer {
@@ -564,55 +594,41 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         operand: &crate::Operand,
     ) -> alloc::fmt::Result {
         match operand.kind() {
-            OperandKind::ArchSpec(id, x, y) => match *id {
-                super::OP_LITERAL => {
+            OperandKind::ArchSpec(id, x, y) => match E2KOperand::from_u64(*id).unwrap() {
+                E2KOperand::Literal => {
                     let lit = x;
                     let size = y;
-                    ext.print_immediate(
-                        fmt,
-                        FormatterFn(|fmt| match size {
-                            16 | 32 => {
-                                if lit >> (size - 1) & 1 != 0 {
-                                    write!(fmt, "{lit:#x}_i{size}")
-                                } else {
-                                    write!(fmt, "{lit:#x}")
-                                }
+                    let lit = FormatterFn(|fmt| match size {
+                        16 | 32 => {
+                            if lit >> (size - 1) & 1 != 0 {
+                                write!(fmt, "{lit:#x}_i{size}")
+                            } else {
+                                write!(fmt, "{lit:#x}")
                             }
-                            64 => write!(fmt, "{lit:#x}"),
-                            _ => write!(fmt, "<invalid literal:{lit:02x}>"),
-                        }),
-                    )?;
+                        }
+                        64 => write!(fmt, "{lit:#x}"),
+                        _ => write!(fmt, "<invalid literal:{lit:02x}>"),
+                    });
+                    ext.print_immediate(fmt, lit)?;
                 }
-                super::OP_EMPTY => ext.print_register(fmt, "_")?,
-                super::OP_UIMM => ext.print_immediate(fmt, x)?,
-                super::OP_MAS => {
-                    fmt.write_str("mas=")?;
-                    ext.print_immediate(fmt, FormatterFn(|fmt| write!(fmt, "{x:#x}")))?;
-                }
-                super::OP_LCNTEX => {
-                    invert(*y != 0).fmt(fmt)?;
-                    ext.print_register(fmt, "lcntex")?;
-                }
-                super::OP_LOOP_END => {
-                    invert(*y != 0).fmt(fmt)?;
-                    ext.print_register(fmt, "loop_end")?;
-                }
-                super::OP_SPRED => {
-                    invert(*y != 0).fmt(fmt)?;
-                    ext.print_register(
-                        fmt,
-                        FormatterFn(|fmt| {
-                            fmt.write_str("spred")?;
-                            for i in 0..6 {
-                                if *x & (1 << i) != 0 {
-                                    write!(fmt, "{i}")?;
-                                }
+                E2KOperand::Empty => ext.print_register(fmt, "_")?,
+                E2KOperand::Uimm => ext.print_immediate(fmt, x)?,
+                E2KOperand::Mas => print_named_hex(fmt, ext, "mas", x)?,
+                E2KOperand::Lcntex => print_cond(fmt, ext, *y != 0, "lcntex")?,
+                E2KOperand::LoopEnd => print_cond(fmt, ext, *y != 0, "loop_end")?,
+                E2KOperand::Spred => {
+                    let cond = FormatterFn(|fmt| {
+                        fmt.write_str("spred")?;
+                        for i in 0..6 {
+                            if *x & (1 << i) != 0 {
+                                i.fmt(fmt)?;
                             }
-                            Ok(())
-                        }),
-                    )?;
+                        }
+                        Ok(())
+                    });
+                    print_cond(fmt, ext, *y != 0, cond)?;
                 }
-                super::OP_WAIT => {
+                E2KOperand::Wait => {
                     use super::Cs1;
                     type CheckFn = fn(&Cs1) -> bool;
                     let fields: [(CheckFn, _); 9] = [
@@ -638,43 +654,38 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                         }
                     }
                 }
-                super::OP_VFBG => {
-                    use super::Cs1;
-                    let cs1 = Cs1(*x as u32);
-                    let umask = cs1.vfbg_umask();
-                    let dmask = cs1.vfbg_dmask();
-                    let chkm4 = cs1.vfbg_chkm4() as u8;
-                    write!(fmt, "umask={umask}, dmask={dmask}, chkm4={chkm4}")?;
+                E2KOperand::Vfbg => {
+                    let cs1 = super::Cs1(*x as u32);
+                    print_named(fmt, ext, "umask", cs1.vfbg_umask())?;
+                    fmt.write_str(", ")?;
+                    print_named(fmt, ext, "dmask", cs1.vfbg_dmask())?;
+                    fmt.write_str(", ")?;
+                    print_named(fmt, ext, "chkm4", cs1.vfbg_chkm4())?;
                 }
-                super::OP_IPD => {
-                    fmt.write_str("ipd")?;
+                E2KOperand::Ipd => fmt.write_str("ipd")?,
+                E2KOperand::NoSs => fmt.write_str("<missing ss>")?,
+                E2KOperand::NoMrgc => fmt.write_str("<missing mrgc>")?,
+                E2KOperand::Plu => {
+                    let cond = FormatterFn(|fmt| write!(fmt, "plu{x}"));
+                    print_cond(fmt, ext, *y != 0, cond)?;
                 }
-                super::OP_NO_SS => {
-                    fmt.write_str("<missing ss>")?;
-                }
-                super::OP_NO_MRGC => {
-                    fmt.write_str("<missing mrgc>")?;
-                }
-                super::OP_PLU => {
-                    invert(*y != 0).fmt(fmt)?;
-                    ext.print_register(fmt, FormatterFn(|fmt| write!(fmt, "plu{x}")))?;
-                }
-                super::OP_FDAM => {
-                    fmt.write_str("fdam")?;
-                }
-                super::OP_TRAR => {
-                    fmt.write_str("trar")?;
-                }
-                super::OP_CT_COND => {
-                    print_ct_cond(fmt, ext, *x as u8, *y as u8)?;
-                }
-                super::OP_AREA => {
+                E2KOperand::Fdam => fmt.write_str("fdam")?,
+                E2KOperand::Trar => fmt.write_str("trar")?,
+                E2KOperand::CtCond => print_ct_cond(fmt, ext, *x as u8, *y as u8)?,
+                E2KOperand::Area => {
                     ext.print_immediate(fmt, y)?;
                     fmt.write_char('(')?;
                     ext.print_immediate(fmt, x)?;
                     fmt.write_char(')')?;
                 }
-                _ => todo!("unimplemented arch specific operand {id}"),
+                E2KOperand::ApbCt => print_named(fmt, ext, "ct", x)?,
+                E2KOperand::ApbDpl => print_named(fmt, ext, "dpl", x)?,
+                E2KOperand::ApbDcd => print_named(fmt, ext, "dcd", x)?,
+                E2KOperand::ApbFmt => print_named(fmt, ext, "fmt", x)?,
+                E2KOperand::ApbMrng => print_named(fmt, ext, "mrng", x)?,
+                E2KOperand::ApbAsz => print_named(fmt, ext, "asz", x)?,
+                E2KOperand::ApbAbs => print_named(fmt, ext, "abs", x)?,
+                E2KOperand::CondStart => {} // handled in print_operands
             },
             _ => {
                 if let OperandKind::Reg(reg) = operand.kind() {
@@ -749,7 +760,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         let mut iter = insn.operands().iter().filter(|i| i.is_printable());
         for operand in iter.by_ref() {
             match operand.kind() {
-                OperandKind::ArchSpec(super::OP_COND_START, ..) => {
+                OperandKind::ArchSpec(id, ..) if *id == E2KOperand::CondStart as u64 => {
                     fmt.write_str(if first { "? " } else { " ? " })?;
                     break;
                 }

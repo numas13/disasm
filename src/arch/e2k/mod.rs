@@ -12,6 +12,7 @@ use core::{
 
 use crate::{
     bytes::Bytes,
+    macros::impl_arch_operands,
     utils::{zextract, ZExtract},
     Access, ArchDecoder, Bundle, Error, Insn, Reg, RegClass, Slot,
 };
@@ -67,24 +68,35 @@ pub const REG_CLASS_IPR: RegClass = RegClass::arch(8);
 pub const REG_CLASS_PRND: RegClass = RegClass::arch(9);
 
 // Custom operands
-pub const OP_LITERAL: u64 = 0;
-pub const OP_EMPTY: u64 = 1;
-pub const OP_UIMM: u64 = 2;
-pub const OP_MAS: u64 = 3;
-pub const OP_LCNTEX: u64 = 4;
-pub const OP_SPRED: u64 = 5;
-pub const OP_COND_START: u64 = 6;
-pub const OP_WAIT: u64 = 7;
-pub const OP_VFBG: u64 = 8;
-pub const OP_IPD: u64 = 9;
-pub const OP_NO_MRGC: u64 = 10;
-pub const OP_PLU: u64 = 11;
-pub const OP_FDAM: u64 = 12;
-pub const OP_TRAR: u64 = 13;
-pub const OP_LOOP_END: u64 = 14;
-pub const OP_CT_COND: u64 = 15;
-pub const OP_AREA: u64 = 16;
-pub const OP_NO_SS: u64 = 17;
+impl_arch_operands! {
+    pub enum E2KOperand {
+        Literal = 0,
+        Empty = 1,
+        Uimm = 2,
+        Mas = 3,
+        Lcntex = 4,
+        Spred = 5,
+        CondStart = 6,
+        Wait = 7,
+        Vfbg = 8,
+        Ipd = 9,
+        NoMrgc = 10,
+        Plu = 11,
+        Fdam = 12,
+        Trar = 13,
+        LoopEnd = 14,
+        CtCond = 15,
+        Area = 16,
+        NoSs = 17,
+        ApbCt = 18,
+        ApbDpl = 19,
+        ApbDcd = 20,
+        ApbFmt = 21,
+        ApbMrng = 22,
+        ApbAsz = 23,
+        ApbAbs = 24,
+    }
+}
 
 pub const PSRC_INVERT: u8 = 0x80;
 
@@ -145,30 +157,30 @@ trait InsnExt {
 
 impl InsnExt for Insn {
     fn push_literal(&mut self, literal: u64, size: u8) {
-        self.push_arch_spec(OP_LITERAL, literal, size as u64)
+        self.push_arch_spec3(E2KOperand::Literal, literal, size)
     }
 
     fn push_empty(&mut self) {
-        self.push_arch_spec(OP_EMPTY, 0, 0);
+        self.push_arch_spec1(E2KOperand::Empty);
     }
 
     fn push_uimm_short<I: Into<u64>>(&mut self, uimm: I) {
-        self.push_arch_spec(OP_UIMM, uimm.into(), 0);
+        self.push_arch_spec2(E2KOperand::Uimm, uimm.into());
     }
 
     fn push_mas(&mut self, mas: u8) {
         if mas != 0 {
-            self.push_arch_spec(OP_MAS, mas as u64, 0);
+            self.push_arch_spec2(E2KOperand::Mas, mas);
         }
     }
 
     fn push_pred(&mut self, pred: Pred) {
         match pred.psrc {
             Psrc::Lcntex => {
-                self.push_arch_spec(OP_LCNTEX, 0, pred.invert as u64);
+                self.push_arch_spec3(E2KOperand::Lcntex, 0_u8, pred.invert);
             }
             Psrc::Spred(mask) => {
-                self.push_arch_spec(OP_SPRED, mask as u64, pred.invert as u64);
+                self.push_arch_spec3(E2KOperand::Spred, mask, pred.invert);
             }
             Psrc::Pcnt(mut index) => {
                 if pred.invert {
@@ -212,7 +224,7 @@ impl InsnExt for Insn {
     }
 
     fn push_mova_area(&mut self, area: u8, index: u8) {
-        self.push_arch_spec(OP_AREA, area.into(), index.into());
+        self.push_arch_spec3(E2KOperand::Area, area, index);
     }
 }
 
@@ -699,6 +711,28 @@ impl Aas {
     }
 }
 
+#[derive(Copy, Clone, Default)]
+struct Apb(u32);
+
+impl Apb {
+    fn raw(&self) -> u32 {
+        self.0
+    }
+
+    impl_field! {
+        abs         =  0, 5, u8;
+        asz         =  5, 3, u8;
+        aaind       =  8, 4, u8;
+        aaincr      = 12, 3, u8;
+        aad         = 15, 5, u8;
+        mrng        = 20, 5, u8;
+        fmt         = 25, 3, u8;
+        dcd         = 28, 2, u8;
+        si          = 30, 1, bool;
+        ct          = 31, 1, bool;
+    }
+}
+
 #[derive(Default)]
 struct UnpackedBundle {
     hs: Hs,
@@ -983,10 +1017,10 @@ impl Decoder {
             if cs0.is_done() {
                 insn.set_opcode(opcode::DONE);
                 if cs0.done_fdam() {
-                    insn.push_arch_spec(OP_FDAM, 0, 0);
+                    insn.push_arch_spec1(E2KOperand::Fdam);
                 }
                 if cs0.done_trar() {
-                    insn.push_arch_spec(OP_TRAR, 0, 0);
+                    insn.push_arch_spec1(E2KOperand::Trar);
                 }
             } else if self.isa >= 7 && cs0.is_done_iret() {
                 insn.set_opcode(opcode::IRET);
@@ -998,8 +1032,8 @@ impl Decoder {
         }
 
         if cond != CT_COND_ALWAYS {
-            insn.push_arch_spec(OP_COND_START, 0, 0);
-            insn.push_arch_spec(OP_CT_COND, cond as u64, pred as u64);
+            insn.push_arch_spec1(E2KOperand::CondStart);
+            insn.push_arch_spec3(E2KOperand::CtCond, cond, pred);
         }
 
         // TODO: jump target hints
@@ -1020,7 +1054,7 @@ impl Decoder {
                 insn.push_reg(Reg::new(REG_CLASS_IPR, cs0.pref_ipr() as u64).read());
                 insn.push_uimm(cs0.pref_disp() as u64);
                 if cs0.pref_ipd() {
-                    insn.push_arch_spec(OP_IPD, 0, 0);
+                    insn.push_arch_spec1(E2KOperand::Ipd);
                 }
             });
         } else if cs0.is_puttsd() {
@@ -1132,7 +1166,7 @@ impl Decoder {
             out.push(opcode::SETSFT);
         } else if cs1.is_wait() {
             out.push_with(opcode::WAIT, |insn| {
-                insn.push_arch_spec(OP_WAIT, cs1.wait_bits() as u64, 0);
+                insn.push_arch_spec2(E2KOperand::Wait, cs1.wait_bits());
             });
         } else if cs1.is_call() || cs1.is_icall() {
             // handled in decode_ct
@@ -1147,7 +1181,7 @@ impl Decoder {
             }
         } else if cs1.is_vfbg() {
             out.push_with(opcode::VFBG, |insn| {
-                insn.push_arch_spec(OP_VFBG, cs1.vfbg_bits() as u64, 0);
+                insn.push_arch_spec2(E2KOperand::Vfbg, cs1.vfbg_bits());
             });
         } else {
             out.push_with(opcode::CS, |insn| {
@@ -1280,7 +1314,7 @@ impl Decoder {
                     let pred = Pred::new(psrc, invert);
                     insn.push_pred(pred);
                 } else {
-                    insn.push_arch_spec(OP_PLU, (lp - 4) as u64, invert as u64);
+                    insn.push_arch_spec3(E2KOperand::Plu, lp - 4, invert);
                 }
             }
 
@@ -1307,7 +1341,7 @@ impl Decoder {
 
 impl ArchDecoder for Decoder {
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error> {
-        let bytes = Bytes::new(bytes);
+        let mut bytes = Bytes::new(bytes);
         let len = Hs(bytes.peek_u8().unwrap_or(0) as u32).len();
         let cur = bytes
             .truncate(len)
@@ -1332,16 +1366,31 @@ impl ArchDecoder for Decoder {
                 Ok(self.hs().len() * 8)
             }
             Err(_) => {
-                if bytes.len() >= 16 {
-                    out.clear();
-                    // TODO: decode apb instructions
-                    out.push(opcode::APB);
-                    out.push(opcode::APB);
-                    self.end(out);
-                    Ok(128)
-                } else {
-                    Err(Error::Failed(bytes.len() * 8))
+                out.clear();
+                for i in 0..2 {
+                    let apb = bytes.read_u32().map(Apb)?;
+                    let offset = bytes.read_u32()?;
+                    out.push_with(opcode::APB, |insn| {
+                        if i == 0 {
+                            insn.push_arch_spec2(E2KOperand::ApbCt, apb.ct());
+                        } else {
+                            insn.push_arch_spec2(E2KOperand::ApbDpl, apb.ct());
+                        }
+                        insn.push_arch_spec2(E2KOperand::ApbDcd, apb.dcd());
+                        insn.push_arch_spec2(E2KOperand::ApbFmt, apb.fmt());
+                        insn.push_arch_spec2(E2KOperand::ApbMrng, apb.mrng());
+                        insn.push_reg(Reg::new(REG_CLASS_AAD, apb.aad() as u64).read());
+                        insn.push_reg(Reg::new(REG_CLASS_AAINCR, apb.aaincr() as u64).read());
+                        insn.push_reg(Reg::new(REG_CLASS_AAIND, apb.aaind() as u64).write());
+                        insn.push_arch_spec2(E2KOperand::ApbAsz, apb.asz());
+                        insn.push_arch_spec2(E2KOperand::ApbAbs, apb.abs());
+                        if offset != 0 {
+                            insn.push_uimm(offset as u64);
+                        }
+                    });
                 }
+                self.end(out);
+                Ok(128)
             }
         }
     }
@@ -1475,7 +1524,7 @@ impl Decoder {
                 return;
             }
         }
-        out.push_arch_spec(OP_NO_MRGC, 0, 0);
+        out.push_arch_spec1(E2KOperand::NoMrgc);
     }
 
     fn set_pred(&mut self, out: &mut Insn) {
@@ -1484,7 +1533,7 @@ impl Decoder {
             if let Some(pred) = rlp.get(out.slot()) {
                 if first {
                     first = false;
-                    out.push_arch_spec(OP_COND_START, 0, 0);
+                    out.push_arch_spec1(E2KOperand::CondStart);
                 }
                 out.push_pred(pred);
             }
@@ -1496,11 +1545,11 @@ impl Decoder {
         let ss = self.unpacked.ss;
         let cond = ss.ct_cond();
         if ss.is_empty() {
-            insn.push_arch_spec(OP_COND_START, 0, 0);
-            insn.push_arch_spec(OP_NO_SS, 0, 0);
+            insn.push_arch_spec1(E2KOperand::CondStart);
+            insn.push_arch_spec1(E2KOperand::NoSs);
         } else if cond != CT_COND_NONE && cond != CT_COND_ALWAYS {
-            insn.push_arch_spec(OP_COND_START, 0, 0);
-            insn.push_arch_spec(OP_CT_COND, cond as u64, ss.ct_pred() as u64);
+            insn.push_arch_spec1(E2KOperand::CondStart);
+            insn.push_arch_spec3(E2KOperand::CtCond, cond, ss.ct_pred());
         }
     }
 

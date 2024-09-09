@@ -6,6 +6,7 @@ pub mod arch;
 mod bytes;
 mod flags;
 mod insn;
+mod macros;
 mod operand;
 mod utils;
 
