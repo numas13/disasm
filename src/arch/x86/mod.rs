@@ -307,6 +307,19 @@ impl RawInsn {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum AddrSize {
+    Auto,
+    Addr32,
+    Addr64,
+}
+
+impl Default for AddrSize {
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
 // TODO: need ?macro? to define extensions and dependencies
 #[derive(Copy, Clone, Debug, Default)]
 pub struct Extensions {
@@ -454,6 +467,7 @@ pub struct Options {
     pub ext: Extensions,
     pub att: bool,
     pub suffix_always: bool,
+    pub addr_size: AddrSize,
 }
 
 #[derive(Default)]

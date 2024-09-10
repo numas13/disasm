@@ -104,10 +104,17 @@ impl Arch {
             },
             #[cfg(feature = "x86")]
             Arch::X86(opts) => {
-                if opts.ext.amd64 {
-                    64
-                } else {
-                    32
+                use crate::arch::x86::AddrSize;
+                match opts.addr_size {
+                    AddrSize::Auto => {
+                        if opts.ext.amd64 {
+                            64
+                        } else {
+                            32
+                        }
+                    }
+                    AddrSize::Addr32 => 32,
+                    AddrSize::Addr64 => 64,
                 }
             }
         }
