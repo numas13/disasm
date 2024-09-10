@@ -1,41 +1,20 @@
+mod consts;
 mod generated;
+
 #[cfg(feature = "print")]
 mod printer;
 
-use crate::{
-    bytes::Bytes, macros::impl_arch_operands, ArchDecoder, Box, Bundle, Error, Insn, Operand, Reg,
-    RegClass,
-};
+use crate::{bytes::Bytes, ArchDecoder, Box, Bundle, Error, Insn, Operand, Reg, RegClass};
 
 use self::generated::{RiscvDecode16, RiscvDecode32, SetValue};
 
+pub use self::consts::*;
 pub use self::generated::opcode;
+
+use self::operand::RiscvOperand;
 
 #[cfg(feature = "print")]
 pub(crate) use self::printer::printer;
-
-// Custom instruction flags
-const INSN_AQ: u32 = 1 << 16;
-const INSN_RL: u32 = 1 << 17;
-
-// Custom register classes
-pub const REG_CLASS_CSR: RegClass = RegClass::arch(0);
-
-// Custom operands
-impl_arch_operands! {
-    pub enum RiscvOperand {
-        Fence = 0,
-        RM = 1,
-    }
-}
-
-// rm values for fops
-pub const RM_RNE: u8 = 0;
-pub const RM_RTZ: u8 = 1;
-pub const RM_RDN: u8 = 2;
-pub const RM_RUP: u8 = 3;
-pub const RM_RMM: u8 = 4;
-pub const RM_DYN: u8 = 7;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Xlen {
@@ -208,7 +187,7 @@ impl SetValue for Decoder {
 
     fn set_rm(&mut self, out: &mut Insn, value: i32) {
         let rm = Operand::arch2(RiscvOperand::RM, value as u64);
-        out.push_operand(rm.non_printable(value as u8 == RM_DYN))
+        out.push_operand(rm.non_printable(value as u8 == operand::RM_DYN))
     }
 
     fn set_vm(&mut self, _: &mut Insn, _: i32) {
@@ -224,11 +203,11 @@ impl SetValue for Decoder {
     }
 
     fn set_aq(&mut self, out: &mut Insn, aq: i32) {
-        out.flags_mut().set_if(INSN_AQ, aq != 0);
+        out.flags_mut().set_if(insn::INSN_AQ, aq != 0);
     }
 
     fn set_rl(&mut self, out: &mut Insn, rl: i32) {
-        out.flags_mut().set_if(INSN_RL, rl != 0);
+        out.flags_mut().set_if(insn::INSN_RL, rl != 0);
     }
 
     fn set_csr(&mut self, out: &mut Insn, value: i32) {
@@ -411,7 +390,7 @@ fn f(index: i32) -> Reg {
 }
 
 fn csr(index: i32) -> Reg {
-    Reg::new(REG_CLASS_CSR, index as u64)
+    Reg::new(reg_class::CSR, index as u64)
 }
 
 fn rel_addr(address: u64, offset: i32) -> u64 {
@@ -422,7 +401,7 @@ fn rel_addr(address: u64, offset: i32) -> u64 {
 fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
     let m = self::generated::opcode::mnemonic(insn.opcode())?;
     let flags = insn.flags();
-    let s = match (flags.any(INSN_AQ), flags.any(INSN_RL)) {
+    let s = match (flags.any(insn::INSN_AQ), flags.any(insn::INSN_RL)) {
         (true, true) => "aqrl",
         (true, false) => "aq",
         (false, true) => "rl",

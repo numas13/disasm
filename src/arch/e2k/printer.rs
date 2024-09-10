@@ -9,7 +9,7 @@ use crate::{
     Insn, OperandKind, Reg, RegClass, Slot,
 };
 
-use super::{opcode, E2KOperand, Options};
+use super::{consts::*, opcode, E2KOperand, Options};
 
 #[rustfmt::skip]
 const GPR_NAME: [&str; 256] = [
@@ -427,42 +427,42 @@ fn print_ct_cond(
     pred: u8,
 ) -> fmt::Result {
     match cond {
-        super::CT_COND_NONE => unreachable!(),
-        super::CT_COND_ALWAYS => unreachable!(),
-        super::CT_COND_PREG => {
+        operand::CT_COND_NONE => unreachable!(),
+        operand::CT_COND_ALWAYS => unreachable!(),
+        operand::CT_COND_PREG => {
             ext.print_register(fmt, PREG_NAME[pred as usize])?;
         }
-        super::CT_COND_NOT_PREG => {
+        operand::CT_COND_NOT_PREG => {
             fmt.write_char('~')?;
             ext.print_register(fmt, PREG_NAME[pred as usize])?;
         }
-        super::CT_COND_LOOP_END => {
+        operand::CT_COND_LOOP_END => {
             ext.print_register(fmt, "loop_end")?;
         }
-        super::CT_COND_NOT_LOOP_END => {
+        operand::CT_COND_NOT_LOOP_END => {
             fmt.write_char('~')?;
             ext.print_register(fmt, "loop_end")?;
         }
-        super::CT_COND_PREG_OR_LOOP_END => {
+        operand::CT_COND_PREG_OR_LOOP_END => {
             ext.print_register(fmt, PREG_NAME[pred as usize])?;
             fmt.write_str(" || ")?;
             ext.print_register(fmt, "loop_end")?;
         }
-        super::CT_COND_NOT_PREG_AND_NOT_LOOP_END => {
+        operand::CT_COND_NOT_PREG_AND_NOT_LOOP_END => {
             fmt.write_char('~')?;
             ext.print_register(fmt, PREG_NAME[pred as usize])?;
             fmt.write_str(" && ")?;
             fmt.write_char('~')?;
             ext.print_register(fmt, "loop_end")?;
         }
-        super::CT_COND_MLOCK_OR_DTAL => {
+        operand::CT_COND_MLOCK_OR_DTAL => {
             ext.print_register(fmt, "mlock")?;
             if pred != 0 {
                 fmt.write_str(" || ")?;
                 print_dt_al(fmt, ext, pred)?;
             }
         }
-        super::CT_COND_MLOCK_OR_CMP => {
+        operand::CT_COND_MLOCK_OR_CMP => {
             ext.print_register(fmt, "mlock")?;
             fmt.write_str(" || ")?;
             match pred & 0x18 {
@@ -480,7 +480,7 @@ fn print_ct_cond(
                 _ => write!(fmt, "<invalid cond:{cond}:{pred:02x}>")?,
             }
         }
-        super::CT_COND_CMP_CLP => {
+        operand::CT_COND_CMP_CLP => {
             if pred & 0x10 != 0 {
                 print_plu_cond(fmt, ext, pred)?;
             } else {
@@ -488,13 +488,13 @@ fn print_ct_cond(
                 print_cmp_cond(fmt, ext, index, pred & 1 != 0)?;
             }
         }
-        super::CT_COND_NOT_PREG_OR_LOOP_END => {
+        operand::CT_COND_NOT_PREG_OR_LOOP_END => {
             fmt.write_char('~')?;
             ext.print_register(fmt, PREG_NAME[pred as usize])?;
             fmt.write_str(" || ")?;
             ext.print_register(fmt, "loop_end")?;
         }
-        super::CT_COND_PREG_AND_NOT_LOOP_END => {
+        operand::CT_COND_PREG_AND_NOT_LOOP_END => {
             ext.print_register(fmt, PREG_NAME[pred as usize])?;
             fmt.write_str(" && ")?;
             fmt.write_char('~')?;
@@ -560,11 +560,11 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                     format!("<invalid gpr:{index:02x}>").into()
                 }
             }
-            super::REG_CLASS_PREG => PREG_NAME[reg.index() as usize & 31].into(),
-            super::REG_CLASS_PCNT => PCNT_NAME[reg.index() as usize & 31].into(),
-            super::REG_CLASS_PRND => PRND_NAME[reg.index() as usize & 31].into(),
-            super::REG_CLASS_CTPR => CTPR_NAME[reg.index() as usize].into(),
-            super::REG_CLASS_SREG => {
+            reg_class::PREG => PREG_NAME[reg.index() as usize & 31].into(),
+            reg_class::PCNT => PCNT_NAME[reg.index() as usize & 31].into(),
+            reg_class::PRND => PRND_NAME[reg.index() as usize & 31].into(),
+            reg_class::CTPR => CTPR_NAME[reg.index() as usize].into(),
+            reg_class::SREG => {
                 let index = reg.index() as usize;
                 let s = SREG_NAME[index];
                 if s.is_empty() {
@@ -573,11 +573,11 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                     s.into()
                 }
             }
-            super::REG_CLASS_AAD => AAD_NAME[reg.index() as usize].into(),
-            super::REG_CLASS_AASTI => AASTI_NAME[reg.index() as usize].into(),
-            super::REG_CLASS_AAIND => AAIND_NAME[reg.index() as usize].into(),
-            super::REG_CLASS_AAINCR => AAINCR_NAME[reg.index() as usize].into(),
-            super::REG_CLASS_IPR => IPR_NAME[reg.index() as usize].into(),
+            reg_class::AAD => AAD_NAME[reg.index() as usize].into(),
+            reg_class::AASTI => AASTI_NAME[reg.index() as usize].into(),
+            reg_class::AAIND => AAIND_NAME[reg.index() as usize].into(),
+            reg_class::AAINCR => AAINCR_NAME[reg.index() as usize].into(),
+            reg_class::IPR => IPR_NAME[reg.index() as usize].into(),
             _ => todo!(),
         }
     }
@@ -690,8 +690,8 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             _ => {
                 if let OperandKind::Reg(reg) = operand.kind() {
                     match reg.class() {
-                        super::REG_CLASS_PREG | super::REG_CLASS_PCNT | super::REG_CLASS_PRND => {
-                            if reg.index() & super::PSRC_INVERT as u64 != 0 {
+                        reg_class::PREG | reg_class::PCNT | reg_class::PRND => {
+                            if reg.index() & operand::PSRC_INVERT as u64 != 0 {
                                 fmt.write_char('~')?;
                             }
                         }
@@ -725,24 +725,19 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         };
         match slot {
             Slot::NONE => fmt.write_str("    ")?,
-            super::SLOT_ALC0
-            | super::SLOT_ALC1
-            | super::SLOT_ALC2
-            | super::SLOT_ALC3
-            | super::SLOT_ALC4
-            | super::SLOT_ALC5 => {
-                print_slot(super::SLOT_ALC0, "alc")?;
+            slot::ALC0 | slot::ALC1 | slot::ALC2 | slot::ALC3 | slot::ALC4 | slot::ALC5 => {
+                print_slot(slot::ALC0, "alc")?;
             }
-            super::SLOT_APB0 | super::SLOT_APB1 | super::SLOT_APB2 | super::SLOT_APB3 => {
-                print_slot(super::SLOT_APB0, "apb")?;
+            slot::APB0 | slot::APB1 | slot::APB2 | slot::APB3 => {
+                print_slot(slot::APB0, "apb")?;
             }
-            super::SLOT_PLU0 | super::SLOT_PLU1 | super::SLOT_PLU2 => {
-                print_slot(super::SLOT_PLU0, "plu")?;
+            slot::PLU0 | slot::PLU1 | slot::PLU2 => {
+                print_slot(slot::PLU0, "plu")?;
             }
             _ => unreachable!("unexpected slot {slot:?}"),
         }
 
-        if insn.flags().any(super::INSN_SM) {
+        if insn.flags().any(insn::SM) {
             ext.print_sub_mnemonic(fmt, ".sm ")?;
         } else {
             fmt.write_str("    ")?;

@@ -26,7 +26,7 @@ macro_rules! impl_arch_operands {
         }
 
         impl $name {
-            fn from_u64(value: u64) -> Option<Self> {
+            pub fn from_u64(value: u64) -> Option<Self> {
                 Some(match value {
                     $($n => Self::$op,)+
                     _ => return None,

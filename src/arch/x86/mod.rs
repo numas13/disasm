@@ -1,3 +1,4 @@
+mod consts;
 mod generated;
 
 #[cfg(feature = "print")]
@@ -6,12 +7,13 @@ mod printer;
 use core::ops::{Deref, DerefMut};
 
 use crate::{
-    bytes::Bytes, flags::Field, macros::impl_arch_operands, utils::zextract, Access, ArchDecoder,
-    Box, Bundle, Error, Insn, Operand, OperandKind, Reg, RegClass,
+    bytes::Bytes, utils::zextract, Access, ArchDecoder, Box, Bundle, Error, Insn, Operand,
+    OperandKind, Reg, RegClass,
 };
 
-use self::generated::*;
+use self::{consts::operand::X86Operand, generated::*};
 
+pub use self::consts::*;
 pub use self::generated::opcode;
 
 const GPR_MASK: u64 = 15;
@@ -23,86 +25,8 @@ pub(crate) use self::printer::printer;
 
 type Result<T = (), E = Error> = core::result::Result<T, E>;
 
-// Custom instruction flags
-const INSN_FIELD_SUFFIX: Field = Field::new(16, 3);
-const INSN_FIELD_REP: Field = Field::new(19, 2);
-const INSN_FIELD_SEGMENT: Field = Field::new(21, 3);
-const INSN_REX_W: u32 = 1 << 27;
-const INSN_ADDR32: u32 = 1 << 28;
-const INSN_DATA16: u32 = 1 << 29;
-const INSN_LOCK: u32 = 1 << 30;
-const INSN_SUFFIX: u32 = 1 << 31;
-
-const SUFFIX_B: u32 = 0;
-const SUFFIX_W: u32 = 1;
-const SUFFIX_L: u32 = 2;
-const SUFFIX_Q: u32 = 3;
-const SUFFIX_FP_S: u32 = 4;
-const SUFFIX_FP_L: u32 = 5;
-const SUFFIX_FP_LL: u32 = 6;
-
-const INSN_REP_NONE: u32 = 0;
-const INSN_REP: u32 = 1;
-const INSN_REPZ: u32 = 2;
-const INSN_REPNZ: u32 = 3;
-
-const SEGMENT_NONE: u32 = 0;
-const SEGMENT_ES: u32 = 1;
-const SEGMENT_CS: u32 = 2;
-const SEGMENT_SS: u32 = 3;
-const SEGMENT_DS: u32 = 4;
-const SEGMENT_FS: u32 = 5;
-const SEGMENT_GS: u32 = 6;
-
-// Custom register classes
-const REG_CLASS_K: RegClass = RegClass::arch(0);
-const REG_CLASS_K_MASK: RegClass = RegClass::arch(1);
-const REG_CLASS_BND: RegClass = RegClass::arch(2);
-const REG_CLASS_SEGMENT: RegClass = RegClass::arch(3);
-
 const NONE: Reg = Reg::new(RegClass::INT, 0x1000);
 const RIP: Reg = Reg::new(RegClass::INT, 0x1001);
-
-// Custom operands
-impl_arch_operands! {
-    pub enum X86Operand {
-        ST = 0,
-        STI = 1,
-        Sae = 2,
-        SaeEr = 3,
-        MemOffset = 4,
-    }
-}
-
-// Custom operand flags
-const OP_INDIRECT: u32 = 8;
-
-const OP_FIELD_MEM: Field = Field::new(16, 4);
-const OP_FIELD_BCST: Field = Field::new(20, 3);
-const OP_FIELD_SEGMENT: Field = Field::new(23, 3);
-
-const SIZE_NONE: u8 = 0;
-const SIZE_BYTE: u8 = 1;
-const SIZE_WORD: u8 = 2;
-const SIZE_DWORD: u8 = 3;
-const SIZE_QWORD: u8 = 4;
-const SIZE_OWORD: u8 = 5;
-const SIZE_XMMWORD: u8 = 6;
-const SIZE_YMMWORD: u8 = 7;
-const SIZE_ZMMWORD: u8 = 8;
-const SIZE_TBYTE: u8 = 9;
-const SIZE_FWORD_48: u8 = 10;
-const SIZE_FWORD_80: u8 = 11;
-
-const BROADCAST_NONE: u8 = 0;
-const BROADCAST_1TO2: u8 = 1;
-const BROADCAST_1TO4: u8 = 2;
-const BROADCAST_1TO8: u8 = 3;
-const BROADCAST_1TO16: u8 = 4;
-const BROADCAST_1TO32: u8 = 5;
-
-const OP_BCST_FORCE: u32 = 1 << 30;
-const OP_NO_PTR: u32 = 1 << 31;
 
 // mapping for escape bytes
 const OPCODE_MAP_0F: u8 = 0x01;
@@ -205,35 +129,35 @@ impl Size {
 
     fn op_size(&self) -> u8 {
         match self {
-            Self::None => SIZE_NONE,
-            Self::Byte => SIZE_BYTE,
-            Self::Word => SIZE_WORD,
-            Self::Long => SIZE_DWORD,
-            Self::Quad => SIZE_QWORD,
-            Self::Octo => SIZE_OWORD,
-            Self::Mm => SIZE_QWORD,
-            Self::Xmm => SIZE_XMMWORD,
-            Self::Ymm => SIZE_YMMWORD,
-            Self::Zmm => SIZE_ZMMWORD,
-            Self::Tbyte => SIZE_TBYTE,
-            Self::Far48 => SIZE_FWORD_48,
-            Self::Far80 => SIZE_FWORD_80,
+            Self::None => operand::SIZE_NONE,
+            Self::Byte => operand::SIZE_BYTE,
+            Self::Word => operand::SIZE_WORD,
+            Self::Long => operand::SIZE_DWORD,
+            Self::Quad => operand::SIZE_QWORD,
+            Self::Octo => operand::SIZE_OWORD,
+            Self::Mm => operand::SIZE_QWORD,
+            Self::Xmm => operand::SIZE_XMMWORD,
+            Self::Ymm => operand::SIZE_YMMWORD,
+            Self::Zmm => operand::SIZE_ZMMWORD,
+            Self::Tbyte => operand::SIZE_TBYTE,
+            Self::Far48 => operand::SIZE_FWORD_48,
+            Self::Far80 => operand::SIZE_FWORD_80,
         }
     }
 
     fn op_size_vec(&self, access: MemAccess) -> u8 {
         match (self, access) {
-            (Self::Byte, MemAccess::Tuple2) => SIZE_WORD,
-            (Self::Byte, MemAccess::Tuple4) => SIZE_DWORD,
-            (Self::Byte, MemAccess::Tuple8) => SIZE_QWORD,
-            (Self::Word, MemAccess::Tuple2) => SIZE_DWORD,
-            (Self::Word, MemAccess::Tuple4) => SIZE_QWORD,
-            (Self::Word, MemAccess::Tuple8) => SIZE_XMMWORD,
-            (Self::Long, MemAccess::Tuple2) => SIZE_QWORD,
-            (Self::Long, MemAccess::Tuple4) => SIZE_XMMWORD,
-            (Self::Long, MemAccess::Tuple8) => SIZE_YMMWORD,
-            (Self::Quad, MemAccess::Tuple2) => SIZE_XMMWORD,
-            (Self::Quad, MemAccess::Tuple4) => SIZE_YMMWORD,
+            (Self::Byte, MemAccess::Tuple2) => operand::SIZE_WORD,
+            (Self::Byte, MemAccess::Tuple4) => operand::SIZE_DWORD,
+            (Self::Byte, MemAccess::Tuple8) => operand::SIZE_QWORD,
+            (Self::Word, MemAccess::Tuple2) => operand::SIZE_DWORD,
+            (Self::Word, MemAccess::Tuple4) => operand::SIZE_QWORD,
+            (Self::Word, MemAccess::Tuple8) => operand::SIZE_XMMWORD,
+            (Self::Long, MemAccess::Tuple2) => operand::SIZE_QWORD,
+            (Self::Long, MemAccess::Tuple4) => operand::SIZE_XMMWORD,
+            (Self::Long, MemAccess::Tuple8) => operand::SIZE_YMMWORD,
+            (Self::Quad, MemAccess::Tuple2) => operand::SIZE_XMMWORD,
+            (Self::Quad, MemAccess::Tuple4) => operand::SIZE_YMMWORD,
             _ => self.op_size(),
         }
     }
@@ -672,7 +596,7 @@ impl<'a> Inner<'a> {
 
         let mask = (zextract(evex[3], 7, 1) << 3) | zextract(evex[3], 0, 3);
         if mask & 7 != 0 {
-            let mask = Reg::new(REG_CLASS_K_MASK, mask.into()).read();
+            let mask = Reg::new(reg_class::K_MASK, mask.into()).read();
             self.operand_mask = Some(Operand::reg(mask));
         }
 
@@ -870,13 +794,13 @@ impl<'a> Inner<'a> {
         };
         let mut op = Operand::new(kind);
         let flags = op.flags_mut();
-        if self.segment != SEGMENT_NONE && self.segment != SEGMENT_CS {
-            flags.field_set(OP_FIELD_SEGMENT, self.segment);
+        if self.segment != insn::SEGMENT_NONE && self.segment != insn::SEGMENT_CS {
+            flags.field_set(operand::FIELD_SEGMENT, self.segment);
             self.segment = 0;
         }
         flags
-            .set_if(OP_NO_PTR, self.no_ptr)
-            .field_set(OP_FIELD_MEM, size as u32);
+            .set_if(operand::NO_PTR, self.no_ptr)
+            .field_set(operand::FIELD_MEM, size as u32);
         self.need_suffix = true;
         Ok(Some(op))
     }
@@ -924,12 +848,12 @@ impl<'a> Inner<'a> {
                     self.raw.set_f2();
                     pp = PP_F2;
                 }
-                PREFIX_CS => self.segment = SEGMENT_CS,
-                PREFIX_ES => self.segment = SEGMENT_ES,
-                PREFIX_SS => self.segment = SEGMENT_SS,
-                PREFIX_DS => self.segment = SEGMENT_DS,
-                PREFIX_FS => self.segment = SEGMENT_FS,
-                PREFIX_GS => self.segment = SEGMENT_GS,
+                PREFIX_CS => self.segment = insn::SEGMENT_CS,
+                PREFIX_ES => self.segment = insn::SEGMENT_ES,
+                PREFIX_SS => self.segment = insn::SEGMENT_SS,
+                PREFIX_DS => self.segment = insn::SEGMENT_DS,
+                PREFIX_FS => self.segment = insn::SEGMENT_FS,
+                PREFIX_GS => self.segment = insn::SEGMENT_GS,
                 _ => break,
             }
 
@@ -996,13 +920,13 @@ impl<'a> Inner<'a> {
 
         // TODO: HLE
         insn.flags_mut()
-            .set_if(INSN_LOCK, self.lock)
-            .set_if(INSN_DATA16, self.prefix_66 > 1)
+            .set_if(insn::LOCK, self.lock)
+            .set_if(insn::DATA16, self.prefix_66 > 1)
             .set_if(
-                INSN_ADDR32,
+                insn::ADDR32,
                 self.prefix_67 > 0 && self.mode == MODE_REGISTER_DIRECT,
             )
-            .field_set_if(INSN_FIELD_SEGMENT, self.segment, self.segment != 0);
+            .field_set_if(insn::FIELD_SEGMENT, self.segment, self.segment != 0);
 
         out.next();
 
@@ -1117,7 +1041,7 @@ impl<'a> Inner<'a> {
                 self.has_gpr = true;
                 Operand::reg(reg.access(access))
             });
-        op.flags_mut().set_if(OP_INDIRECT, self.indirect);
+        op.flags_mut().set_if(operand::INDIRECT, self.indirect);
         out.push_operand(op);
         Ok(())
     }
@@ -1132,13 +1056,13 @@ impl<'a> Inner<'a> {
         };
         let mut op = Operand::arch2(X86Operand::MemOffset, offset);
         let flags = op.flags_mut();
-        if self.segment != SEGMENT_NONE {
-            flags.field_set(OP_FIELD_SEGMENT, self.segment);
+        if self.segment != insn::SEGMENT_NONE {
+            flags.field_set(operand::FIELD_SEGMENT, self.segment);
             self.segment = 0;
         }
         flags
-            .set(OP_NO_PTR)
-            .field_set(OP_FIELD_MEM, self.mem_size.op_size() as u32);
+            .set(operand::NO_PTR)
+            .field_set(operand::FIELD_MEM, self.mem_size.op_size() as u32);
         out.push_operand(op);
         self.need_suffix = true;
         Ok(())
@@ -1186,9 +1110,9 @@ impl<'a> Inner<'a> {
         }
         let mem_size = if self.broadcast && self.broadcast_size != 0 {
             match self.broadcast_size {
-                4 => SIZE_WORD,
-                5 => SIZE_DWORD,
-                6 => SIZE_QWORD,
+                4 => operand::SIZE_WORD,
+                5 => operand::SIZE_DWORD,
+                6 => operand::SIZE_QWORD,
                 _ => unreachable!(),
             }
         } else if self.mem_size_override {
@@ -1202,17 +1126,17 @@ impl<'a> Inner<'a> {
             .map(|mut operand| {
                 if self.broadcast && self.broadcast_size != 0 {
                     let bcst = match size.bits() >> self.broadcast_size as usize {
-                        2 => BROADCAST_1TO2,
-                        4 => BROADCAST_1TO4,
-                        8 => BROADCAST_1TO8,
-                        16 => BROADCAST_1TO16,
-                        32 => BROADCAST_1TO32,
+                        2 => operand::BROADCAST_1TO2,
+                        4 => operand::BROADCAST_1TO4,
+                        8 => operand::BROADCAST_1TO8,
+                        16 => operand::BROADCAST_1TO16,
+                        32 => operand::BROADCAST_1TO32,
                         _ => unreachable!(),
                     };
                     operand
                         .flags_mut()
-                        .field_set(OP_FIELD_BCST, bcst as u32)
-                        .set_if(OP_BCST_FORCE, self.broadcast_force);
+                        .field_set(operand::FIELD_BCST, bcst as u32)
+                        .set_if(operand::BCST_FORCE, self.broadcast_force);
                 }
                 operand
             })
@@ -1224,7 +1148,7 @@ impl<'a> Inner<'a> {
                 let reg = Reg::new(RegClass::VECTOR, size.encode_vec(index));
                 Operand::reg(reg.access(access))
             });
-        operand.flags_mut().set_if(OP_INDIRECT, self.indirect);
+        operand.flags_mut().set_if(operand::INDIRECT, self.indirect);
         Ok(operand)
     }
 
@@ -1513,13 +1437,13 @@ impl<'a> Inner<'a> {
     }
 
     fn set_k_vvv(&mut self, out: &mut Insn, value: i32, access: Access) -> Result {
-        let reg = Reg::new(REG_CLASS_K, value as u64);
+        let reg = Reg::new(reg_class::K, value as u64);
         out.push_reg(reg.access(access));
         Ok(())
     }
 
     fn set_k_reg(&mut self, out: &mut Insn, value: i32, access: Access) -> Result {
-        let reg = Reg::new(REG_CLASS_K, value as u64);
+        let reg = Reg::new(reg_class::K, value as u64);
         let operand = Operand::reg(reg.access(access));
         self.push_operand_with_mask(out, operand);
         Ok(())
@@ -1537,17 +1461,17 @@ impl<'a> Inner<'a> {
         self.set_mem_size(msz);
         let index = value as u8;
         let mut operand = self
-            .decode_mem(out, index, SIZE_DWORD, self.addr_size)?
-            .unwrap_or_else(|| Operand::reg(Reg::new(REG_CLASS_K, value as u64).access(access)));
+            .decode_mem(out, index, operand::SIZE_DWORD, self.addr_size)?
+            .unwrap_or_else(|| Operand::reg(Reg::new(reg_class::K, value as u64).access(access)));
         operand
             .flags_mut()
-            .field_set(OP_FIELD_MEM, self.mem_size.op_size() as u32);
+            .field_set(operand::FIELD_MEM, self.mem_size.op_size() as u32);
         out.push_operand(operand);
         Ok(())
     }
 
     fn set_bnd_reg(&mut self, out: &mut Insn, value: i32, access: Access) -> Result {
-        out.push_reg(Reg::new(REG_CLASS_BND, value as u64).access(access));
+        out.push_reg(Reg::new(reg_class::BND, value as u64).access(access));
         Ok(())
     }
 
@@ -1626,16 +1550,16 @@ impl SetValue for Inner<'_> {
     fn set_suffix(&mut self, out: &mut Insn, value: i32) -> Result {
         let size = self.operand_size(value);
         let suffix = match size {
-            8 => SUFFIX_B,
-            16 => SUFFIX_W,
-            32 => SUFFIX_L,
-            64 => SUFFIX_Q,
+            8 => insn::SUFFIX_B,
+            16 => insn::SUFFIX_W,
+            32 => insn::SUFFIX_L,
+            64 => insn::SUFFIX_Q,
             _ => unreachable!("unexpected suffix for size {size} (value={value})"),
         };
         if self.opts_arch.suffix_always || (self.need_suffix && !self.has_gpr) || value < 0 {
             out.flags_mut()
-                .field_set(INSN_FIELD_SUFFIX, suffix)
-                .set(INSN_SUFFIX);
+                .field_set(insn::FIELD_SUFFIX, suffix)
+                .set(insn::SUFFIX);
         };
         Ok(())
     }
@@ -1650,14 +1574,14 @@ impl SetValue for Inner<'_> {
             value as usize
         };
         let suffix = match size {
-            32 => SUFFIX_FP_S,
-            64 => SUFFIX_FP_L,
-            80 => SUFFIX_FP_LL,
+            32 => insn::SUFFIX_FP_S,
+            64 => insn::SUFFIX_FP_L,
+            80 => insn::SUFFIX_FP_LL,
             _ => unreachable!("unexpected fp suffix for size {size} (value={value})"),
         };
         out.flags_mut()
-            .field_set(INSN_FIELD_SUFFIX, suffix)
-            .set(INSN_SUFFIX);
+            .field_set(insn::FIELD_SUFFIX, suffix)
+            .set(insn::SUFFIX);
         Ok(())
     }
 
@@ -1688,7 +1612,7 @@ impl SetValue for Inner<'_> {
     }
 
     fn set_rex_w(&mut self, out: &mut Insn, value: i32) -> Result {
-        out.flags_mut().set_if(INSN_REX_W, value != 0 && self.w);
+        out.flags_mut().set_if(insn::REX_W, value != 0 && self.w);
         Ok(())
     }
 
@@ -1696,11 +1620,11 @@ impl SetValue for Inner<'_> {
         if value != 0 {
             let rep = match self.repeat {
                 Repeat::None => 0,
-                Repeat::RepZ if value == 2 => INSN_REPZ,
-                Repeat::RepZ => INSN_REP,
-                Repeat::RepNZ => INSN_REPNZ,
+                Repeat::RepZ if value == 2 => insn::REPZ,
+                Repeat::RepZ => insn::REP,
+                Repeat::RepNZ => insn::REPNZ,
             };
-            out.flags_mut().field_set(INSN_FIELD_REP, rep);
+            out.flags_mut().field_set(insn::FIELD_REP, rep);
         }
         Ok(())
     }
@@ -1720,7 +1644,7 @@ impl SetValue for Inner<'_> {
 
     fn set_args_segment(&mut self, out: &mut Insn, args: args_segment) -> Result {
         assert!((0..6).contains(&args.seg));
-        let reg = Reg::new(REG_CLASS_SEGMENT, args.seg as u64);
+        let reg = Reg::new(reg_class::SEGMENT, args.seg as u64);
         out.push_reg(reg.access(access_from_mask(args.rw)));
         Ok(())
     }
@@ -1888,7 +1812,7 @@ impl SetValue for Inner<'_> {
             return Err(Error::Failed(0));
         }
         let access = access_from_mask(args.rw);
-        let reg = Reg::new(REG_CLASS_SEGMENT, seg as u64);
+        let reg = Reg::new(reg_class::SEGMENT, seg as u64);
         out.push_reg(reg.access(access));
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)
     }
@@ -1900,7 +1824,7 @@ impl SetValue for Inner<'_> {
         }
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
-        let reg = Reg::new(REG_CLASS_SEGMENT, seg as u64);
+        let reg = Reg::new(reg_class::SEGMENT, seg as u64);
         out.push_reg(reg.access(Access::Read));
         Ok(())
     }
@@ -2374,25 +2298,25 @@ impl SetValue for Inner<'_> {
     }
 
     fn set_movs(&mut self, out: &mut Insn, msz: i32) -> Result {
-        self.segment = SEGMENT_ES;
+        self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Write, 0, msz)?;
-        self.segment = SEGMENT_DS;
+        self.segment = insn::SEGMENT_DS;
         self.set_gpr_mem(out, 6, msz, Access::Read, 0, msz)?;
         self.set_suffix(out, msz)?;
         Ok(())
     }
 
     fn set_cmps(&mut self, out: &mut Insn, msz: i32) -> Result {
-        self.segment = SEGMENT_DS;
+        self.segment = insn::SEGMENT_DS;
         self.set_gpr_mem(out, 6, msz, Access::Read, 0, msz)?;
-        self.segment = SEGMENT_ES;
+        self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Read, 0, msz)?;
         self.set_suffix(out, msz)?;
         Ok(())
     }
 
     fn set_stos(&mut self, out: &mut Insn, msz: i32) -> Result {
-        self.segment = SEGMENT_ES;
+        self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Write, 0, msz)?;
         self.set_gpr_reg(out, 0, Access::Read, msz)?;
         self.set_suffix(out, msz)?;
@@ -2401,7 +2325,7 @@ impl SetValue for Inner<'_> {
 
     fn set_lods(&mut self, out: &mut Insn, msz: i32) -> Result {
         self.set_gpr_reg(out, 0, Access::Write, msz)?;
-        self.segment = SEGMENT_DS;
+        self.segment = insn::SEGMENT_DS;
         self.set_gpr_mem(out, 6, msz, Access::Read, 0, msz)?;
         self.set_suffix(out, msz)?;
         Ok(())
@@ -2409,7 +2333,7 @@ impl SetValue for Inner<'_> {
 
     fn set_scas(&mut self, out: &mut Insn, msz: i32) -> Result {
         self.set_gpr_reg(out, 0, Access::Read, msz)?;
-        self.segment = SEGMENT_ES;
+        self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Read, 0, msz)?;
         self.set_suffix(out, msz)?;
         Ok(())
@@ -2472,7 +2396,7 @@ impl SetValue for Inner<'_> {
             .wrapping_add(self.bytes.offset() as u64)
             .wrapping_add(disp as u64);
         let mut operand = Operand::new(OperandKind::Absolute(address));
-        operand.flags_mut().set(OP_NO_PTR);
+        operand.flags_mut().set(operand::NO_PTR);
         out.push_operand(operand);
         Ok(())
     }
@@ -2484,14 +2408,14 @@ impl SetValue for Inner<'_> {
 
     fn set_es(&mut self, _: &mut Insn, value: i32) -> Result {
         if value != 0 {
-            self.segment = SEGMENT_ES;
+            self.segment = insn::SEGMENT_ES;
         }
         Ok(())
     }
 
     fn set_ds(&mut self, _: &mut Insn, value: i32) -> Result {
         if value != 0 {
-            self.segment = SEGMENT_DS;
+            self.segment = insn::SEGMENT_DS;
         }
         Ok(())
     }

@@ -4,7 +4,7 @@ use alloc::borrow::Cow;
 
 use crate::{ArchPrinter, Insn, Operand, OperandKind, PrinterExt, Reg, RegClass};
 
-use super::{Options, RiscvOperand};
+use super::{consts::*, Options, RiscvOperand};
 
 #[rustfmt::skip]
 const X_NAME: [&str; 32] = [
@@ -66,7 +66,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                 let names = if self.abi_regs { F_ABI_NAME } else { F_NAME };
                 names[index].into()
             }
-            super::REG_CLASS_CSR => match index {
+            reg_class::CSR => match index {
                 0x001 => "fflags",
                 0x002 => "frm",
                 0x003 => "fcsr",
@@ -96,12 +96,12 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                 }
                 RiscvOperand::RM => {
                     let s = match value as u8 {
-                        super::RM_RNE => "rne",
-                        super::RM_RTZ => "rtz",
-                        super::RM_RDN => "rdn",
-                        super::RM_RUP => "rup",
-                        super::RM_RMM => "rmm",
-                        super::RM_DYN => "dyn",
+                        operand::RM_RNE => "rne",
+                        operand::RM_RTZ => "rtz",
+                        operand::RM_RDN => "rdn",
+                        operand::RM_RUP => "rup",
+                        operand::RM_RMM => "rmm",
+                        operand::RM_DYN => "dyn",
                         _ => "unknown",
                     };
                     fmt.write_str(s)?;

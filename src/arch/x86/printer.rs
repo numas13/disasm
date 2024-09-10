@@ -7,7 +7,7 @@ use crate::{
     ArchPrinter, Insn, Operand, OperandKind, PrinterExt, Reg, RegClass,
 };
 
-use super::{opcode, Size, X86Operand};
+use super::{consts::*, opcode, Size, X86Operand};
 
 #[rustfmt::skip]
 const GPR_NAME_BYTE: [&str; 16] = [
@@ -345,15 +345,15 @@ impl Printer {
                         };
                         self.strip_prefix(name).into()
                     }
-                    super::REG_CLASS_K | super::REG_CLASS_K_MASK => {
+                    reg_class::K | reg_class::K_MASK => {
                         let name = K_NAME[index as usize & 7];
                         self.strip_prefix(name).into()
                     }
-                    super::REG_CLASS_BND => {
+                    reg_class::BND => {
                         let name = BND_NAME[index as usize];
                         self.strip_prefix(name).into()
                     }
-                    super::REG_CLASS_SEGMENT => {
+                    reg_class::SEGMENT => {
                         let name = SEGMENT_NAME[index as usize];
                         self.strip_prefix(name).into()
                     }
@@ -370,9 +370,9 @@ impl Printer {
         operand: &Operand,
         force_ds: bool,
     ) -> fmt::Result {
-        let name = match operand.flags().field(super::OP_FIELD_SEGMENT) {
+        let name = match operand.flags().field(operand::FIELD_SEGMENT) {
             s if s != 0 => Some(SEGMENT_NAME[s as usize - 1]),
-            0 if force_ds => Some(SEGMENT_NAME[super::SEGMENT_DS as usize - 1]),
+            0 if force_ds => Some(SEGMENT_NAME[insn::SEGMENT_DS as usize - 1]),
             _ => None,
         };
         if let Some(name) = name {
@@ -383,14 +383,14 @@ impl Printer {
     }
 
     fn print_broadcast(&self, fmt: &mut fmt::Formatter, operand: &Operand) -> fmt::Result {
-        let bcst = operand.flags().field(super::OP_FIELD_BCST) as u8;
-        if bcst != super::BROADCAST_NONE {
+        let bcst = operand.flags().field(operand::FIELD_BCST) as u8;
+        if bcst != operand::BROADCAST_NONE {
             let s = match bcst {
-                super::BROADCAST_1TO2 => "1to2",
-                super::BROADCAST_1TO4 => "1to4",
-                super::BROADCAST_1TO8 => "1to8",
-                super::BROADCAST_1TO16 => "1to16",
-                super::BROADCAST_1TO32 => "1to32",
+                operand::BROADCAST_1TO2 => "1to2",
+                operand::BROADCAST_1TO4 => "1to4",
+                operand::BROADCAST_1TO8 => "1to8",
+                operand::BROADCAST_1TO16 => "1to16",
+                operand::BROADCAST_1TO32 => "1to32",
                 _ => unreachable!(),
             };
             fmt.write_char('{')?;
@@ -406,25 +406,25 @@ impl Printer {
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
-        let size = operand.flags().field(super::OP_FIELD_MEM) as u8;
-        if insn.opcode() != opcode::LEA && !operand.flags().any(super::OP_NO_PTR) {
+        let size = operand.flags().field(operand::FIELD_MEM) as u8;
+        if insn.opcode() != opcode::LEA && !operand.flags().any(operand::NO_PTR) {
             let prefix = match size {
-                super::SIZE_NONE => "",
-                super::SIZE_BYTE => "BYTE ",
-                super::SIZE_TBYTE => "TBYTE ",
-                super::SIZE_WORD => "WORD ",
-                super::SIZE_DWORD => "DWORD ",
-                super::SIZE_QWORD => "QWORD ",
-                super::SIZE_OWORD => "OWORD ",
-                super::SIZE_XMMWORD => "XMMWORD ",
-                super::SIZE_YMMWORD => "YMMWORD ",
-                super::SIZE_ZMMWORD => "ZMMWORD ",
-                super::SIZE_FWORD_48 | super::SIZE_FWORD_80 => "FWORD ",
+                operand::SIZE_NONE => "",
+                operand::SIZE_BYTE => "BYTE ",
+                operand::SIZE_TBYTE => "TBYTE ",
+                operand::SIZE_WORD => "WORD ",
+                operand::SIZE_DWORD => "DWORD ",
+                operand::SIZE_QWORD => "QWORD ",
+                operand::SIZE_OWORD => "OWORD ",
+                operand::SIZE_XMMWORD => "XMMWORD ",
+                operand::SIZE_YMMWORD => "YMMWORD ",
+                operand::SIZE_ZMMWORD => "ZMMWORD ",
+                operand::SIZE_FWORD_48 | operand::SIZE_FWORD_80 => "FWORD ",
                 _ => unreachable!("unexpected operand size {size}"),
             };
             fmt.write_str(prefix)?;
-            let bcst = operand.flags().field(super::OP_FIELD_BCST) as u8;
-            let ptr = if bcst != super::BROADCAST_NONE {
+            let bcst = operand.flags().field(operand::FIELD_BCST) as u8;
+            let ptr = if bcst != operand::BROADCAST_NONE {
                 "BCST "
             } else {
                 "PTR "
@@ -469,7 +469,7 @@ impl Printer {
             ext.print_address_offset(fmt, FormatterFn(|fmt| write!(fmt, "{offset:#x}")))?;
         }
         fmt.write_char(']')?;
-        if operand.flags().any(super::OP_BCST_FORCE) {
+        if operand.flags().any(operand::BCST_FORCE) {
             self.print_broadcast(fmt, operand)?;
         }
         Ok(())
@@ -536,14 +536,14 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             Ok(())
         };
 
-        print_prefix(super::INSN_LOCK, "lock ")?;
-        print_prefix(super::INSN_DATA16, "data16 ")?;
-        print_prefix(super::INSN_ADDR32, "addr32 ")?;
-        print_prefix(super::INSN_REX_W, "rex.W ")?;
+        print_prefix(insn::LOCK, "lock ")?;
+        print_prefix(insn::DATA16, "data16 ")?;
+        print_prefix(insn::ADDR32, "addr32 ")?;
+        print_prefix(insn::REX_W, "rex.W ")?;
 
-        let segment = insn.flags().field(super::INSN_FIELD_SEGMENT);
+        let segment = insn.flags().field(insn::FIELD_SEGMENT);
         if segment != 0 {
-            let s = if segment == super::SEGMENT_DS && insn.opcode() == opcode::JMP {
+            let s = if segment == insn::SEGMENT_DS && insn.opcode() == opcode::JMP {
                 "notrack"
             } else {
                 SEGMENT_PREFIX[segment as usize - 1]
@@ -553,12 +553,12 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             len += s.len() + 1;
         }
 
-        let rep = insn.flags().field(super::INSN_FIELD_REP);
-        if rep != super::INSN_REP_NONE {
+        let rep = insn.flags().field(insn::FIELD_REP);
+        if rep != insn::REP_NONE {
             let s = match rep {
-                super::INSN_REP => "rep ",
-                super::INSN_REPZ => "repz ",
-                super::INSN_REPNZ => "repnz ",
+                insn::REP => "rep ",
+                insn::REPZ => "repz ",
+                insn::REPNZ => "repnz ",
                 _ => unreachable!("unexpected repeat {rep}"),
             };
             ext.print_mnemonic(fmt, s)?;
@@ -569,15 +569,15 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         ext.print_mnemonic(fmt, mnemonic)?;
         len += mnemonic.len();
 
-        if self.is_att() && insn.flags().any(super::INSN_SUFFIX) {
-            let suffix = match insn.flags().field(super::INSN_FIELD_SUFFIX) {
-                super::SUFFIX_B => "b",
-                super::SUFFIX_W => "w",
-                super::SUFFIX_L => "l",
-                super::SUFFIX_Q => "q",
-                super::SUFFIX_FP_S => "s",
-                super::SUFFIX_FP_L => "l",
-                super::SUFFIX_FP_LL => "ll",
+        if self.is_att() && insn.flags().any(insn::SUFFIX) {
+            let suffix = match insn.flags().field(insn::FIELD_SUFFIX) {
+                insn::SUFFIX_B => "b",
+                insn::SUFFIX_W => "w",
+                insn::SUFFIX_L => "l",
+                insn::SUFFIX_Q => "q",
+                insn::SUFFIX_FP_S => "s",
+                insn::SUFFIX_FP_L => "l",
+                insn::SUFFIX_FP_LL => "ll",
                 _ => unreachable!(),
             };
             ext.print_mnemonic(fmt, suffix)?;
@@ -593,7 +593,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
 
     fn need_operand_separator(&self, i: usize, operand: &Operand) -> bool {
         match operand.kind() {
-            OperandKind::Reg(reg) if reg.class() == super::REG_CLASS_K_MASK => {
+            OperandKind::Reg(reg) if reg.class() == reg_class::K_MASK => {
                 return false;
             }
             OperandKind::ArchSpec(id, ..) if self.is_intel() => {
@@ -615,13 +615,13 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
         insn: &Insn,
         operand: &Operand,
     ) -> fmt::Result {
-        if self.is_att() && operand.flags().any(super::OP_INDIRECT) {
+        if self.is_att() && operand.flags().any(operand::INDIRECT) {
             fmt.write_char('*')?;
         }
 
         match operand.kind() {
             OperandKind::Reg(reg) => match reg.class() {
-                super::REG_CLASS_K_MASK => {
+                reg_class::K_MASK => {
                     let name = self.register_name(*reg);
                     fmt.write_char('{')?;
                     ext.print_register(fmt, name)?;
@@ -672,7 +672,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                     Some(*offset as i64),
                 ),
             OperandKind::Absolute(addr) => {
-                let only_addr = operand.flags().any(super::OP_NO_PTR);
+                let only_addr = operand.flags().any(operand::NO_PTR);
                 if self.is_intel() {
                     self.print_mem_access_intel(fmt, insn, operand)?;
                     self.print_segment(fmt, ext, operand, !only_addr)?;

@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+mod consts;
 mod generated;
+
 #[cfg(feature = "print")]
 mod printer;
 
@@ -12,136 +14,28 @@ use core::{
 
 use crate::{
     bytes::Bytes,
-    macros::{impl_arch_operands, impl_field, impl_opcode_check},
+    macros::{impl_field, impl_opcode_check},
     utils::{zextract, ZExtract},
     Access, ArchDecoder, Bundle, Error, Insn, Reg, RegClass, Slot,
 };
 
+pub use self::consts::*;
 pub use self::generated::opcode;
 
-use self::generated::{E2KDecodeAlop, SetValue};
+use self::{
+    generated::{E2KDecodeAlop, SetValue},
+    operand::E2KOperand,
+    slot::Cluster,
+};
 
 #[cfg(feature = "print")]
 pub(crate) use self::printer::printer;
-
-// Instruction slots
-pub const SLOT_ALC0: Slot = Slot::new(0);
-pub const SLOT_ALC1: Slot = Slot::new(1);
-pub const SLOT_ALC2: Slot = Slot::new(2);
-pub const SLOT_ALC3: Slot = Slot::new(3);
-pub const SLOT_ALC4: Slot = Slot::new(4);
-pub const SLOT_ALC5: Slot = Slot::new(5);
-
-pub const SLOT_APB0: Slot = Slot::new(6);
-pub const SLOT_APB1: Slot = Slot::new(7);
-pub const SLOT_APB2: Slot = Slot::new(8);
-pub const SLOT_APB3: Slot = Slot::new(9);
-
-pub const SLOT_PLU0: Slot = Slot::new(10);
-pub const SLOT_PLU1: Slot = Slot::new(11);
-pub const SLOT_PLU2: Slot = Slot::new(12);
-
-// Custom shared instruction flags
-pub const INSN_SM: u32 = 1 << 31;
-
-// Custom instruction flags
-pub const SETWD_X: u32 = 1 << 16;
-pub const SETWD_Z: u32 = 1 << 17;
-pub const SETWD_MCN: u32 = 1 << 18;
-
-pub const ADVANCE_T: u32 = 1 << 16;
-pub const ADVANCE_F: u32 = 1 << 17;
-
-pub const MOVA_BE: u32 = 1 << 16;
-pub const MOVA_AM: u32 = 1 << 17;
-
-// Custom register classes
-pub const REG_CLASS_PREG: RegClass = RegClass::arch(0);
-pub const REG_CLASS_SREG: RegClass = RegClass::arch(1);
-pub const REG_CLASS_CTPR: RegClass = RegClass::arch(2);
-pub const REG_CLASS_AAD: RegClass = RegClass::arch(3);
-pub const REG_CLASS_AASTI: RegClass = RegClass::arch(4);
-pub const REG_CLASS_AAIND: RegClass = RegClass::arch(5);
-pub const REG_CLASS_AAINCR: RegClass = RegClass::arch(6);
-pub const REG_CLASS_PCNT: RegClass = RegClass::arch(7);
-pub const REG_CLASS_IPR: RegClass = RegClass::arch(8);
-pub const REG_CLASS_PRND: RegClass = RegClass::arch(9);
-
-// Custom operands
-impl_arch_operands! {
-    pub enum E2KOperand {
-        Literal = 0,
-        Empty = 1,
-        Uimm = 2,
-        Mas = 3,
-        Lcntex = 4,
-        Spred = 5,
-        CondStart = 6,
-        Wait = 7,
-        Vfbg = 8,
-        Ipd = 9,
-        NoMrgc = 10,
-        Plu = 11,
-        Fdam = 12,
-        Trar = 13,
-        LoopEnd = 14,
-        CtCond = 15,
-        Area = 16,
-        NoSs = 17,
-        ApbCt = 18,
-        ApbDpl = 19,
-        ApbDcd = 20,
-        ApbFmt = 21,
-        ApbMrng = 22,
-        ApbAsz = 23,
-        ApbAbs = 24,
-    }
-}
-
-pub const PSRC_INVERT: u8 = 0x80;
 
 // aaur{r,w} modes
 const AAUR_MODE_AAD: i32 = 0;
 const AAUR_MODE_AASTI: i32 = 1;
 const AAUR_MODE_AAIND: i32 = 2;
 const AAUR_MODE_AAINCR: i32 = 3;
-
-// Values for SS.ct_cond
-/// none
-pub const CT_COND_NONE: u8 = 0;
-/// unconditional
-pub const CT_COND_ALWAYS: u8 = 1;
-/// pN
-pub const CT_COND_PREG: u8 = 2;
-/// ~pN
-pub const CT_COND_NOT_PREG: u8 = 3;
-/// loop_end
-pub const CT_COND_LOOP_END: u8 = 4;
-/// ~loop_end
-pub const CT_COND_NOT_LOOP_END: u8 = 5;
-/// pN || loop_end
-pub const CT_COND_PREG_OR_LOOP_END: u8 = 6;
-/// ~pN && ~loop_end
-pub const CT_COND_NOT_PREG_AND_NOT_LOOP_END: u8 = 7;
-/// mlock
-/// mlock || dt_al0134
-pub const CT_COND_MLOCK_OR_DTAL: u8 = 8;
-/// mlock || [~]cmpN
-/// mlock || [~]cmpN || [~]cmpN
-/// mlock || [~]clpN
-pub const CT_COND_MLOCK_OR_CMP: u8 = 9;
-/// {~}{cmp,clp}N
-pub const CT_COND_CMP_CLP: u8 = 11;
-/// ~pN || loop_end
-pub const CT_COND_NOT_PREG_OR_LOOP_END: u8 = 14;
-/// pN && ~loop_end
-pub const CT_COND_PREG_AND_NOT_LOOP_END: u8 = 15;
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Cluster {
-    A,
-    B,
-}
 
 trait InsnExt {
     fn push_literal(&mut self, literal: u64, size: u8);
@@ -184,21 +78,21 @@ impl InsnExt for Insn {
             }
             Psrc::Pcnt(mut index) => {
                 if pred.invert {
-                    index |= PSRC_INVERT;
+                    index |= operand::PSRC_INVERT;
                 }
-                self.push_reg(Reg::new(REG_CLASS_PCNT, index as u64).read());
+                self.push_reg(Reg::new(reg_class::PCNT, index as u64).read());
             }
             Psrc::Preg(mut index) => {
                 if pred.invert {
-                    index |= PSRC_INVERT;
+                    index |= operand::PSRC_INVERT;
                 }
-                self.push_reg(Reg::new(REG_CLASS_PREG, index as u64).read());
+                self.push_reg(Reg::new(reg_class::PREG, index as u64).read());
             }
             Psrc::Prnd(mut index) => {
                 if pred.invert {
-                    index |= PSRC_INVERT;
+                    index |= operand::PSRC_INVERT;
                 }
-                self.push_reg(Reg::new(REG_CLASS_PRND, index as u64).read());
+                self.push_reg(Reg::new(reg_class::PRND, index as u64).read());
             }
         }
     }
@@ -213,14 +107,14 @@ impl InsnExt for Insn {
     fn push_dst_movtd(&mut self, dst: i32) {
         match dst {
             0xd1..=0xd3 => {
-                self.push_reg(Reg::new(REG_CLASS_CTPR, dst as u64 - 0xd0).write());
+                self.push_reg(Reg::new(reg_class::CTPR, dst as u64 - 0xd0).write());
             }
             _ => self.push_dst(dst),
         }
     }
 
     fn push_dst_preg(&mut self, dst: i32) {
-        self.push_reg(Reg::new(REG_CLASS_PREG, dst as u64).write());
+        self.push_reg(Reg::new(reg_class::PREG, dst as u64).write());
     }
 
     fn push_mova_area(&mut self, area: u8, index: u8) {
@@ -601,12 +495,12 @@ impl Rlp {
     }
 
     fn has_alc(&self, slot: Slot) -> bool {
-        self.cluster() == alc_cluster(slot) && self.has(alc_cluster_index(slot))
+        self.cluster() == slot::alc_cluster(slot) && self.has(slot::alc_cluster_index(slot))
     }
 
     fn get(&self, slot: Slot) -> Option<Pred> {
         if self.has_alc(slot) {
-            let index = alc_cluster_index(slot);
+            let index = slot::alc_cluster_index(slot);
             Some(Pred::from_u8(self.psrc(), self.invert(index)))
         } else {
             None
@@ -802,57 +696,6 @@ impl Decoder {
     }
 }
 
-fn alc_slot_for(chan: usize) -> Slot {
-    debug_assert!(chan < 6);
-    Slot::new(SLOT_ALC0.raw() + (chan as u16))
-}
-
-fn is_first_cluster(slot: Slot) -> bool {
-    debug_assert!((SLOT_ALC0..=SLOT_ALC5).contains(&slot));
-    slot < SLOT_ALC3
-}
-
-fn is_second_cluster(slot: Slot) -> bool {
-    !is_first_cluster(slot)
-}
-
-fn alc_cluster(slot: Slot) -> Cluster {
-    if is_first_cluster(slot) {
-        Cluster::A
-    } else {
-        Cluster::B
-    }
-}
-
-fn alc_index(slot: Slot) -> usize {
-    debug_assert!((SLOT_ALC0..=SLOT_ALC5).contains(&slot));
-    (slot.raw() - SLOT_ALC0.raw()) as usize
-}
-
-fn alc_cluster_index(slot: Slot) -> usize {
-    match alc_index(slot) {
-        i if i < 3 => i,
-        i => i - 3,
-    }
-}
-
-fn alc_channel_encode(mut chan: usize) -> u64 {
-    if chan >= 3 {
-        chan += 1;
-    }
-    chan as u64
-}
-
-fn apb_slot_for(chan: usize) -> Slot {
-    debug_assert!(chan < 4);
-    Slot::new(SLOT_APB0.raw() + (chan as u16))
-}
-
-fn plu_slot_for(chan: usize) -> Slot {
-    debug_assert!(chan < 3);
-    Slot::new(SLOT_PLU0.raw() + (chan as u16))
-}
-
 impl Decoder {
     fn hs(&self) -> Hs {
         self.unpacked.hs
@@ -884,8 +727,8 @@ impl Decoder {
                 }
                 out.push_with(opcode, |insn| {
                     insn.flags_mut()
-                        .set_if(ADVANCE_T, mask & 1 != 0)
-                        .set_if(ADVANCE_F, mask & 2 != 0);
+                        .set_if(insn::ADVANCE_T, mask & 1 != 0)
+                        .set_if(insn::ADVANCE_F, mask & 2 != 0);
                 });
             };
 
@@ -910,7 +753,7 @@ impl Decoder {
     fn decode_ct(&mut self, out: &mut Bundle) {
         let ss = self.unpacked.ss;
         let mut cond = ss.ct_cond();
-        if ss.is_empty() || cond == CT_COND_NONE {
+        if ss.is_empty() || cond == operand::CT_COND_NONE {
             return;
         }
 
@@ -933,13 +776,13 @@ impl Decoder {
             } else {
                 insn.set_opcode(opcode::CT);
             }
-            insn.push_reg(Reg::new(REG_CLASS_CTPR, ctpr as u64).read());
+            insn.push_reg(Reg::new(reg_class::CTPR, ctpr as u64).read());
         } else if let Some((cs0, true)) = self.unpacked.cs0.map(|i| (i, i.is_ibranch())) {
             if let Some((cs1, true)) = self.unpacked.cs1.map(|i| (i, i.is_icall())) {
                 insn.set_opcode(opcode::ICALL);
                 insn.push_uimm_short(cs1.call_wbs());
-            } else if self.alias && cond == CT_COND_MLOCK_OR_DTAL && pred == 0 {
-                cond = CT_COND_ALWAYS; // do not print mlock
+            } else if self.alias && cond == operand::CT_COND_MLOCK_OR_DTAL && pred == 0 {
+                cond = operand::CT_COND_ALWAYS; // do not print mlock
                 insn.set_opcode(opcode::RBRANCH);
             } else {
                 insn.set_opcode(opcode::IBRANCH);
@@ -963,7 +806,7 @@ impl Decoder {
             }
         }
 
-        if cond != CT_COND_ALWAYS {
+        if cond != operand::CT_COND_ALWAYS {
             insn.push_arch_spec1(E2KOperand::CondStart);
             insn.push_arch_spec3(E2KOperand::CtCond, cond, pred);
         }
@@ -983,7 +826,7 @@ impl Decoder {
             // handled in decode_ct
         } else if cs0.is_pref() {
             out.push_with(opcode::PREF, |insn| {
-                insn.push_reg(Reg::new(REG_CLASS_IPR, cs0.pref_ipr() as u64).read());
+                insn.push_reg(Reg::new(reg_class::IPR, cs0.pref_ipr() as u64).read());
                 insn.push_uimm(cs0.pref_disp() as u64);
                 if cs0.pref_ipd() {
                     insn.push_arch_spec1(E2KOperand::Ipd);
@@ -1004,26 +847,26 @@ impl Decoder {
                 }
             }
             out.push_with(opcode, |insn| {
-                insn.push_reg(Reg::new(REG_CLASS_CTPR, cs0.ctpr() as u64).write());
+                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
                 insn.push_absolute(self.disp_to_absolute(cs0.disp()));
             });
         } else if cs0.is_prep_apb() {
             out.push_with(opcode::PREP_APB, |insn| {
-                insn.push_reg(Reg::new(REG_CLASS_CTPR, cs0.ctpr() as u64).write());
+                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
                 insn.push_absolute(self.disp_to_absolute(cs0.disp()));
             });
         } else if cs0.is_prep_sys() {
             out.push_with(opcode::PREP_SYS, |insn| {
-                insn.push_reg(Reg::new(REG_CLASS_CTPR, cs0.ctpr() as u64).write());
+                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
                 insn.push_uimm(cs0.disp() as u64);
             });
         } else if cs0.is_prep_ret() {
             out.push_with(opcode::PREP_RET, |insn| {
-                insn.push_reg(Reg::new(REG_CLASS_CTPR, cs0.ctpr() as u64).write());
+                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
             });
         } else if cs0.is_gettsd() {
             out.push_with(opcode::GETTSD, |insn| {
-                insn.push_reg(Reg::new(REG_CLASS_CTPR, cs0.ctpr() as u64).write());
+                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
             });
         } else {
             out.push_with(opcode::CS, |insn| {
@@ -1054,9 +897,9 @@ impl Decoder {
                     match self.unpacked.lts[0].map(SetwdLts) {
                         Some(lts) => {
                             insn.flags_mut()
-                                .set_if(SETWD_X, !lts.setwd_nfx())
-                                .set_if(SETWD_Z, lts.setwd_dbl())
-                                .set_if(SETWD_MCN, self.isa >= 7 && lts.setwd_mcn());
+                                .set_if(insn::SETWD_X, !lts.setwd_nfx())
+                                .set_if(insn::SETWD_Z, lts.setwd_dbl())
+                                .set_if(insn::SETWD_MCN, self.isa >= 7 && lts.setwd_mcn());
                             let wsz = lts.setwd_wsz() * 2;
                             insn.push_uimm_short(wsz);
                         }
@@ -1137,13 +980,13 @@ impl Decoder {
             };
 
             let insn = out.peek();
-            let slot = alc_slot_for(i);
+            let slot = slot::alc_slot_for(i);
             insn.set_slot(slot);
-            insn.flags_mut().set_if(INSN_SM, als.sm());
+            insn.flags_mut().set_if(insn::SM, als.sm());
 
             let mut raw = als.raw() as u64;
             raw |= (self.unpacked.ales[i].unwrap_or_default().raw() as u64) << 32;
-            raw |= alc_channel_encode(i) << 48;
+            raw |= slot::alc_channel_encode(i) << 48;
             raw |= (mas as u64) << 51;
 
             if E2KDecodeAlop::decode(self, raw, insn).is_err() {
@@ -1188,11 +1031,11 @@ impl Decoder {
             };
             let insn = out.peek();
             insn.set_opcode(opcode);
-            insn.set_slot(apb_slot_for(i));
+            insn.set_slot(slot::apb_slot_for(i));
             insn.push_dst(aas.dst() as i32);
             insn.flags_mut()
-                .set_if(MOVA_BE, aas.be())
-                .set_if(MOVA_AM, aas.am());
+                .set_if(insn::MOVA_BE, aas.be())
+                .set_if(insn::MOVA_AM, aas.am());
             insn.push_mova_area(aas.area(), aas.index());
             out.next();
         }
@@ -1214,7 +1057,7 @@ impl Decoder {
         for i in (0..count).filter(|i| used[i + 4] != 0) {
             let pls = self.unpacked.pls[i];
             let insn = out.peek();
-            insn.set_slot(plu_slot_for(i));
+            insn.set_slot(slot::plu_slot_for(i));
 
             let opcode = match pls.op() {
                 0 => opcode::ANDP,
@@ -1226,7 +1069,7 @@ impl Decoder {
             insn.set_opcode(opcode);
 
             if pls.write() {
-                insn.push_reg(Reg::new(REG_CLASS_PREG, pls.preg() as u64).write());
+                insn.push_reg(Reg::new(reg_class::PREG, pls.preg() as u64).write());
             } else {
                 insn.push_empty();
             }
@@ -1311,9 +1154,9 @@ impl ArchDecoder for Decoder {
                         insn.push_arch_spec2(E2KOperand::ApbDcd, apb.dcd());
                         insn.push_arch_spec2(E2KOperand::ApbFmt, apb.fmt());
                         insn.push_arch_spec2(E2KOperand::ApbMrng, apb.mrng());
-                        insn.push_reg(Reg::new(REG_CLASS_AAD, apb.aad() as u64).read());
-                        insn.push_reg(Reg::new(REG_CLASS_AAINCR, apb.aaincr() as u64).read());
-                        insn.push_reg(Reg::new(REG_CLASS_AAIND, apb.aaind() as u64).write());
+                        insn.push_reg(Reg::new(reg_class::AAD, apb.aad() as u64).read());
+                        insn.push_reg(Reg::new(reg_class::AAINCR, apb.aaincr() as u64).read());
+                        insn.push_reg(Reg::new(reg_class::AAIND, apb.aaind() as u64).write());
                         insn.push_arch_spec2(E2KOperand::ApbAsz, apb.asz());
                         insn.push_arch_spec2(E2KOperand::ApbAbs, apb.abs());
                         if offset != 0 {
@@ -1396,11 +1239,11 @@ impl Decoder {
     }
 
     fn set_dst_sreg(&mut self, out: &mut Insn, dst: i32) {
-        out.push_reg(Reg::new(REG_CLASS_SREG, dst as u64).write());
+        out.push_reg(Reg::new(reg_class::SREG, dst as u64).write());
     }
 
     fn set_src1_sreg(&mut self, out: &mut Insn, src2: i32) {
-        out.push_reg(Reg::new(REG_CLASS_SREG, src2 as u64).read());
+        out.push_reg(Reg::new(reg_class::SREG, src2 as u64).read());
     }
 
     fn set_wbs(&mut self, out: &mut Insn, wbs: i32) {
@@ -1416,19 +1259,19 @@ impl Decoder {
     }
 
     fn set_aad(&mut self, out: &mut Insn, index: i32, access: Access) {
-        self.set_reg(out, REG_CLASS_AAD, index, access);
+        self.set_reg(out, reg_class::AAD, index, access);
     }
 
     fn set_aasti(&mut self, out: &mut Insn, index: i32, access: Access) {
-        self.set_reg(out, REG_CLASS_AASTI, index, access);
+        self.set_reg(out, reg_class::AASTI, index, access);
     }
 
     fn set_aaind(&mut self, out: &mut Insn, index: i32, access: Access) {
-        self.set_reg(out, REG_CLASS_AAIND, index, access);
+        self.set_reg(out, reg_class::AAIND, index, access);
     }
 
     fn set_aaincr(&mut self, out: &mut Insn, index: i32, access: Access) {
-        self.set_reg(out, REG_CLASS_AAINCR, index, access);
+        self.set_reg(out, reg_class::AAINCR, index, access);
     }
 
     fn set_aau(
@@ -1479,7 +1322,7 @@ impl Decoder {
         if ss.is_empty() {
             insn.push_arch_spec1(E2KOperand::CondStart);
             insn.push_arch_spec1(E2KOperand::NoSs);
-        } else if cond != CT_COND_NONE && cond != CT_COND_ALWAYS {
+        } else if cond != operand::CT_COND_NONE && cond != operand::CT_COND_ALWAYS {
             insn.push_arch_spec1(E2KOperand::CondStart);
             insn.push_arch_spec3(E2KOperand::CtCond, cond, ss.ct_pred());
         }
@@ -1771,8 +1614,8 @@ impl E2KDecodeAlop for Decoder {
 fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
     fn advance_sub<'a>(insn: &Insn, f: &'a str, t: &'a str, both: &'a str) -> &'a str {
         let flags = insn.flags();
-        let f0 = flags.any(ADVANCE_F);
-        let f1 = flags.any(ADVANCE_T);
+        let f0 = flags.any(insn::ADVANCE_F);
+        let f1 = flags.any(insn::ADVANCE_T);
         match (f0, f1) {
             (false, false) => "",
             (true, false) => f,
@@ -1783,8 +1626,8 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
 
     fn mova_sub(insn: &Insn) -> &'static str {
         let flags = insn.flags();
-        let f0 = flags.any(MOVA_BE);
-        let f1 = flags.any(MOVA_AM);
+        let f0 = flags.any(insn::MOVA_BE);
+        let f1 = flags.any(insn::MOVA_AM);
         match (f0, f1) {
             (false, false) => "",
             (true, false) => "be",
@@ -1815,9 +1658,9 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
         opcode::INCR => ("incr", ""),
         opcode::SETWD => {
             let flags = insn.flags();
-            let mask = (flags.any(SETWD_X) as usize)
-                | ((flags.any(SETWD_Z) as usize) << 1)
-                | ((flags.any(SETWD_MCN) as usize) << 2);
+            let mask = (flags.any(insn::SETWD_X) as usize)
+                | ((flags.any(insn::SETWD_Z) as usize) << 1)
+                | ((flags.any(insn::SETWD_MCN) as usize) << 2);
             // TODO: to complicated...
             let sub = match mask {
                 0b000 => "",
