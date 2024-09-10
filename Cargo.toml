@@ -1,6 +1,4 @@
-[package]
-name = "disasm"
-description = "Disassembler library"
+[workspace.package]
 version = "0.4.0"
 license = "LGPL-3.0-only"
 keywords = ["disassembler", "decodetree"]
@@ -9,28 +7,28 @@ repository = "https://github.com/numas13/disasm"
 edition = "2021"
 rust-version = "1.61"
 
-[package.metadata.docs.rs]
+[workspace.metadata.docs.rs]
 all-features = true
 default-target = "x86_64-unknown-linux-gnu"
 
-[features]
-default = ["print", "all-arch"]
-std = []
-print = ["std", "mnemonic"]
-mnemonic = []
+[workspace]
+resolver = "2"
+members = [
+    "disasm",
+    "core",
+    "gen",
+    "test",
 
-# architectures
-e2k = []
-riscv = []
-x86 = []
-all-arch = [
-    "e2k",
-    "riscv",
-    "x86",
+    "arch/e2k",
+    "arch/riscv",
+    "arch/x86",
 ]
 
-[build-dependencies]
-decodetree = { version = "0.4.7", features = ["gen"] }
+[workspace.dependencies]
+disasm-core         = { version = "0.4.0", path = "core" }
+disasm-gen          = { version = "0.4.0", path = "gen" }
+disasm-test         = { version = "0.4.0", path = "test" }
 
-[dev-dependencies]
-diff = "0.1"
+disasm-e2k          = { version = "0.4.0", path = "arch/e2k" }
+disasm-riscv        = { version = "0.4.0", path = "arch/riscv" }
+disasm-x86          = { version = "0.4.0", path = "arch/x86" }

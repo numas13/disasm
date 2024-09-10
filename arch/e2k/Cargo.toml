@@ -1,0 +1,28 @@
+[package]
+name = "disasm-e2k"
+description = "disasm e2k library"
+version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["print"]
+std = []
+print = ["std", "mnemonic"]
+mnemonic = []
+
+[dependencies]
+disasm-core = { workspace = true }
+
+[build-dependencies]
+disasm-gen = { workspace = true }
+
+[dev-dependencies]
+disasm-test = { workspace = true }

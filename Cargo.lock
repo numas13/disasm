@@ -28,8 +28,57 @@ checksum = "56254986775e3233ffa9c4d7d3faaf6d36a2c09d30b20687e9f88bc8bafc16c8"
 name = "disasm"
 version = "0.4.0"
 dependencies = [
+ "disasm-core",
+ "disasm-e2k",
+ "disasm-riscv",
+ "disasm-test",
+ "disasm-x86",
+]
+
+[[package]]
+name = "disasm-core"
+version = "0.4.0"
+
+[[package]]
+name = "disasm-e2k"
+version = "0.4.0"
+dependencies = [
+ "disasm-core",
+ "disasm-gen",
+ "disasm-test",
+]
+
+[[package]]
+name = "disasm-gen"
+version = "0.4.0"
+dependencies = [
  "decodetree",
+]
+
+[[package]]
+name = "disasm-riscv"
+version = "0.4.0"
+dependencies = [
+ "disasm-core",
+ "disasm-gen",
+ "disasm-test",
+]
+
+[[package]]
+name = "disasm-test"
+version = "0.4.0"
+dependencies = [
  "diff",
+ "disasm-core",
+]
+
+[[package]]
+name = "disasm-x86"
+version = "0.4.0"
+dependencies = [
+ "disasm-core",
+ "disasm-gen",
+ "disasm-test",
 ]
 
 [[package]]

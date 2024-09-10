@@ -1,0 +1,19 @@
+[package]
+name = "disasm-core"
+description = "Core crate for disasm library"
+version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["print"]
+std = []
+print = ["std", "mnemonic"]
+mnemonic = []

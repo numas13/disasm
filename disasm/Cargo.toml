@@ -1,0 +1,41 @@
+[package]
+name = "disasm"
+description = "Disassembler library"
+version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["print", "all-arch"]
+std = []
+print = [
+    "std",
+    "mnemonic",
+]
+mnemonic = []
+
+# architectures
+e2k = ["dep:disasm-e2k"]
+riscv = ["dep:disasm-riscv"]
+x86 = ["dep:disasm-x86"]
+all-arch = [
+    "e2k",
+    "riscv",
+    "x86",
+]
+
+[dependencies]
+disasm-core = { workspace = true }
+disasm-e2k = { workspace = true, optional = true }
+disasm-riscv = { workspace = true, optional = true }
+disasm-x86 = { workspace = true, optional = true }
+
+[dev-dependencies]
+disasm-test = { workspace = true }

@@ -1,0 +1,16 @@
+[package]
+name = "disasm-gen"
+description = "disasm decodetree generator library"
+version.workspace = true
+license.workspace = true
+keywords.workspace = true
+authors.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+decodetree = { version = "0.4.7", features = ["gen"] }
