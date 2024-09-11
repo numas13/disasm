@@ -13,20 +13,76 @@ pub use disasm_core::{
 };
 
 pub trait WriteExt: Write {
-    fn write_u8_hex(&mut self, byte: u8) -> io::Result<()> {
+    fn write_u4_hex(&mut self, byte: u8) -> io::Result<()> {
         const MAP: [u8; 16] = *b"0123456789abcdef";
-        let buf = [MAP[(byte >> 4) as usize & 15], MAP[byte as usize & 15]];
-        self.write_all(&buf)
+        let i = (byte as usize) & 15;
+        self.write_all(&MAP[i..i + 1])
+    }
+
+    fn write_u8_hex(&mut self, byte: u8) -> io::Result<()> {
+        self.write_u4_hex(byte >> 4)?;
+        self.write_u4_hex(byte)
     }
 
     fn write_spaces(&mut self, mut width: usize) -> io::Result<()> {
+        const BUF: [u8; 32] = [b' '; 32];
         while width > 0 {
-            const FILL: [u8; 32] = [b' '; 32];
-            let len = cmp::min(width, FILL.len());
-            self.write_all(&FILL[..len])?;
+            let len = cmp::min(width, BUF.len());
+            self.write_all(&BUF[..len])?;
             width -= len;
         }
         Ok(())
+    }
+
+    fn write_zeroes(&mut self, mut width: usize) -> io::Result<()> {
+        const BUF: [u8; 32] = [b'0'; 32];
+        while width > 0 {
+            let len = cmp::min(width, BUF.len());
+            self.write_all(&BUF[..len])?;
+            width -= len;
+        }
+        Ok(())
+    }
+
+    fn write_u64_hex(&mut self, value: u64, width: usize) -> io::Result<()> {
+        for i in (0..width).rev() {
+            self.write_u4_hex((value >> (i * 4)) as u8)?;
+        }
+        Ok(())
+    }
+
+    fn write_address(&mut self, address: u64, width: usize) -> io::Result<()> {
+        let c = (64 + 3 - address.leading_zeros() as usize) / 4;
+        if c < width {
+            self.write_spaces(width - c)?;
+        }
+        self.write_u64_hex(address, c)
+    }
+
+    fn write_symbol_address(&mut self, address: u64, width: usize) -> io::Result<()> {
+        let c = (64 + 3 - address.leading_zeros() as usize) / 4;
+        if c < width {
+            self.write_zeroes(width - c)?;
+        }
+        self.write_u64_hex(address, c)
+    }
+
+    fn write_symbol(
+        &mut self,
+        address: u64,
+        width: usize,
+        name: &str,
+        offset: u64,
+    ) -> io::Result<()> {
+        self.write_all(b"\n")?;
+        self.write_symbol_address(address, width)?;
+        self.write_all(b" <")?;
+        self.write_all(name.as_bytes())?;
+        if offset != 0 {
+            self.write_all(b"-")?;
+            self.write_address(offset, 0)?;
+        }
+        self.write_all(b">:\n")
     }
 }
 
@@ -84,14 +140,10 @@ impl<E: PrinterExt> Printer<E> {
         let width = self.arch.addr_size() / 4;
         let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<()> {
             if let Some((name, offset)) = first_symbol.take() {
-                if offset != 0 {
-                    writeln!(out, "\n{address:0width$x} <{name}-{offset:#x}>:")?;
-                } else {
-                    writeln!(out, "\n{address:0width$x} <{name}>:")?;
-                }
+                out.write_symbol(address, width, name, offset)?;
             } else if let Some((addr, name)) = *next_symbol {
                 if addr == address {
-                    writeln!(out, "\n{address:0width$x} <{name}>:")?;
+                    out.write_symbol(address, width, name, 0)?;
                     *next_symbol = self.ext.get_symbol_after(address);
                 }
             }
@@ -142,7 +194,7 @@ impl<E: PrinterExt> Printer<E> {
             if let Some((len, zeroes)) = zeroes {
                 if (len != 0 && zeroes == len) || zeroes >= (skip_zeroes * 2 - 1) {
                     print_symbol(out, address, &mut next_symbol)?;
-                    writeln!(out, "\t...")?;
+                    out.write_all(b"\t...\n")?;
                     let skip = cmp::min(zeroes & !(skip_zeroes - 1), cur.len());
                     self.decoder.skip(skip as u64);
                     cur = &cur[skip..];
@@ -185,7 +237,8 @@ impl<E: PrinterExt> Printer<E> {
                 let mut p = 0;
                 let mut c = 0;
                 if l < len {
-                    write!(out, "{:addr_width$x}:\t", address + l as u64)?;
+                    out.write_address(address + l as u64, addr_width)?;
+                    out.write_all(b":\t")?;
 
                     for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
                         c += 1;
