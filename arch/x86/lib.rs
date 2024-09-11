@@ -1829,7 +1829,7 @@ impl SetValue for Inner<'_> {
 
     fn set_args_rm_sr(&mut self, out: &mut Insn, args: args_rm_rr) -> Result {
         let seg = args.r & 7;
-        if seg > 6 {
+        if seg >= 6 {
             return Err(Error::Failed(0));
         }
         let access = access_from_mask(args.rw);
@@ -1840,7 +1840,7 @@ impl SetValue for Inner<'_> {
 
     fn set_args_mr_rs(&mut self, out: &mut Insn, args: args_mr_rr) -> Result {
         let seg = args.r & 7;
-        if seg > 6 {
+        if seg >= 6 {
             return Err(Error::Failed(0));
         }
         let access = access_from_mask(args.rw);
