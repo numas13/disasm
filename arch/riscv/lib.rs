@@ -122,6 +122,25 @@ impl ArchDecoder for Decoder {
             Err(Error::Failed(len))
         }
     }
+
+    fn decode_len(&mut self, _: u64, bytes: &[u8], _: &mut Bundle) -> Result<usize, Error> {
+        let mut bytes = Bytes::new(bytes);
+        let len = bytes
+            .peek_u8()
+            .map(|i| if i & 3 == 3 { 32 } else { 16 })
+            .ok_or(Error::More(2))?;
+
+        if len == 16 {
+            if !self.opts_arch.ext.c {
+                return Err(Error::Failed(len));
+            }
+            bytes.read_u16()?;
+        } else {
+            bytes.read_u32()?;
+        }
+
+        Ok(len)
+    }
 }
 
 macro_rules! impl_ex_shift {

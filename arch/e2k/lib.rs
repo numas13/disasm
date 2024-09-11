@@ -1134,7 +1134,7 @@ impl ArchDecoder for Decoder {
                 self.decode_cs0(out);
                 self.decode_nops(out);
                 self.end(out);
-                Ok(self.hs().len() * 8)
+                Ok(len * 8)
             }
             Err(_) => {
                 out.clear();
@@ -1161,6 +1161,24 @@ impl ArchDecoder for Decoder {
                     });
                 }
                 self.end(out);
+                Ok(128)
+            }
+        }
+    }
+
+    fn decode_len(&mut self, _: u64, bytes: &[u8], _: &mut Bundle) -> Result<usize, Error> {
+        let mut bytes = Bytes::new(bytes);
+        let len = Hs(bytes.peek_u8().unwrap_or(0) as u32).len();
+        let cur = bytes
+            .truncate(len)
+            .map(Cursor::new)
+            .ok_or_else(|| Error::More((len - bytes.len()) * 8))?;
+
+        match UnpackedBundle::unpack(self.isa, cur) {
+            Ok(_) => Ok(len * 8),
+            Err(_) => {
+                bytes.read_u64()?;
+                bytes.read_u64()?;
                 Ok(128)
             }
         }

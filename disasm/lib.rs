@@ -132,7 +132,7 @@ pub struct Decoder {
     address: u64,
     opts: Options,
     arch: Arch,
-    bundle: Bundle,
+    tmp: Bundle,
     decoder: Box<dyn ArchDecoder>,
 }
 
@@ -153,7 +153,7 @@ impl Decoder {
             address,
             opts,
             arch,
-            bundle: Bundle::empty(),
+            tmp: Bundle::empty(),
             decoder,
         }
     }
@@ -206,10 +206,7 @@ impl Decoder {
                     }
                 }
             }
-            self.bundle.clear();
-            // TODO: optimize, backends know better how to detect instruction lengths
-            // rather then decode instruction
-            let bits = match self.decoder.decode(address, cur, &mut self.bundle) {
+            let bits = match self.decoder.decode_len(address, cur, &mut self.tmp) {
                 Ok(bits) => bits,
                 Err(Error::Failed(bits)) => bits,
                 Err(Error::More(_)) => break,

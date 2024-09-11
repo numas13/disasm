@@ -16,7 +16,13 @@ pub mod symbols;
 use crate::{error::Error, insn::Bundle};
 
 pub trait ArchDecoder {
+    /// Decode bundle from bytes.
     fn decode(&mut self, address: u64, bytes: &[u8], out: &mut Bundle) -> Result<usize, Error>;
+
+    /// Decode bundle length from bytes.
+    fn decode_len(&mut self, address: u64, bytes: &[u8], tmp: &mut Bundle) -> Result<usize, Error> {
+        self.decode(address, bytes, tmp)
+    }
 }
 
 #[derive(Copy, Clone)]
