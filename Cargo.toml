@@ -1,5 +1,5 @@
 [workspace.package]
-version = "0.4.0"
+version = "0.5.0"
 license = "LGPL-3.0-only"
 keywords = ["disassembler", "decodetree"]
 authors = ["Denis Drakhnia <numas13@gmail.com>"]
@@ -25,10 +25,10 @@ members = [
 ]
 
 [workspace.dependencies]
-disasm-core         = { version = "0.4.0", path = "core" }
-disasm-gen          = { version = "0.4.0", path = "gen" }
-disasm-test         = { version = "0.4.0", path = "test" }
+disasm-core         = { version = "0.5.0", path = "core" }
+disasm-gen          = { version = "0.5.0", path = "gen" }
+disasm-test         = { version = "0.5.0", path = "test" }
 
-disasm-e2k          = { version = "0.4.0", path = "arch/e2k" }
-disasm-riscv        = { version = "0.4.0", path = "arch/riscv" }
-disasm-x86          = { version = "0.4.0", path = "arch/x86" }
+disasm-e2k          = { version = "0.5.0", path = "arch/e2k" }
+disasm-riscv        = { version = "0.5.0", path = "arch/riscv" }
+disasm-x86          = { version = "0.5.0", path = "arch/x86" }
