@@ -1220,7 +1220,7 @@ impl<'a> Inner<'a> {
     fn set_evex_rm_vv(
         &mut self,
         out: &mut Insn,
-        args: args_evex_rm_vv,
+        args: &args_evex_rm_vv,
         rsz: Size,
         bsz: Size,
     ) -> Result {
@@ -1231,14 +1231,14 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_rm_rv(&mut self, out: &mut Insn, args: args_evex_rm_rv, size: Size) -> Result {
+    fn set_evex_rm_rv(&mut self, out: &mut Insn, args: &args_evex_rm_rv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, rw, args.rsz)?;
         self.set_vec_mem(out, args.b, size, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_evex_rm_vr(&mut self, out: &mut Insn, args: args_evex_rm_vr, size: Size) -> Result {
+    fn set_evex_rm_vr(&mut self, out: &mut Insn, args: &args_evex_rm_vr, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
@@ -1248,7 +1248,7 @@ impl<'a> Inner<'a> {
     fn set_evex_mr_vv(
         &mut self,
         out: &mut Insn,
-        args: args_evex_rm_vv,
+        args: &args_evex_rm_vv,
         bsz: Size,
         rsz: Size,
     ) -> Result {
@@ -1259,7 +1259,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_mr_rv(&mut self, out: &mut Insn, args: args_evex_mr_rv, size: Size) -> Result {
+    fn set_evex_mr_rv(&mut self, out: &mut Insn, args: &args_evex_mr_rv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, rw, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, size, Access::Read)?;
@@ -1269,7 +1269,7 @@ impl<'a> Inner<'a> {
     fn set_evex_rvm_vvv(
         &mut self,
         out: &mut Insn,
-        args: args_evex_rvm_vvv,
+        args: &args_evex_rvm_vvv,
         rsz: Size,
         vsz: Size,
         bsz: Size,
@@ -1285,7 +1285,7 @@ impl<'a> Inner<'a> {
     fn set_gather_vvv(
         &mut self,
         out: &mut Insn,
-        args: args_gather,
+        args: &args_gather,
         bsz: Size,
         vsz: Size,
     ) -> Result {
@@ -1305,7 +1305,7 @@ impl<'a> Inner<'a> {
     fn set_evex_gather(
         &mut self,
         out: &mut Insn,
-        args: args_evex_gather,
+        args: &args_evex_gather,
         bsz: Size,
         isz: Size,
     ) -> Result {
@@ -1318,7 +1318,7 @@ impl<'a> Inner<'a> {
     fn set_evex_scatter(
         &mut self,
         out: &mut Insn,
-        args: args_evex_scatter,
+        args: &args_evex_scatter,
         bsz: Size,
         isz: Size,
     ) -> Result {
@@ -1328,7 +1328,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_fma_vvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv, size: Size) -> Result {
+    fn set_evex_fma_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_bcst(args.bcst);
         self.set_vec_reg(out, args.r, size, rw)?;
@@ -1337,7 +1337,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_fma4_vvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv, size: Size) -> Result {
+    fn set_fma4_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_vec_reg(out, args.v, size, Access::Read)?;
@@ -1346,7 +1346,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_fma4a_vvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv, size: Size) -> Result {
+    fn set_fma4a_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_vec_reg(out, args.v, size, Access::Read)?;
@@ -1364,7 +1364,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_rvm_vvr(&mut self, out: &mut Insn, args: args_evex_rvm_vvr, size: Size) -> Result {
+    fn set_evex_rvm_vvr(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_vec_reg(out, args.v, size, Access::Read)?;
@@ -1375,7 +1375,7 @@ impl<'a> Inner<'a> {
     fn set_evex_mvr_vvv(
         &mut self,
         out: &mut Insn,
-        args: args_evex_rvm_vvv,
+        args: &args_evex_rvm_vvv,
         rsz: Size,
         vsz: Size,
         bsz: Size,
@@ -1388,7 +1388,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_rm_kv(&mut self, out: &mut Insn, args: args_evex_rm_vv, size: Size) -> Result {
+    fn set_evex_rm_kv(&mut self, out: &mut Insn, args: &args_evex_rm_vv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_bcst(args.bcst);
         self.set_k_reg(out, args.r, rw)?;
@@ -1396,14 +1396,14 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_rm_vk(&mut self, out: &mut Insn, args: args_evex_rm_vv, size: Size) -> Result {
+    fn set_evex_rm_vk(&mut self, out: &mut Insn, args: &args_evex_rm_vv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_k_mem(out, args.b, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_evex_rvm_kvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv, size: Size) -> Result {
+    fn set_evex_rvm_kvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_bcst(args.bcst);
         self.set_k_reg(out, args.r, rw)?;
@@ -1468,11 +1468,11 @@ impl<'a> Inner<'a> {
         }
     }
 
-    fn set_evex_rm_qv(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_evex_rm_qv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_bcst(args.bcst);
-        args.bcst = 0;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
         self.broadcast_force = true;
-        self.set_evex_rm_vv(out, args, Size::Xmm, self.vec_size)
+        self.set_evex_rm_vv(out, &args, Size::Xmm, self.vec_size)
     }
 
     fn vec_half(&self) -> (Size, i32) {
@@ -1634,34 +1634,34 @@ impl SetValue for Inner<'_> {
         self.set_moffset(out, value, Access::Write)
     }
 
-    fn set_args_segment(&mut self, out: &mut Insn, args: args_segment) -> Result {
+    fn set_args_segment(&mut self, out: &mut Insn, args: &args_segment) -> Result {
         assert!((0..6).contains(&args.seg));
         let reg = Reg::new(reg_class::SEGMENT, args.seg as u64);
         out.push_reg(reg.access(access_from_mask(args.rw)));
         Ok(())
     }
 
-    fn set_args_reg(&mut self, out: &mut Insn, args: args_reg) -> Result {
+    fn set_args_reg(&mut self, out: &mut Insn, args: &args_reg) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.reg, access, args.rsz)
     }
 
-    fn set_args_reg_vec(&mut self, out: &mut Insn, args: args_reg_vec) -> Result {
+    fn set_args_reg_vec(&mut self, out: &mut Insn, args: &args_reg_vec) -> Result {
         let size = self.vec_size(args.rsz)?;
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.reg, size, access)
     }
 
-    fn set_args_xmm(&mut self, out: &mut Insn, args: args_reg_vec) -> Result {
+    fn set_args_xmm(&mut self, out: &mut Insn, args: &args_reg_vec) -> Result {
         self.set_args_reg_vec(out, args)
     }
 
-    fn set_args_mem(&mut self, out: &mut Insn, args: args_mem) -> Result {
+    fn set_args_mem(&mut self, out: &mut Insn, args: &args_mem) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)
     }
 
-    fn set_args_shift_cl(&mut self, out: &mut Insn, args: args_mem) -> Result {
+    fn set_args_shift_cl(&mut self, out: &mut Insn, args: &args_mem) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
         let has_gpr = self.has_gpr;
@@ -1670,135 +1670,135 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_m_m(&mut self, out: &mut Insn, args: args_mem_vec) -> Result {
+    fn set_args_m_m(&mut self, out: &mut Insn, args: &args_mem_vec) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_mem(out, args.b, Size::Mm, access, args.mode, args.msz)
     }
 
-    fn set_args_m_x(&mut self, out: &mut Insn, args: args_mem_vec) -> Result {
+    fn set_args_m_x(&mut self, out: &mut Insn, args: &args_mem_vec) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_mem(out, args.b, Size::Xmm, access, args.mode, args.msz)
     }
 
-    fn set_args_rvm_rrr(&mut self, out: &mut Insn, args: args_rvm_rrr) -> Result {
+    fn set_args_rvm_rrr(&mut self, out: &mut Insn, args: &args_rvm_rrr) -> Result {
         self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
         self.set_gpr_vvv(out, args.v, Access::Read, args.vsz)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_rmv_rrr(&mut self, out: &mut Insn, args: args_rmv_rrr) -> Result {
+    fn set_args_rmv_rrr(&mut self, out: &mut Insn, args: &args_rmv_rrr) -> Result {
         self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
         self.set_gpr_vvv(out, args.v, Access::Read, args.vsz)?;
         Ok(())
     }
 
-    fn set_args_rm_mm(&mut self, out: &mut Insn, args: args_rm_mm) -> Result {
+    fn set_args_rm_mm(&mut self, out: &mut Insn, args: &args_rm_mm) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Mm, access)?;
         self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_mr_mm(&mut self, out: &mut Insn, args: args_mr_mm) -> Result {
+    fn set_args_mr_mm(&mut self, out: &mut Insn, args: &args_mr_mm) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_mem(out, args.b, Size::Mm, access, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, Size::Mm, Access::Read)?;
         Ok(())
     }
 
-    fn set_args_rm_rm(&mut self, out: &mut Insn, args: args_rm_rm) -> Result {
+    fn set_args_rm_rm(&mut self, out: &mut Insn, args: &args_rm_rm) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, access, args.rsz)?;
         self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_rm_mr(&mut self, out: &mut Insn, args: args_rm_mr) -> Result {
+    fn set_args_rm_mr(&mut self, out: &mut Insn, args: &args_rm_mr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Mm, access)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_mr_rm(&mut self, out: &mut Insn, args: args_mr_rm) -> Result {
+    fn set_args_mr_rm(&mut self, out: &mut Insn, args: &args_mr_rm) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, Size::Mm, Access::Read)?;
         Ok(())
     }
 
-    fn set_args_rm_xx(&mut self, out: &mut Insn, args: args_rm_xx) -> Result {
+    fn set_args_rm_xx(&mut self, out: &mut Insn, args: &args_rm_xx) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Xmm, access)?;
         self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_rm_xm(&mut self, out: &mut Insn, args: args_rm_xm) -> Result {
+    fn set_args_rm_xm(&mut self, out: &mut Insn, args: &args_rm_xm) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Xmm, access)?;
         self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_rm_mx(&mut self, out: &mut Insn, args: args_rm_mx) -> Result {
+    fn set_args_rm_mx(&mut self, out: &mut Insn, args: &args_rm_mx) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Mm, access)?;
         self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_rm_xr(&mut self, out: &mut Insn, args: args_rm_xr) -> Result {
+    fn set_args_rm_xr(&mut self, out: &mut Insn, args: &args_rm_xr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Xmm, access)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_mr_xx(&mut self, out: &mut Insn, args: args_mr_xx) -> Result {
+    fn set_args_mr_xx(&mut self, out: &mut Insn, args: &args_mr_xx) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_mem(out, args.b, Size::Xmm, access, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)?;
         Ok(())
     }
 
-    fn set_args_rm_rx(&mut self, out: &mut Insn, args: args_rm_rx) -> Result {
+    fn set_args_rm_rx(&mut self, out: &mut Insn, args: &args_rm_rx) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, access, args.rsz)?;
         self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_mr_rx(&mut self, out: &mut Insn, args: args_mr_rx) -> Result {
+    fn set_args_mr_rx(&mut self, out: &mut Insn, args: &args_mr_rx) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)?;
         Ok(())
     }
 
-    fn set_args_evex_rm_vx(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, self.vec_size, Size::Xmm)
     }
 
-    fn set_args_evex_rm_vy(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, self.vec_size, Size::Ymm)
     }
 
-    fn set_args_rm_rr(&mut self, out: &mut Insn, args: args_rm_rr) -> Result {
+    fn set_args_rm_rr(&mut self, out: &mut Insn, args: &args_rm_rr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, access, args.rsz)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)
     }
 
-    fn set_args_mr_rr(&mut self, out: &mut Insn, args: args_mr_rr) -> Result {
+    fn set_args_mr_rr(&mut self, out: &mut Insn, args: &args_mr_rr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
         self.set_gpr_reg(out, args.r, Access::Read, args.rsz)
     }
 
-    fn set_args_rm_sr(&mut self, out: &mut Insn, args: args_rm_rr) -> Result {
+    fn set_args_rm_sr(&mut self, out: &mut Insn, args: &args_rm_rr) -> Result {
         let seg = args.r & 7;
         if seg >= 6 {
             return Err(Error::Failed(0));
@@ -1809,7 +1809,7 @@ impl SetValue for Inner<'_> {
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)
     }
 
-    fn set_args_mr_rs(&mut self, out: &mut Insn, args: args_mr_rr) -> Result {
+    fn set_args_mr_rs(&mut self, out: &mut Insn, args: &args_mr_rr) -> Result {
         let seg = args.r & 7;
         if seg >= 6 {
             return Err(Error::Failed(0));
@@ -1821,270 +1821,270 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_rm_hv(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_hv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_bcst(args.bcst);
-        args.bcst = 0;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
         let size = self.vec_reg_half();
-        self.set_evex_rm_vv(out, args, size, self.vec_size)
+        self.set_evex_rm_vv(out, &args, size, self.vec_size)
     }
 
-    fn set_args_evex_rm_hv_er(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_hv_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_args_evex_rm_hv(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_args_evex_rm_hv(out, &args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_qv_er(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_qv_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_evex_rm_qv(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_evex_rm_qv(out, &args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_vh_er(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vh_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_args_evex_rm_vh(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_args_evex_rm_vh(out, &args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_vq_er(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vq_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_args_evex_rm_vq(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_args_evex_rm_vq(out, &args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_hv_sae(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_hv_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_args_evex_rm_hv(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_args_evex_rm_hv(out, &args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_vq_sae(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vq_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_args_evex_rm_vq(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_args_evex_rm_vq(out, &args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_vh(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vh(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let (size, msz) = self.vec_mem_half();
-        args.msz = msz;
-        self.set_evex_rm_vv(out, args, self.vec_size, size)
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_rm_vv(out, &args, self.vec_size, size)
     }
 
-    fn set_args_evex_rm_vq(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vq(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let (size, msz) = self.vec_mem_quarter();
-        args.msz = msz;
-        self.set_evex_rm_vv(out, args, self.vec_size, size)
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_rm_vv(out, &args, self.vec_size, size)
     }
 
-    fn set_args_evex_rm_ve(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_ve(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let (size, msz) = self.vec_mem_eighth();
-        args.msz = msz;
-        self.set_evex_rm_vv(out, args, self.vec_size, size)
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_rm_vv(out, &args, self.vec_size, size)
     }
 
-    fn set_args_evex_rm_vh_sae(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vh_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let sae = self.get_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
-        args.bcst = 0;
-        self.set_args_evex_rm_vh(out, args)?;
+        let args = args_evex_rm_vv { bcst: 0, ..*args };
+        self.set_args_evex_rm_vh(out, &args)?;
         out.push_operand_if_some(sae);
         Ok(())
     }
 
-    fn set_args_evex_mr_hv(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_hv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let (size, msz) = self.vec_mem_half();
-        args.msz = msz;
-        self.set_evex_mr_vv(out, args, size, self.vec_size)
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_mr_vv(out, &args, size, self.vec_size)
     }
 
-    fn set_args_evex_mr_hv_sae(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_hv_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let sae = self.get_sae_zmm(args.mode);
         let (size, msz) = self.vec_mem_half();
-        args.msz = msz;
-        self.set_evex_mr_vv(out, args, size, self.vec_size)?;
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_mr_vv(out, &args, size, self.vec_size)?;
         out.push_operand_if_some(sae);
         Ok(())
     }
 
-    fn set_args_evex_mr_qv(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_qv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let (size, msz) = self.vec_mem_quarter();
-        args.msz = msz;
-        self.set_evex_mr_vv(out, args, size, self.vec_size)
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_mr_vv(out, &args, size, self.vec_size)
     }
 
-    fn set_args_evex_mr_ev(&mut self, out: &mut Insn, mut args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_ev(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let (size, msz) = self.vec_mem_eighth();
-        args.msz = msz;
-        self.set_evex_mr_vv(out, args, size, self.vec_size)
+        let args = args_evex_rm_vv { msz, ..*args };
+        self.set_evex_mr_vv(out, &args, size, self.vec_size)
     }
 
-    fn set_args_evex_rm_xx(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_xx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Xmm, Size::Xmm)
     }
 
-    fn set_args_evex_rm_xy(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_xy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Xmm, Size::Ymm)
     }
 
-    fn set_args_evex_rm_yx(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_yx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Ymm, Size::Xmm)
     }
 
-    fn set_args_evex_rm_yy(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_yy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Ymm, Size::Ymm)
     }
 
-    fn set_args_evex_rm_zx(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_zx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Zmm, Size::Xmm)
     }
 
-    fn set_args_evex_rm_zy(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_zy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Zmm, Size::Ymm)
     }
 
-    fn set_args_evex_rm_xx_sae(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_xx_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let sae = self.get_sae(args.mode);
         self.set_evex_rm_vv(out, args, Size::Xmm, Size::Xmm)?;
         out.push_operand_if_some(sae);
         Ok(())
     }
 
-    fn set_args_evex_rm_rx(&mut self, out: &mut Insn, args: args_evex_rm_rv) -> Result {
+    fn set_args_evex_rm_rx(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
         self.set_evex_rm_rv(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_rm_rx_er(&mut self, out: &mut Insn, args: args_evex_rm_rv) -> Result {
+    fn set_args_evex_rm_rx_er(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
         let er = self.get_er_sae(args.mode);
         self.set_args_evex_rm_rx(out, args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_rx_sae(&mut self, out: &mut Insn, args: args_evex_rm_rv) -> Result {
+    fn set_args_evex_rm_rx_sae(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
         let sae = self.get_sae(args.mode);
         self.set_args_evex_rm_rx(out, args)?;
         out.push_operand_if_some(sae);
         Ok(())
     }
 
-    fn set_args_evex_rm_ry(&mut self, out: &mut Insn, args: args_evex_rm_rv) -> Result {
+    fn set_args_evex_rm_ry(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
         self.set_evex_rm_rv(out, args, Size::Ymm)
     }
 
-    fn set_args_evex_rm_vr(&mut self, out: &mut Insn, args: args_evex_rm_vr) -> Result {
+    fn set_args_evex_rm_vr(&mut self, out: &mut Insn, args: &args_evex_rm_vr) -> Result {
         self.set_evex_rm_vr(out, args, self.vec_size)
     }
 
-    fn set_args_evex_rm_xr(&mut self, out: &mut Insn, args: args_evex_rm_vr) -> Result {
+    fn set_args_evex_rm_xr(&mut self, out: &mut Insn, args: &args_evex_rm_vr) -> Result {
         self.set_evex_rm_vr(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_mr_xx(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_xx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, Size::Xmm, Size::Xmm)
     }
 
-    fn set_args_evex_mr_xy(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_xy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, Size::Xmm, Size::Ymm)
     }
 
-    fn set_args_evex_mr_xz(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_xz(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, Size::Xmm, Size::Zmm)
     }
 
-    fn set_args_evex_mr_yy(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_yy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, Size::Ymm, Size::Ymm)
     }
 
-    fn set_args_evex_mr_yz(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_yz(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, Size::Ymm, Size::Zmm)
     }
 
-    fn set_args_evex_mr_rx(&mut self, out: &mut Insn, args: args_evex_mr_rv) -> Result {
+    fn set_args_evex_mr_rx(&mut self, out: &mut Insn, args: &args_evex_mr_rv) -> Result {
         self.set_evex_mr_rv(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_rvm_xxx(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_xxx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.vec_size = Size::Xmm;
         self.set_args_evex_rvm_vvv(out, args)
     }
 
-    fn set_args_evex_rvm_yyx(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_yyx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_vvv(out, args, Size::Ymm, Size::Ymm, Size::Xmm)
     }
 
-    fn set_args_evex_rvm_yyy(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_yyy(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_vvv(out, args, Size::Ymm, Size::Ymm, Size::Ymm)
     }
 
-    fn set_args_evex_rvm_zzx(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_zzx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_vvv(out, args, Size::Zmm, Size::Zmm, Size::Xmm)
     }
 
-    fn set_args_evex_rvm_zzy(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_zzy(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_vvv(out, args, Size::Zmm, Size::Zmm, Size::Ymm)
     }
 
-    fn set_args_evex_mvr_xxx(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_mvr_xxx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_mvr_vvv(out, args, Size::Xmm, Size::Xmm, Size::Xmm)
     }
 
-    fn set_args_evex_mvr_yyy(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_mvr_yyy(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_mvr_vvv(out, args, Size::Ymm, Size::Ymm, Size::Ymm)
     }
 
-    fn set_args_evex_rvm_xxr(&mut self, out: &mut Insn, args: args_evex_rvm_vvr) -> Result {
+    fn set_args_evex_rvm_xxr(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr) -> Result {
         self.set_evex_rvm_vvr(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_rvm_xxr_er(&mut self, out: &mut Insn, args: args_evex_rvm_vvr) -> Result {
+    fn set_args_evex_rvm_xxr_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr) -> Result {
         let er = self.get_er_sae(args.mode);
         self.set_args_evex_rvm_xxr(out, args)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_kv(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_kv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_kv(out, args, self.vec_size)
     }
 
-    fn set_args_evex_rm_kx(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_kx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_kv(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_rm_vk(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vk(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vk(out, args, self.vec_size)
     }
 
-    fn set_args_evex_rvm_kxx_sae(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_kxx_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_sae(args.mode);
         self.set_evex_rvm_kvv(out, args, Size::Xmm)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rm_vv(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, self.vec_size, self.vec_size)
     }
 
-    fn set_args_evex_rm_vv_er(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vv_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
         self.set_evex_rm_vv(out, args, self.vec_size, self.vec_size)?;
@@ -2092,7 +2092,7 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_rm_vv_sae(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_rm_vv_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         let er = self.get_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
         self.set_evex_rm_vv(out, args, self.vec_size, self.vec_size)?;
@@ -2100,95 +2100,95 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_mr_vv(&mut self, out: &mut Insn, args: args_evex_rm_vv) -> Result {
+    fn set_args_evex_mr_vv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, self.vec_size, self.vec_size)
     }
 
-    fn set_args_gather_xvx(&mut self, out: &mut Insn, args: args_gather) -> Result {
+    fn set_args_gather_xvx(&mut self, out: &mut Insn, args: &args_gather) -> Result {
         self.set_gather_vvv(out, args, Size::Xmm, Size::Xmm)
     }
 
-    fn set_args_gather_vvv(&mut self, out: &mut Insn, args: args_gather) -> Result {
+    fn set_args_gather_vvv(&mut self, out: &mut Insn, args: &args_gather) -> Result {
         self.set_gather_vvv(out, args, self.vec_size, self.vec_size)
     }
 
-    fn set_args_evex_gather_vv(&mut self, out: &mut Insn, args: args_evex_gather) -> Result {
+    fn set_args_evex_gather_vv(&mut self, out: &mut Insn, args: &args_evex_gather) -> Result {
         self.set_evex_gather(out, args, self.vec_size, self.vec_size)
     }
 
-    fn set_args_evex_gather_vh(&mut self, out: &mut Insn, args: args_evex_gather) -> Result {
+    fn set_args_evex_gather_vh(&mut self, out: &mut Insn, args: &args_evex_gather) -> Result {
         let half = self.vec_half().0;
         self.set_evex_gather(out, args, self.vec_size, half)
     }
 
-    fn set_args_evex_gather_hv(&mut self, out: &mut Insn, args: args_evex_gather) -> Result {
+    fn set_args_evex_gather_hv(&mut self, out: &mut Insn, args: &args_evex_gather) -> Result {
         let half = self.vec_half().0;
         self.set_evex_gather(out, args, half, self.vec_size)
     }
 
-    fn set_args_evex_scatter_vv(&mut self, out: &mut Insn, args: args_evex_scatter) -> Result {
+    fn set_args_evex_scatter_vv(&mut self, out: &mut Insn, args: &args_evex_scatter) -> Result {
         self.set_evex_scatter(out, args, self.vec_size, self.vec_size)
     }
 
-    fn set_args_evex_scatter_vh(&mut self, out: &mut Insn, args: args_evex_scatter) -> Result {
+    fn set_args_evex_scatter_vh(&mut self, out: &mut Insn, args: &args_evex_scatter) -> Result {
         let half = self.vec_half().0;
         self.set_evex_scatter(out, args, self.vec_size, half)
     }
 
-    fn set_args_evex_scatter_hv(&mut self, out: &mut Insn, args: args_evex_scatter) -> Result {
+    fn set_args_evex_scatter_hv(&mut self, out: &mut Insn, args: &args_evex_scatter) -> Result {
         let half = self.vec_half().0;
         self.set_evex_scatter(out, args, half, self.vec_size)
     }
 
-    fn set_args_evex_rvm_vvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_vvv(out, args, self.vec_size, self.vec_size, self.vec_size)
     }
 
-    fn set_args_evex_rvm_vvx_128(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_vvx_128(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.mem_access = MemAccess::Mem128;
         self.set_evex_rvm_vvv(out, args, self.vec_size, self.vec_size, Size::Xmm)
     }
 
-    fn set_args_evex_rvm_vvv_er(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_vvv_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_evex_rvm_vvv(out, args, self.vec_size, self.vec_size, self.vec_size)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rvm_vvv_sae(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_vvv_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_sae_zmm(args.mode);
         self.set_evex_rvm_vvv(out, args, self.vec_size, self.vec_size, self.vec_size)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rvm_xxx_er(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_xxx_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_er_sae(args.mode);
         self.set_evex_rvm_vvv(out, args, Size::Xmm, Size::Xmm, Size::Xmm)?;
         out.push_operand_if_some(er);
         Ok(())
     }
 
-    fn set_args_evex_rvm_xxx_sae(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_xxx_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let sae = self.get_sae(args.mode);
         self.set_evex_rvm_vvv(out, args, Size::Xmm, Size::Xmm, Size::Xmm)?;
         out.push_operand_if_some(sae);
         Ok(())
     }
 
-    fn set_args_evex_rvm_kvv(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_kvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_kvv(out, args, self.vec_size)
     }
 
-    fn set_args_evex_rvm_kvv_sae(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_rvm_kvv_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let sae = self.get_sae_zmm(args.mode);
         self.set_evex_rvm_kvv(out, args, self.vec_size)?;
         out.push_operand_if_some(sae);
         Ok(())
     }
 
-    fn set_args_fmadds_er(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_fmadds_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_er_sae(args.mode);
         self.set_vec_reg(out, args.r, Size::Xmm, Access::ReadWrite)?;
         self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
@@ -2197,7 +2197,7 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_fmaddp(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_fmaddp(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_bcst(args.bcst);
         self.set_vec_reg(out, args.r, self.vec_size, Access::ReadWrite)?;
         self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
@@ -2212,7 +2212,7 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_fmaddp_er(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_fmaddp_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_er_sae_zmm(args.mode);
         self.set_bcst(args.bcst);
         self.set_vec_reg(out, args.r, self.vec_size, Access::ReadWrite)?;
@@ -2229,31 +2229,31 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_fmax(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_fmax(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_fma_vvv(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_fmay(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_fmay(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_fma_vvv(out, args, Size::Ymm)
     }
 
-    fn set_args_evex_fma4x(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_fma4x(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_fma4_vvv(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_fma4y(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_fma4y(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_fma4_vvv(out, args, Size::Ymm)
     }
 
-    fn set_args_evex_fma4x2(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_fma4x2(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_fma4a_vvv(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_fma4y2(&mut self, out: &mut Insn, args: args_evex_rvm_vvv) -> Result {
+    fn set_args_evex_fma4y2(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_fma4a_vvv(out, args, Size::Ymm)
     }
 
-    fn set_args_evex_rvm_kkk(&mut self, out: &mut Insn, args: args_evex_rvm_kkk) -> Result {
+    fn set_args_evex_rvm_kkk(&mut self, out: &mut Insn, args: &args_evex_rvm_kkk) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_k_reg(out, args.r, rw)?;
         self.set_k_vvv(out, args.v, Access::Read)?;
@@ -2261,28 +2261,28 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_mr_kk(&mut self, out: &mut Insn, args: args_evex_mr_kk) -> Result {
+    fn set_args_evex_mr_kk(&mut self, out: &mut Insn, args: &args_evex_mr_kk) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_k_mem(out, args.b, rw, args.mode, args.msz)?;
         self.set_k_reg(out, args.r, Access::Read)?;
         Ok(())
     }
 
-    fn set_args_evex_rm_kk(&mut self, out: &mut Insn, args: args_evex_rm_kk) -> Result {
+    fn set_args_evex_rm_kk(&mut self, out: &mut Insn, args: &args_evex_rm_kk) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_k_reg(out, args.r, rw)?;
         self.set_k_mem(out, args.b, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_evex_rm_kr(&mut self, out: &mut Insn, args: args_evex_rm_kr) -> Result {
+    fn set_args_evex_rm_kr(&mut self, out: &mut Insn, args: &args_evex_rm_kr) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_k_reg(out, args.r, rw)?;
         self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
-    fn set_args_evex_rm_rk(&mut self, out: &mut Insn, args: args_evex_rm_rk) -> Result {
+    fn set_args_evex_rm_rk(&mut self, out: &mut Insn, args: &args_evex_rm_rk) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, rw, args.rsz)?;
         self.set_k_mem(out, args.b, Access::Read, args.mode, args.msz)?;
@@ -2331,7 +2331,7 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_mem_bnd(&mut self, out: &mut Insn, args: args_mem_bnd) -> Result {
+    fn set_args_mem_bnd(&mut self, out: &mut Insn, args: &args_mem_bnd) -> Result {
         let access = access_from_mask(args.rw);
         self.set_bnd_reg(out, args.b, access)
     }

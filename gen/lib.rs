@@ -135,7 +135,11 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
             writeln!(out, "{pad}out.set_opcode(opcode);")?;
 
             for (arg, ty) in args {
-                let prefix = if ty.starts_with("args_") { "args_" } else { "" };
+                let prefix = if ty.starts_with("args_") || ty.starts_with("&args_") {
+                    "args_"
+                } else {
+                    ""
+                };
                 write!(
                     out,
                     "{pad}self.set_{prefix}{arg}({}, {arg})",
@@ -196,7 +200,11 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         write!(out, ", opcode::{}", pattern.name().to_uppercase())?;
 
         for value in pattern.values() {
-            write!(out, ", {}", value.name())?;
+            if self.arch.args_by_ref && value.is_set() {
+                write!(out, ", &{}", value.name())?;
+            } else {
+                write!(out, ", {}", value.name())?;
+            }
         }
         if self.arch.set_return_error {
             writeln!(out, ")?;")?;
@@ -209,7 +217,13 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
             for value in pattern.values() {
                 let name = String::from(*value.name());
                 let ty = match value.kind() {
-                    ValueKind::Set(ty, ..) => format!("args_{ty}"),
+                    ValueKind::Set(ty, ..) => {
+                        if self.arch.args_by_ref {
+                            format!("&args_{ty}")
+                        } else {
+                            format!("args_{ty}")
+                        }
+                    }
                     _ => self.arch.value_type.to_owned(),
                 };
                 args.push((name, ty));
@@ -320,6 +334,7 @@ pub struct Arch {
     value_type: &'static str,
     set_return_error: bool,
     mnemonic_dot: bool,
+    args_by_ref: bool,
     shared_args: String,
     shared_args_def: String,
 
@@ -357,6 +372,7 @@ impl Arch {
             value_type: "i32",
             set_return_error: false,
             mnemonic_dot: true,
+            args_by_ref: true,
             shared_args,
             shared_args_def,
 
@@ -382,6 +398,11 @@ impl Arch {
 
     pub fn mnemonic_dot(mut self, b: bool) -> Self {
         self.mnemonic_dot = b;
+        self
+    }
+
+    pub fn args_by_ref(mut self, enabled: bool) -> Self {
+        self.args_by_ref = enabled;
         self
     }
 
@@ -419,10 +440,11 @@ impl Arch {
             writeln!(out)?;
         }
         for (name, ty) in &self.sets {
-            writeln!(
-                out,
-                "    fn set_args_{name}({shared}, args: args_{ty}){ret};"
-            )?;
+            write!(out, "    fn set_args_{name}({shared}, args: ")?;
+            if self.args_by_ref {
+                write!(out, "&")?;
+            }
+            writeln!(out, "args_{ty}){ret};")?;
         }
         writeln!(out, "}}")?;
         Ok(())

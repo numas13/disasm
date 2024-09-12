@@ -23,11 +23,7 @@ use disasm_core::{
     ArchDecoder,
 };
 
-use self::{
-    generated::{E2KDecodeAlop, SetValue},
-    operand::E2KOperand,
-    slot::Cluster,
-};
+use self::{generated::*, operand::E2KOperand, slot::Cluster};
 
 pub use self::consts::*;
 pub use self::generated::opcode;
@@ -1353,14 +1349,14 @@ impl Decoder {
 impl SetValue for Decoder {
     type Error = Error;
 
-    fn set_args_alf1(&mut self, out: &mut Insn, args: generated::args_alf1) {
+    fn set_args_alf1(&mut self, out: &mut Insn, args: &args_alf1) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf1_mas(&mut self, out: &mut Insn, args: generated::args_alf1_mas) {
+    fn set_args_alf1_mas(&mut self, out: &mut Insn, args: &args_alf1_mas) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1368,7 +1364,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf1_merge(&mut self, out: &mut Insn, args: generated::args_alf1_merge) {
+    fn set_args_alf1_merge(&mut self, out: &mut Insn, args: &args_alf1_merge) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1376,19 +1372,19 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf2(&mut self, out: &mut Insn, args: generated::args_alf2) {
+    fn set_args_alf2(&mut self, out: &mut Insn, args: &args_alf2) {
         out.push_dst(args.dst);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf2_movtd(&mut self, out: &mut Insn, args: generated::args_alf2_movtd) {
+    fn set_args_alf2_movtd(&mut self, out: &mut Insn, args: &args_alf2_movtd) {
         out.push_dst_movtd(args.dst);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf3_mas(&mut self, out: &mut Insn, args: generated::args_alf3_mas) {
+    fn set_args_alf3_mas(&mut self, out: &mut Insn, args: &args_alf3_mas) {
         self.set_src4(out, args.src4);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1396,26 +1392,26 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf4(&mut self, out: &mut Insn, args: generated::args_alf4) {
+    fn set_args_alf4(&mut self, out: &mut Insn, args: &args_alf4) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_pred(out);
     }
 
-    fn set_args_alf7(&mut self, out: &mut Insn, args: generated::args_alf7) {
+    fn set_args_alf7(&mut self, out: &mut Insn, args: &args_alf7) {
         out.push_dst_preg(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf8(&mut self, out: &mut Insn, args: generated::args_alf8) {
+    fn set_args_alf8(&mut self, out: &mut Insn, args: &args_alf8) {
         out.push_dst_preg(args.dst);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf10_mas(&mut self, out: &mut Insn, args: generated::args_alf10_mas) {
+    fn set_args_alf10_mas(&mut self, out: &mut Insn, args: &args_alf10_mas) {
         self.set_src4(out, args.src4);
         self.set_aad(out, args.aad, Access::Read);
         self.set_aasti(out, args.aaindex, Access::Read);
@@ -1428,14 +1424,14 @@ impl SetValue for Decoder {
         }
     }
 
-    fn set_args_alf11(&mut self, out: &mut Insn, args: generated::args_alf11) {
+    fn set_args_alf11(&mut self, out: &mut Insn, args: &args_alf11) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf11_mas(&mut self, out: &mut Insn, args: generated::args_alf11_mas) {
+    fn set_args_alf11_mas(&mut self, out: &mut Insn, args: &args_alf11_mas) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1443,7 +1439,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf11_merge(&mut self, out: &mut Insn, args: generated::args_alf11_merge) {
+    fn set_args_alf11_merge(&mut self, out: &mut Insn, args: &args_alf11_merge) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1451,7 +1447,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf11_lit8(&mut self, out: &mut Insn, args: generated::args_alf11_lit8) {
+    fn set_args_alf11_lit8(&mut self, out: &mut Insn, args: &args_alf11_lit8) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1459,33 +1455,33 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf12(&mut self, out: &mut Insn, args: generated::args_alf12) {
+    fn set_args_alf12(&mut self, out: &mut Insn, args: &args_alf12) {
         out.push_dst(args.dst);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf12_pshufh(&mut self, out: &mut Insn, args: generated::args_alf12_pshufh) {
+    fn set_args_alf12_pshufh(&mut self, out: &mut Insn, args: &args_alf12_pshufh) {
         out.push_dst(args.dst);
         self.set_src2(out, args.src2);
         self.set_uimm(out, args.imm as u64);
         self.set_pred(out);
     }
 
-    fn set_args_alf12_ibranchd(&mut self, out: &mut Insn, args: generated::args_alf12_ibranchd) {
+    fn set_args_alf12_ibranchd(&mut self, out: &mut Insn, args: &args_alf12_ibranchd) {
         out.push_dst(args.dst);
         self.set_src2(out, args.src2);
         self.set_ct_cond(out);
     }
 
-    fn set_args_alf12_icalld(&mut self, out: &mut Insn, args: generated::args_alf12_icalld) {
+    fn set_args_alf12_icalld(&mut self, out: &mut Insn, args: &args_alf12_icalld) {
         out.push_dst(args.dst);
         self.set_wbs(out, args.wbs);
         self.set_src2(out, args.src2);
         self.set_ct_cond(out);
     }
 
-    fn set_args_alf13_mas(&mut self, out: &mut Insn, args: generated::args_alf13_mas) {
+    fn set_args_alf13_mas(&mut self, out: &mut Insn, args: &args_alf13_mas) {
         self.set_src4(out, args.src4);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1493,26 +1489,26 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf15(&mut self, out: &mut Insn, args: generated::args_alf15) {
+    fn set_args_alf15(&mut self, out: &mut Insn, args: &args_alf15) {
         self.set_dst_sreg(out, args.dst);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf16(&mut self, out: &mut Insn, args: generated::args_alf16) {
+    fn set_args_alf16(&mut self, out: &mut Insn, args: &args_alf16) {
         out.push_dst(args.dst);
         self.set_src1_sreg(out, args.src1);
         self.set_pred(out);
     }
 
-    fn set_args_alf17(&mut self, out: &mut Insn, args: generated::args_alf17) {
+    fn set_args_alf17(&mut self, out: &mut Insn, args: &args_alf17) {
         out.push_dst_preg(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_alf21(&mut self, out: &mut Insn, args: generated::args_alf21) {
+    fn set_args_alf21(&mut self, out: &mut Insn, args: &args_alf21) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1520,7 +1516,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf21_merge(&mut self, out: &mut Insn, args: generated::args_alf21_merge) {
+    fn set_args_alf21_merge(&mut self, out: &mut Insn, args: &args_alf21_merge) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1529,7 +1525,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf21_lt3(&mut self, out: &mut Insn, args: generated::args_alf21_lt3) {
+    fn set_args_alf21_lt3(&mut self, out: &mut Insn, args: &args_alf21_lt3) {
         out.push_dst(args.dst);
         self.set_src1(out, args.src1);
         self.set_src2(out, args.src2);
@@ -1537,7 +1533,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf21_log(&mut self, out: &mut Insn, args: generated::args_alf21_log) {
+    fn set_args_alf21_log(&mut self, out: &mut Insn, args: &args_alf21_log) {
         out.push_dst(args.dst);
         self.set_uimm(out, args.table as u64);
         self.set_src1(out, args.src1);
@@ -1546,7 +1542,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf21_log_lt3(&mut self, out: &mut Insn, args: generated::args_alf21_log_lt3) {
+    fn set_args_alf21_log_lt3(&mut self, out: &mut Insn, args: &args_alf21_log_lt3) {
         out.push_dst(args.dst);
         self.set_uimm(out, args.table as u64);
         self.set_src1(out, args.src1);
@@ -1555,13 +1551,13 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_alf22(&mut self, out: &mut Insn, args: generated::args_alf22) {
+    fn set_args_alf22(&mut self, out: &mut Insn, args: &args_alf22) {
         out.push_dst(args.dst);
         self.set_src2(out, args.src2);
         self.set_pred(out);
     }
 
-    fn set_args_aaurr(&mut self, out: &mut Insn, args: generated::args_aaurr) {
+    fn set_args_aaurr(&mut self, out: &mut Insn, args: &args_aaurr) {
         out.push_dst(args.dst);
         self.set_aau(
             out,
@@ -1574,7 +1570,7 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_args_aaurw(&mut self, out: &mut Insn, args: generated::args_aaurw) {
+    fn set_args_aaurw(&mut self, out: &mut Insn, args: &args_aaurw) {
         self.set_aau(
             out,
             args.aau,

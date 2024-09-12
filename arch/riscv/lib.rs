@@ -16,10 +16,7 @@ use disasm_core::{
     ArchDecoder,
 };
 
-use self::{
-    generated::{RiscvDecode16, RiscvDecode32, SetValue},
-    operand::RiscvOperand,
-};
+use self::{generated::*, operand::RiscvOperand};
 
 pub use self::consts::*;
 pub use self::generated::opcode;
@@ -245,22 +242,22 @@ impl SetValue for Decoder {
         out.push_reg(csr(value));
     }
 
-    fn set_args_offset(&mut self, insn: &mut Insn, args: generated::args_offset) {
+    fn set_args_offset(&mut self, insn: &mut Insn, args: &args_offset) {
         insn.push_offset(x(args.rs1).read(), args.imm as i64);
     }
 
-    fn set_args_offset_implicit(&mut self, insn: &mut Insn, args: generated::args_offset_implicit) {
+    fn set_args_offset_implicit(&mut self, insn: &mut Insn, args: &args_offset_implicit) {
         insn.push_offset(x(args.rs1).read().implicit(), args.imm as i64);
     }
 
-    fn set_args_j(&mut self, insn: &mut Insn, args: generated::args_j) {
+    fn set_args_j(&mut self, insn: &mut Insn, args: &args_j) {
         insn.push_operand(
             Operand::reg(x(args.rd).write()).non_printable(self.alias() && args.rd == 1),
         );
         insn.push_pc_rel(self.address, args.imm as i64);
     }
 
-    fn set_args_jr(&mut self, insn: &mut Insn, args: generated::args_jr) {
+    fn set_args_jr(&mut self, insn: &mut Insn, args: &args_jr) {
         let rs1 = x(args.rs1).read();
         if args.imm != 0 {
             insn.push_offset(rs1, args.imm as i64);
@@ -269,7 +266,7 @@ impl SetValue for Decoder {
         }
     }
 
-    fn set_args_jalr(&mut self, insn: &mut Insn, args: generated::args_jalr) {
+    fn set_args_jalr(&mut self, insn: &mut Insn, args: &args_jalr) {
         insn.push_operand(
             Operand::reg(x(args.rd).write()).non_printable(self.alias() && args.rd == 1),
         );
@@ -281,7 +278,7 @@ impl SetValue for Decoder {
         }
     }
 
-    fn set_args_fence(&mut self, insn: &mut Insn, args: generated::args_fence) {
+    fn set_args_fence(&mut self, insn: &mut Insn, args: &args_fence) {
         // TODO: non_printable
         if !self.alias() || args.pred != 0b1111 || args.succ != 0b1111 {
             insn.push_arch_spec2(RiscvOperand::Fence, args.pred as u64);
@@ -289,31 +286,31 @@ impl SetValue for Decoder {
         }
     }
 
-    fn set_args_rmrr(&mut self, _: &mut Insn, _: generated::args_rmrr) {
+    fn set_args_rmrr(&mut self, _: &mut Insn, _: &args_rmrr) {
         // TODO:
     }
 
-    fn set_args_rmr(&mut self, _: &mut Insn, _: generated::args_rmr) {
+    fn set_args_rmr(&mut self, _: &mut Insn, _: &args_rmr) {
         // TODO:
     }
 
-    fn set_args_r2nfvm(&mut self, _: &mut Insn, _: generated::args_r2nfvm) {
+    fn set_args_r2nfvm(&mut self, _: &mut Insn, _: &args_r2nfvm) {
         // TODO:
     }
 
-    fn set_args_rnfvm(&mut self, _: &mut Insn, _: generated::args_rnfvm) {
+    fn set_args_rnfvm(&mut self, _: &mut Insn, _: &args_rnfvm) {
         // TODO:
     }
 
-    fn set_args_k_aes(&mut self, _: &mut Insn, _: generated::args_k_aes) {
+    fn set_args_k_aes(&mut self, _: &mut Insn, _: &args_k_aes) {
         // TODO:
     }
 
-    // fn set_args_cmpp(&mut self, _: &mut Insn, _: generated::args_cmpp) {
+    // fn set_args_cmpp(&mut self, _: &mut Insn, _: &args_cmpp) {
     //     // TODO:
     // }
 
-    // fn set_args_cmjt(&mut self, _: &mut Insn, _: generated::args_cmjt) {
+    // fn set_args_cmjt(&mut self, _: &mut Insn, _: &args_cmjt) {
     //     // TODO:
     // }
 }
