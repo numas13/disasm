@@ -169,28 +169,30 @@ impl Size {
     }
 
     fn encode_gpr(&self, index: u8, rex: bool) -> u64 {
-        debug_assert!(index < 16);
-        let class = match self {
-            Self::Byte if rex => 1,
-            Self::Byte => 0,
-            Self::Word => 2,
-            Self::Long => 3,
-            Self::Quad => 4,
+        let (size, index) = match self {
+            Self::Byte => {
+                if rex && (4..8).contains(&index) {
+                    (0, index + 12)
+                } else {
+                    (0, index)
+                }
+            }
+            Self::Word => (1, index),
+            Self::Long => (2, index),
+            Self::Quad => (3, index),
             _ => unreachable!(),
         };
-        ((class as u64) << 4) | (index as u64)
+        (size << 5) | (index as u64)
     }
 
-    fn decode_gpr(reg: u64) -> (Size, bool, usize) {
-        let (size, rex) = match reg >> 4 {
-            0 => (Self::Byte, false),
-            1 => (Self::Byte, true),
-            2 => (Self::Word, false),
-            3 => (Self::Long, false),
-            4 => (Self::Quad, false),
+    fn decode_gpr(reg: u64) -> (Size, usize) {
+        match reg >> 5 {
+            0 => (Size::Byte, (reg as usize) & 31),
+            1 => (Size::Word, (reg as usize) & 15),
+            2 => (Size::Long, (reg as usize) & 15),
+            3 => (Size::Quad, (reg as usize) & 15),
             _ => unreachable!(),
-        };
-        (size, rex, reg as usize & 15)
+        }
     }
 
     fn encode_vec(&self, index: u8) -> u64 {

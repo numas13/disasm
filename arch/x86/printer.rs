@@ -11,7 +11,7 @@ use disasm_core::{
 use super::{consts::*, opcode, Size, X86Operand};
 
 #[rustfmt::skip]
-const GPR_NAME_BYTE: [&str; 16] = [
+const GPR_NAME_BYTE: [&str; 20] = [
     "%al",
     "%cl",
     "%dl",
@@ -28,26 +28,11 @@ const GPR_NAME_BYTE: [&str; 16] = [
     "%r13b",
     "%r14b",
     "%r15b",
-];
-
-#[rustfmt::skip]
-const GPR_NAME_BYTE_REX: [&str; 16] = [
-    "%al",
-    "%cl",
-    "%dl",
-    "%bl",
+    // only for rex
     "%spl",
     "%bpl",
     "%sil",
     "%dil",
-    "%r8b",
-    "%r9b",
-    "%r10b",
-    "%r11b",
-    "%r12b",
-    "%r13b",
-    "%r14b",
-    "%r15b",
 ];
 
 #[rustfmt::skip]
@@ -318,15 +303,13 @@ impl Printer {
     fn register_name(&self, reg: Reg) -> Cow<'static, str> {
         match reg {
             super::NONE => "".into(),
-            super::RIP if self.att => "%rip".into(),
-            super::RIP => "rip".into(),
+            super::RIP => self.strip_prefix("%rip").into(),
             _ => {
                 let index = reg.index();
                 match reg.class() {
                     RegClass::INT => {
-                        let (size, rex, index) = Size::decode_gpr(index);
+                        let (size, index) = Size::decode_gpr(index);
                         let name = match size {
-                            Size::Byte if rex => GPR_NAME_BYTE_REX[index],
                             Size::Byte => GPR_NAME_BYTE[index],
                             Size::Word => GPR_NAME_WORD[index],
                             Size::Long => GPR_NAME_LONG[index],
