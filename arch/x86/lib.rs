@@ -180,7 +180,9 @@ impl Size {
             Self::Word => (1, index),
             Self::Long => (2, index),
             Self::Quad => (3, index),
-            _ => unreachable!(),
+            Self::Far48 => (3, index),
+            Self::Far80 => (3, index),
+            _ => unreachable!("{:?}", self),
         };
         (size << 5) | (index as u64)
     }
