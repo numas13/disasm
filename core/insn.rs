@@ -137,6 +137,10 @@ impl Insn {
         self.push_operand(OperandKind::Indirect(reg));
     }
 
+    pub fn push_pc_rel(&mut self, base: u64, offset: i64) {
+        self.push_operand(OperandKind::PcRelative(base, offset));
+    }
+
     pub fn push_arch_spec(&mut self, a: u64, b: u64, c: u64) {
         self.push_operand(OperandKind::ArchSpec(a, b, c));
     }

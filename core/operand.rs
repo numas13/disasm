@@ -160,7 +160,7 @@ pub enum OperandKind {
     /// absolute address
     Absolute(u64),
     /// pc-relative address
-    PcRelative(i64),
+    PcRelative(u64, i64),
     /// architecture specific operand
     ArchSpec(u64, u64, u64),
 }

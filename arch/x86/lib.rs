@@ -2412,12 +2412,8 @@ impl SetValue for Inner<'_> {
             _ => unreachable!("unexpected relative offset size"),
         };
 
-        let address = self
-            .address
-            .wrapping_add(self.bytes.offset() as u64)
-            .wrapping_add(disp as u64);
-        let mut operand = Operand::new(OperandKind::Absolute(address));
-        operand.flags_mut().set(operand::NO_PTR);
+        let address = self.address.wrapping_add(self.bytes.offset() as u64);
+        let operand = Operand::new(OperandKind::PcRelative(address, disp));
         out.push_operand(operand);
         Ok(())
     }

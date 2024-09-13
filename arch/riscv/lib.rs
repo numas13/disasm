@@ -229,7 +229,7 @@ impl SetValue for Decoder {
     }
 
     fn set_rel(&mut self, out: &mut Insn, rel: i32) {
-        out.push_absolute(rel_addr(self.address, rel));
+        out.push_pc_rel(self.address, rel as i64);
     }
 
     fn set_aq(&mut self, out: &mut Insn, aq: i32) {
@@ -257,7 +257,7 @@ impl SetValue for Decoder {
         insn.push_operand(
             Operand::reg(x(args.rd).write()).non_printable(self.alias() && args.rd == 1),
         );
-        insn.push_absolute(rel_addr(self.address, args.imm));
+        insn.push_pc_rel(self.address, args.imm as i64);
     }
 
     fn set_args_jr(&mut self, insn: &mut Insn, args: generated::args_jr) {
@@ -421,10 +421,6 @@ fn f(index: i32) -> Reg {
 
 fn csr(index: i32) -> Reg {
     Reg::new(reg_class::CSR, index as u64)
-}
-
-fn rel_addr(address: u64, offset: i32) -> u64 {
-    (address as i64).wrapping_add(offset as i64) as u64
 }
 
 #[cfg(feature = "mnemonic")]

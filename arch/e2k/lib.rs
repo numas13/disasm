@@ -305,7 +305,7 @@ impl Cs0 {
 
     impl_field! {
         ctpr        = 30,  2, u8;
-        disp   =  0, 28, i32, |i| ((i << 4) as i32) >> 1;
+        disp        =  0, 28, i32, |i| ((i << 4) as i32) >> 1;
         done_fdam   = 26,  1, bool;
         done_trar   = 27,  1, bool;
         pref_ipr    =  0,  3, u8;
@@ -697,10 +697,6 @@ impl Decoder {
         self.unpacked.hs
     }
 
-    fn disp_to_absolute(&self, disp: i32) -> u64 {
-        self.address.wrapping_add(disp as i64 as u64)
-    }
-
     fn decode_hs(&mut self, out: &mut Bundle) {
         if self.hs().loop_mode() {
             out.peek().set_opcode(opcode::LOOP_MODE);
@@ -783,7 +779,7 @@ impl Decoder {
             } else {
                 insn.set_opcode(opcode::IBRANCH);
             }
-            insn.push_absolute(self.disp_to_absolute(cs0.disp()));
+            insn.push_pc_rel(self.address, cs0.disp() as i64);
         } else if let Some((cs0, true)) = self.unpacked.cs0.map(|i| (i, i.is_done_base())) {
             if cs0.is_done() {
                 insn.set_opcode(opcode::DONE);
@@ -830,7 +826,7 @@ impl Decoder {
             });
         } else if cs0.is_puttsd() {
             out.push_with(opcode::PUTTSD, |insn| {
-                insn.push_absolute(self.disp_to_absolute(cs0.disp()));
+                insn.push_uimm(cs0.disp() as u64);
             });
         } else if cs0.is_done_base() {
             // handled in decode_ct
@@ -844,12 +840,12 @@ impl Decoder {
             }
             out.push_with(opcode, |insn| {
                 insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
-                insn.push_absolute(self.disp_to_absolute(cs0.disp()));
+                insn.push_pc_rel(self.address, cs0.disp() as i64);
             });
         } else if cs0.is_prep_apb() {
             out.push_with(opcode::PREP_APB, |insn| {
                 insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
-                insn.push_absolute(self.disp_to_absolute(cs0.disp()));
+                insn.push_pc_rel(self.address, cs0.disp() as i64);
             });
         } else if cs0.is_prep_sys() {
             out.push_with(opcode::PREP_SYS, |insn| {

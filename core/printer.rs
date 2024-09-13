@@ -264,8 +264,10 @@ pub trait ArchPrinter<E: PrinterExt> {
                 ext.print_address(fmt, FormatterFn(|fmt| write!(fmt, "{addr:x}")))?;
                 self.print_symbol(fmt, ext, *addr)?;
             }
-            OperandKind::PcRelative(_) => {
-                todo!()
+            OperandKind::PcRelative(base, offset) => {
+                let address = base.wrapping_add(*offset as u64);
+                ext.print_address(fmt, FormatterFn(|fmt| write!(fmt, "{address:x}")))?;
+                self.print_symbol(fmt, ext, address)?;
             }
             OperandKind::ArchSpec(a, b, c) => {
                 unreachable!(
