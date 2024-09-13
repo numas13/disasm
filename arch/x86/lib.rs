@@ -256,49 +256,6 @@ impl InsnExt for Insn {
     }
 }
 
-#[derive(Copy, Clone, Default)]
-struct RawInsn {
-    raw: u64,
-}
-
-impl RawInsn {
-    fn set_66(&mut self) {
-        self.raw |= 0x1000;
-    }
-
-    fn set_f2(&mut self) {
-        self.raw |= 0x2000;
-    }
-
-    fn set_f3(&mut self) {
-        self.raw |= 0x4000;
-    }
-
-    fn set_w(&mut self, cond: bool) {
-        self.raw |= (cond as u64) << 15;
-    }
-
-    fn set_legacy_opcode(&mut self, opcode: u8) {
-        self.raw |= (opcode as u64) << 16;
-    }
-
-    fn set_legacy_modrm(&mut self, modrm: u8) {
-        self.raw |= (modrm as u64) << 24;
-    }
-
-    fn set_vex_modrm(&mut self, modrm: u8) {
-        self.raw |= (modrm as u64) << 24;
-    }
-
-    fn as_u32(&self) -> u32 {
-        self.raw as u32
-    }
-
-    fn as_u64(&self) -> u64 {
-        self.raw
-    }
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AddrSize {
     Auto,
@@ -464,8 +421,8 @@ pub struct Options {
 
 #[derive(Default)]
 struct State {
-    // internal instruction format
-    raw: RawInsn,
+    // instruction format for decodetree
+    raw: u64,
 
     no_ptr: bool,
     has_gpr: bool,
@@ -552,6 +509,30 @@ impl<'a> Inner<'a> {
         }
     }
 
+    fn set_66(&mut self) {
+        self.raw |= 0x1000;
+    }
+
+    fn set_f2(&mut self) {
+        self.raw |= 0x2000;
+    }
+
+    fn set_f3(&mut self) {
+        self.raw |= 0x4000;
+    }
+
+    fn set_legacy_opcode(&mut self, opcode: u8) {
+        self.raw |= (opcode as u64) << 16;
+    }
+
+    fn set_legacy_modrm(&mut self, modrm: u8) {
+        self.raw |= (modrm as u64) << 24;
+    }
+
+    fn set_vex_modrm(&mut self, modrm: u8) {
+        self.raw |= (modrm as u64) << 24;
+    }
+
     fn set_gpr_size(&mut self, size: Size) {
         self.mem_size = size;
         self.reg_size = size;
@@ -566,9 +547,9 @@ impl<'a> Inner<'a> {
         self.rex = true;
         if rex & 8 != 0 {
             self.set_w();
-            self.raw.set_w(true);
+            self.raw |= 1 << 15;
         }
-        self.raw.raw |= ((rex & 7) as u64) << 5;
+        self.raw |= ((rex & 7) as u64) << 5;
     }
 
     fn set_vl(&mut self, vl: u8) {
@@ -581,23 +562,23 @@ impl<'a> Inner<'a> {
     }
 
     fn set_vex(&mut self, vex: [u8; 3]) {
-        self.raw.raw = 0;
+        self.raw = 0;
         for (i, b) in vex.into_iter().enumerate() {
-            self.raw.raw |= (b as u64) << (i * 8);
+            self.raw |= (b as u64) << (i * 8);
         }
-        if self.raw.raw & 0x8000 != 0 {
+        if self.raw & 0x8000 != 0 {
             self.set_w();
         }
-        self.set_vl(zextract(self.raw.raw, 10, 1) as u8);
+        self.set_vl(zextract(self.raw, 10, 1) as u8);
     }
 
     fn set_evex(&mut self, evex: [u8; 5]) {
         self.evex = true;
-        self.raw.raw = 0;
+        self.raw = 0;
         for (i, b) in evex.into_iter().enumerate() {
-            self.raw.raw |= (b as u64) << (i * 8);
+            self.raw |= (b as u64) << (i * 8);
         }
-        if self.raw.raw & 0x8000 != 0 {
+        if self.raw & 0x8000 != 0 {
             self.set_w();
         }
         self.vext = zextract(evex[2], 3, 1) ^ 1;
@@ -832,7 +813,7 @@ impl<'a> Inner<'a> {
                     self.mem_size = Size::Word;
                     self.reg_size = Size::Word;
                     self.prefix_66 += 1;
-                    self.raw.set_66();
+                    self.set_66();
                 }
                 PREFIX_ADDRESS_SIZE => {
                     self.addr_size = if self.is_amd64() {
@@ -847,11 +828,11 @@ impl<'a> Inner<'a> {
                 }
                 PREFIX_REPZ => {
                     self.repeat = Repeat::RepZ;
-                    self.raw.set_f3();
+                    self.set_f3();
                 }
                 PREFIX_REPNZ => {
                     self.repeat = Repeat::RepNZ;
-                    self.raw.set_f2();
+                    self.set_f2();
                 }
                 PREFIX_CS => self.segment = insn::SEGMENT_CS,
                 PREFIX_ES => self.segment = insn::SEGMENT_ES,
@@ -862,7 +843,7 @@ impl<'a> Inner<'a> {
                 0x62 if self.is_amd64() => {
                     let evex = self.bytes.read_array::<5>()?;
                     self.set_evex(evex);
-                    break X86DecodeEvex::decode(self, self.raw.as_u64(), insn);
+                    break X86DecodeEvex::decode(self, self.raw, insn);
                 }
                 0xc5 => {
                     let vex = self.bytes.read_array::<2>()?;
@@ -871,9 +852,9 @@ impl<'a> Inner<'a> {
                     // vzeroupper and vzeroall do not use modrm
                     if vex[2] != 0b01110111 {
                         let modrm = self.bytes.read_u8()?;
-                        self.raw.set_vex_modrm(modrm);
+                        self.set_vex_modrm(modrm);
                     }
-                    break X86DecodeVex::decode(self, self.raw.as_u32(), insn);
+                    break X86DecodeVex::decode(self, self.raw as u32, insn);
                 }
                 0xc4 => {
                     let vex = self.bytes.read_array::<3>()?;
@@ -881,9 +862,9 @@ impl<'a> Inner<'a> {
                     // vzeroupper and vzeroall do not use modrm
                     if vex[2] != 0b01110111 {
                         let modrm = self.bytes.read_u8()?;
-                        self.raw.set_vex_modrm(modrm);
+                        self.set_vex_modrm(modrm);
                     }
-                    break X86DecodeVex::decode(self, self.raw.as_u32(), insn);
+                    break X86DecodeVex::decode(self, self.raw as u32, insn);
                 }
                 mut opcode => {
                     if opcode & PREFIX_REX_MASK == PREFIX_REX && self.is_amd64() {
@@ -915,11 +896,10 @@ impl<'a> Inner<'a> {
                         None => (0, 0),
                     };
 
-                    self.raw.set_legacy_opcode(opcode);
-                    self.raw.set_legacy_modrm(modrm);
+                    self.set_legacy_opcode(opcode);
+                    self.set_legacy_modrm(modrm);
 
-                    let raw = self.raw.as_u32();
-                    break decode(self, raw, INSN_FIXED_SIZE + size, insn);
+                    break decode(self, self.raw as u32, INSN_FIXED_SIZE + size, insn);
                 }
             }
         };
