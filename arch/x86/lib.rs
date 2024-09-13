@@ -432,9 +432,6 @@ struct State {
     prefix_66: u8,
     prefix_67: u8,
 
-    // lock prefix
-    lock: bool,
-
     // repeat prefix
     repeat: Repeat,
 
@@ -705,10 +702,7 @@ impl<'a> Inner<'a> {
         base: u8,
         size: u8,
         index_size: Size,
-    ) -> Result<Option<Operand>, Error> {
-        if self.mode == MODE_REGISTER_DIRECT {
-            return Ok(None);
-        }
+    ) -> Result<Operand, Error> {
         let rm = base & 7;
         let kind = if self.mode == 0 && rm == 5 {
             if self.is_amd64() {
@@ -786,7 +780,7 @@ impl<'a> Inner<'a> {
             .set_if(operand::NO_PTR, self.no_ptr)
             .field_set(operand::FIELD_MEM, size as u32);
         self.need_suffix = true;
-        Ok(Some(op))
+        Ok(op)
     }
 
     fn decode(&mut self, out: &mut Bundle) -> Result<usize> {
@@ -824,7 +818,7 @@ impl<'a> Inner<'a> {
                     self.prefix_67 += 1;
                 }
                 PREFIX_LOCK => {
-                    self.lock = true;
+                    insn.flags_mut().set(insn::LOCK);
                 }
                 PREFIX_REPZ => {
                     self.repeat = Repeat::RepZ;
@@ -915,7 +909,6 @@ impl<'a> Inner<'a> {
 
         // TODO: HLE
         insn.flags_mut()
-            .set_if(insn::LOCK, self.lock)
             .set_if(insn::DATA16, self.prefix_66 > 1)
             .set_if(
                 insn::ADDR32,
@@ -1021,23 +1014,23 @@ impl<'a> Inner<'a> {
         mode: i32,
         msz: i32,
     ) -> Result {
-        self.mode = mode as u8;
         self.set_mem_size(msz);
+        self.mode = mode as u8;
         let index = index as u8;
-        let mut op = self
-            .decode_mem(out, index, self.mem_size.op_size(), self.addr_size)?
-            .unwrap_or_else(|| {
-                let size = if bsz != 0 {
-                    self.gpr_size(bsz)
-                } else {
-                    self.mem_size
-                };
-                let reg = Reg::new(RegClass::INT, size.encode_gpr(index & 15, self.rex));
-                self.has_gpr = true;
-                Operand::reg(reg.access(access))
-            });
-        op.flags_mut().set_if(operand::INDIRECT, self.indirect);
-        out.push_operand(op);
+        if self.mode != MODE_REGISTER_DIRECT {
+            let mut op = self.decode_mem(out, index, self.mem_size.op_size(), self.addr_size)?;
+            op.flags_mut().set_if(operand::INDIRECT, self.indirect);
+            out.push_operand(op);
+        } else {
+            let size = if bsz != 0 {
+                self.gpr_size(bsz)
+            } else {
+                self.mem_size
+            };
+            let reg = Reg::new(RegClass::INT, size.encode_gpr(index & 15, self.rex));
+            self.has_gpr = true;
+            out.push_reg(reg.access(access));
+        };
         Ok(())
     }
 
@@ -1055,9 +1048,7 @@ impl<'a> Inner<'a> {
             flags.field_set(operand::FIELD_SEGMENT, self.segment);
             self.segment = 0;
         }
-        flags
-            .set(operand::NO_PTR)
-            .field_set(operand::FIELD_MEM, self.mem_size.op_size() as u32);
+        flags.field_set(operand::FIELD_MEM, self.mem_size.op_size() as u32);
         out.push_operand(op);
         self.need_suffix = true;
         Ok(())
@@ -1095,56 +1086,52 @@ impl<'a> Inner<'a> {
         index_size: Size,
     ) -> Result<Operand> {
         self.mode = mode as u8;
-        match mem_size {
-            0 => {}
-            1 => self.mem_size = size,
-            _ => {
-                self.mem_size = self.gpr_size(mem_size);
-                self.mem_size_override = true;
-            }
-        }
-        let mem_size = if self.broadcast && self.broadcast_size != 0 {
-            match self.broadcast_size {
-                4 => operand::SIZE_WORD,
-                5 => operand::SIZE_DWORD,
-                6 => operand::SIZE_QWORD,
-                _ => unreachable!(),
-            }
-        } else if self.mem_size_override {
-            self.mem_size.op_size_vec(self.mem_access)
-        } else {
-            size.op_size_vec(self.mem_access)
-        };
         let mut index = value as u8;
-        let mut operand = self
-            .decode_mem(out, index, mem_size, index_size)?
-            .map(|mut operand| {
-                if self.broadcast && self.broadcast_size != 0 {
-                    let bcst = match size.bits() >> self.broadcast_size as usize {
-                        2 => operand::BROADCAST_1TO2,
-                        4 => operand::BROADCAST_1TO4,
-                        8 => operand::BROADCAST_1TO8,
-                        16 => operand::BROADCAST_1TO16,
-                        32 => operand::BROADCAST_1TO32,
-                        _ => unreachable!(),
-                    };
-                    operand
-                        .flags_mut()
-                        .field_set(operand::FIELD_BCST, bcst as u32)
-                        .set_if(operand::BCST_FORCE, self.broadcast_force);
+        if self.mode != MODE_REGISTER_DIRECT {
+            match mem_size {
+                0 => {}
+                1 => self.mem_size = size,
+                _ => {
+                    self.mem_size = self.gpr_size(mem_size);
+                    self.mem_size_override = true;
                 }
-                operand
-            })
-            .unwrap_or_else(|| {
-                if !self.evex {
-                    // NOTE: index[5] is X (raw[0][6]), but it is used only in EVEX
-                    index &= 15;
+            }
+            let mem_size = if self.broadcast && self.broadcast_size != 0 {
+                match self.broadcast_size {
+                    4 => operand::SIZE_WORD,
+                    5 => operand::SIZE_DWORD,
+                    6 => operand::SIZE_QWORD,
+                    _ => unreachable!(),
                 }
-                let reg = Reg::new(RegClass::VECTOR, size.encode_vec(index));
-                Operand::reg(reg.access(access))
-            });
-        operand.flags_mut().set_if(operand::INDIRECT, self.indirect);
-        Ok(operand)
+            } else if self.mem_size_override {
+                self.mem_size.op_size_vec(self.mem_access)
+            } else {
+                size.op_size_vec(self.mem_access)
+            };
+            let mut op = self.decode_mem(out, index, mem_size, index_size)?;
+            if self.broadcast && self.broadcast_size != 0 {
+                let bcst = match size.bits() >> self.broadcast_size as usize {
+                    2 => operand::BROADCAST_1TO2,
+                    4 => operand::BROADCAST_1TO4,
+                    8 => operand::BROADCAST_1TO8,
+                    16 => operand::BROADCAST_1TO16,
+                    32 => operand::BROADCAST_1TO32,
+                    _ => unreachable!(),
+                };
+                op.flags_mut()
+                    .field_set(operand::FIELD_BCST, bcst as u32)
+                    .set_if(operand::BCST_FORCE, self.broadcast_force);
+            }
+            op.flags_mut().set_if(operand::INDIRECT, self.indirect);
+            Ok(op)
+        } else {
+            if !self.evex {
+                // NOTE: index[5] is X (raw[0][6]), but it is used only in EVEX
+                index &= 15;
+            }
+            let reg = Reg::new(RegClass::VECTOR, size.encode_vec(index));
+            Ok(Operand::reg(reg.access(access)))
+        }
     }
 
     fn set_vec_mem(
@@ -1452,16 +1439,18 @@ impl<'a> Inner<'a> {
         mode: i32,
         msz: i32,
     ) -> Result {
-        self.mode = mode as u8;
         self.set_mem_size(msz);
+        self.mode = mode as u8;
         let index = value as u8;
-        let mut operand = self
-            .decode_mem(out, index, operand::SIZE_DWORD, self.addr_size)?
-            .unwrap_or_else(|| Operand::reg(Reg::new(reg_class::K, value as u64).access(access)));
-        operand
-            .flags_mut()
-            .field_set(operand::FIELD_MEM, self.mem_size.op_size() as u32);
-        out.push_operand(operand);
+        if self.mode != MODE_REGISTER_DIRECT {
+            let mut op = self.decode_mem(out, index, operand::SIZE_DWORD, self.addr_size)?;
+            op.flags_mut()
+                .field_set(operand::FIELD_MEM, self.mem_size.op_size() as u32);
+            out.push_operand(op);
+        } else {
+            let op = Operand::reg(Reg::new(reg_class::K, value as u64).access(access));
+            out.push_operand(op);
+        }
         Ok(())
     }
 
