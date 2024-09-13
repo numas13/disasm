@@ -140,13 +140,17 @@ impl Decoder {
     pub fn new(arch: Arch, address: u64, opts: Options) -> Self {
         use crate::arch::*;
 
+        fn wrap<T: 'static + ArchDecoder>(x: T) -> Box<dyn ArchDecoder> {
+            Box::new(x)
+        }
+
         let decoder = match arch {
             #[cfg(feature = "e2k")]
-            Arch::E2K(arch_opts) => e2k::decoder(&opts, &arch_opts),
+            Arch::E2K(arch_opts) => wrap(e2k::Decoder::new(&opts, &arch_opts)),
             #[cfg(feature = "riscv")]
-            Arch::Riscv(arch_opts) => riscv::decoder(&opts, &arch_opts),
+            Arch::Riscv(arch_opts) => wrap(riscv::Decoder::new(&opts, &arch_opts)),
             #[cfg(feature = "x86")]
-            Arch::X86(arch_opts) => x86::decoder(&opts, &arch_opts),
+            Arch::X86(arch_opts) => wrap(x86::Decoder::new(&opts, &arch_opts)),
         };
 
         Self {

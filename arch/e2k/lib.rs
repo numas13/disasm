@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 extern crate alloc;
 
 mod consts;
@@ -21,17 +23,16 @@ use disasm_core::{
     ArchDecoder,
 };
 
-pub use self::consts::*;
-pub use self::generated::opcode;
-
 use self::{
     generated::{E2KDecodeAlop, SetValue},
     operand::E2KOperand,
     slot::Cluster,
 };
 
+pub use self::consts::*;
+pub use self::generated::opcode;
 #[cfg(feature = "print")]
-pub use self::printer::printer;
+pub use self::printer::Printer;
 
 // aaur{r,w} modes
 const AAUR_MODE_AAD: i32 = 0;
@@ -670,7 +671,7 @@ impl UnpackedBundle {
     }
 }
 
-struct Decoder {
+pub struct Decoder {
     isa: u8,
     alias: bool,
     address: u64,
@@ -680,7 +681,7 @@ struct Decoder {
 }
 
 impl Decoder {
-    fn new(opts: &disasm_core::Options, arch_opts: &Options) -> Self {
+    pub fn new(opts: &disasm_core::Options, arch_opts: &Options) -> Self {
         Self {
             isa: arch_opts.isa,
             alias: opts.alias,
@@ -1725,8 +1726,4 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
         opcode::IPD => ("ipd", ""),
         opcode => (self::opcode::mnemonic(opcode)?, ""),
     })
-}
-
-pub fn decoder(opts: &disasm_core::Options, opts_arch: &Options) -> Box<dyn ArchDecoder> {
-    Box::new(Decoder::new(opts, opts_arch))
 }

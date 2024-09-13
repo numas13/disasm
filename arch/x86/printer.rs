@@ -290,12 +290,12 @@ const ST_NAME: [&str; 8] = [
     "%st(7)",
 ];
 
-struct Printer {
+pub struct Printer {
     att: bool,
 }
 
 impl Printer {
-    fn new(_: &disasm_core::Options, opts_arch: &super::Options) -> Self {
+    pub fn new(_: &disasm_core::Options, opts_arch: &super::Options) -> Self {
         Self { att: opts_arch.att }
     }
 
@@ -722,11 +722,4 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
     fn insn_separator(&self) -> Separator {
         Separator::Width(7)
     }
-}
-
-pub fn printer<E: PrinterExt>(
-    opts: &disasm_core::Options,
-    opts_arch: &super::Options,
-) -> Box<dyn ArchPrinter<E>> {
-    Box::new(Printer::new(opts, opts_arch))
 }

@@ -100,14 +100,18 @@ impl<E: PrinterExt> Printer<E> {
     pub(crate) fn new(decoder: Decoder, ext: E, section_name: &str) -> Self {
         use crate::arch::*;
 
+        fn wrap<E: PrinterExt, T: 'static + ArchPrinter<E>>(x: T) -> Box<dyn ArchPrinter<E>> {
+            Box::new(x)
+        }
+
         let opts = &decoder.opts;
         let printer = match &decoder.arch {
             #[cfg(feature = "e2k")]
-            Arch::E2K(arch_opts) => e2k::printer(opts, arch_opts),
+            Arch::E2K(arch_opts) => wrap(e2k::Printer::new(opts, arch_opts)),
             #[cfg(feature = "riscv")]
-            Arch::Riscv(arch_opts) => riscv::printer(opts, arch_opts),
+            Arch::Riscv(arch_opts) => wrap(riscv::Printer::new(opts, arch_opts)),
             #[cfg(feature = "x86")]
-            Arch::X86(arch_opts) => x86::printer(opts, arch_opts),
+            Arch::X86(arch_opts) => wrap(x86::Printer::new(opts, arch_opts)),
         };
 
         Self {

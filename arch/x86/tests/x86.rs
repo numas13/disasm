@@ -1,4 +1,4 @@
-use disasm_core::{printer::ArchPrinter, ArchDecoder, Options};
+use disasm_core::Options;
 use disasm_test::test::{self, Runner, Test};
 use disasm_x86 as x86;
 
@@ -7,8 +7,8 @@ struct X86 {
     flags: &'static str,
 }
 
-impl Runner<x86::Options> for X86 {
-    fn create(&mut self, test: &Test) -> (Box<dyn ArchDecoder>, Box<dyn ArchPrinter<()>>) {
+impl Runner<x86::Decoder, x86::Printer> for X86 {
+    fn create(&mut self, test: &Test) -> (x86::Decoder, x86::Printer) {
         let mut opts = Options {
             alias: true,
             ..Options::default()
@@ -30,8 +30,8 @@ impl Runner<x86::Options> for X86 {
             }
         }
 
-        let decoder = x86::decoder(&opts, &opts_arch);
-        let printer = x86::printer(&opts, &opts_arch);
+        let decoder = x86::Decoder::new(&opts, &opts_arch);
+        let printer = x86::Printer::new(&opts, &opts_arch);
 
         (decoder, printer)
     }

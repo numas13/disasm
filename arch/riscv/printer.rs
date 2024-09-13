@@ -42,12 +42,12 @@ const F_ABI_NAME: [&str; 32] = [
     "fs8",  "fs9", "fs10", "fs11",  "ft8",  "ft9", "ft10", "ft11",
 ];
 
-struct Printer {
+pub struct Printer {
     abi_regs: bool,
 }
 
 impl Printer {
-    fn new(opts: &disasm_core::Options, _: &Options) -> Self {
+    pub fn new(opts: &disasm_core::Options, _: &Options) -> Self {
         Self {
             abi_regs: opts.abi_regs,
         }
@@ -116,11 +116,4 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             self.print_operand_default(fmt, ext, insn, operand)
         }
     }
-}
-
-pub fn printer<E: PrinterExt>(
-    opts: &disasm_core::Options,
-    opts_arch: &super::Options,
-) -> Box<dyn ArchPrinter<E>> {
-    Box::new(Printer::new(opts, opts_arch))
 }

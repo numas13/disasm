@@ -1,4 +1,4 @@
-use disasm_core::{printer::ArchPrinter, ArchDecoder, Options};
+use disasm_core::Options;
 use disasm_riscv as riscv;
 use disasm_test::test::{self, Runner, Test};
 
@@ -7,8 +7,8 @@ struct Riscv {
     alias: bool,
 }
 
-impl Runner<riscv::Options> for Riscv {
-    fn create(&mut self, test: &Test) -> (Box<dyn ArchDecoder>, Box<dyn ArchPrinter<()>>) {
+impl Runner<riscv::Decoder, riscv::Printer> for Riscv {
+    fn create(&mut self, test: &Test) -> (riscv::Decoder, riscv::Printer) {
         let mut opts = Options {
             alias: self.alias,
             ..Options::default()
@@ -26,8 +26,8 @@ impl Runner<riscv::Options> for Riscv {
             }
         }
 
-        let decoder = riscv::decoder(&opts, &opts_arch);
-        let printer = riscv::printer(&opts, &opts_arch);
+        let decoder = riscv::Decoder::new(&opts, &opts_arch);
+        let printer = riscv::Printer::new(&opts, &opts_arch);
 
         (decoder, printer)
     }

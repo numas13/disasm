@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 extern crate alloc;
 
 mod consts;
@@ -5,8 +7,6 @@ mod generated;
 
 #[cfg(feature = "print")]
 mod printer;
-
-use alloc::boxed::Box;
 
 use disasm_core::{
     bytes::Bytes,
@@ -16,15 +16,15 @@ use disasm_core::{
     ArchDecoder,
 };
 
-use self::generated::{RiscvDecode16, RiscvDecode32, SetValue};
+use self::{
+    generated::{RiscvDecode16, RiscvDecode32, SetValue},
+    operand::RiscvOperand,
+};
 
 pub use self::consts::*;
 pub use self::generated::opcode;
-
-use self::operand::RiscvOperand;
-
 #[cfg(feature = "print")]
-pub use self::printer::printer;
+pub use self::printer::Printer;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Xlen {
@@ -74,14 +74,14 @@ pub struct Options {
     pub ext: Extensions,
 }
 
-struct Decoder {
+pub struct Decoder {
     alias: bool,
     opts_arch: Options,
     address: u64,
 }
 
 impl Decoder {
-    fn new(opts: &disasm_core::Options, opts_arch: &Options) -> Self {
+    pub fn new(opts: &disasm_core::Options, opts_arch: &Options) -> Self {
         Self {
             alias: opts.alias,
             opts_arch: *opts_arch,
@@ -434,8 +434,4 @@ fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
         (false, false) => "",
     };
     Some((m, s))
-}
-
-pub fn decoder(opts: &disasm_core::Options, opts_arch: &Options) -> Box<dyn crate::ArchDecoder> {
-    Box::new(Decoder::new(opts, opts_arch))
 }

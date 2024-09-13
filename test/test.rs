@@ -234,7 +234,7 @@ fn push_insn(out: &mut String, s: &str) {
     }
 }
 
-fn bundle_to_string(printer: &dyn ArchPrinter<()>, bundle: &Bundle) -> String {
+fn bundle_to_string(printer: &impl ArchPrinter<()>, bundle: &Bundle) -> String {
     let mut out = String::new();
     let mut buf = String::new();
     for (i, insn) in bundle.iter().enumerate() {
@@ -264,8 +264,8 @@ fn expect_to_string(expect: &[&str]) -> String {
     out
 }
 
-pub trait Runner<T: Copy> {
-    fn create(&mut self, test: &Test) -> (Box<dyn ArchDecoder>, Box<dyn ArchPrinter<()>>);
+pub trait Runner<D: ArchDecoder, P: ArchPrinter<()>> {
+    fn create(&mut self, test: &Test) -> (D, P);
 
     fn bundle_end(&self) -> &'static str {
         ""
@@ -279,7 +279,7 @@ pub trait Runner<T: Copy> {
         while parser.parse(&mut test)? {
             let (mut decoder, printer) = self.create(&test);
             let (len, result) = match decoder.decode(test.address, &test.bytes, &mut bundle) {
-                Ok(len) => (len / 8, bundle_to_string(&*printer, &bundle)),
+                Ok(len) => (len / 8, bundle_to_string(&printer, &bundle)),
                 Err(_) => (0, String::new()),
             };
 

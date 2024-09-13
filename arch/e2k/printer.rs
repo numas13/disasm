@@ -538,10 +538,10 @@ fn print_named_hex(
     print_named(fmt, ext, name, FormatterFn(|fmt| write!(fmt, "{value:#x}")))
 }
 
-struct Printer {}
+pub struct Printer {}
 
 impl Printer {
-    fn new(_: &disasm_core::Options, _: &Options) -> Self {
+    pub fn new(_: &disasm_core::Options, _: &Options) -> Self {
         Self {}
     }
 }
@@ -780,11 +780,4 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
 
         Ok(())
     }
-}
-
-pub fn printer<E: PrinterExt>(
-    opts: &disasm_core::Options,
-    opts_arch: &Options,
-) -> Box<dyn ArchPrinter<E>> {
-    Box::new(Printer::new(opts, opts_arch))
 }

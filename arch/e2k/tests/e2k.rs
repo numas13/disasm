@@ -1,4 +1,4 @@
-use disasm_core::{printer::ArchPrinter, ArchDecoder, Options};
+use disasm_core::Options;
 use disasm_e2k as e2k;
 use disasm_test::test::{self, Runner, Test};
 
@@ -7,8 +7,8 @@ struct E2K {
     isa: Option<u8>,
 }
 
-impl Runner<e2k::Options> for E2K {
-    fn create(&mut self, test: &Test) -> (Box<dyn ArchDecoder>, Box<dyn ArchPrinter<()>>) {
+impl Runner<e2k::Decoder, e2k::Printer> for E2K {
+    fn create(&mut self, test: &Test) -> (e2k::Decoder, e2k::Printer) {
         let mut opts = Options::default();
         let mut opts_arch = e2k::Options::default();
 
@@ -23,8 +23,8 @@ impl Runner<e2k::Options> for E2K {
             }
         }
 
-        let decoder = e2k::decoder(&opts, &opts_arch);
-        let printer = e2k::printer(&opts, &opts_arch);
+        let decoder = e2k::Decoder::new(&opts, &opts_arch);
+        let printer = e2k::Printer::new(&opts, &opts_arch);
 
         (decoder, printer)
     }

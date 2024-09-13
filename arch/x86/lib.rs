@@ -1,3 +1,5 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 extern crate alloc;
 
 mod consts;
@@ -6,7 +8,6 @@ mod generated;
 #[cfg(feature = "print")]
 mod printer;
 
-use alloc::boxed::Box;
 use core::ops::{Deref, DerefMut};
 
 use disasm_core::{
@@ -22,13 +23,12 @@ use self::{consts::operand::X86Operand, generated::*};
 
 pub use self::consts::*;
 pub use self::generated::opcode;
+#[cfg(feature = "print")]
+pub use self::printer::Printer;
 
 const GPR_MASK: u64 = 15;
 
 const INSN_MAX: usize = 15;
-
-#[cfg(feature = "print")]
-pub use self::printer::printer;
 
 type Result<T = (), E = Error> = core::result::Result<T, E>;
 
@@ -3033,13 +3033,13 @@ impl X86DecodeEvex for Inner<'_> {
     }
 }
 
-struct Decoder {
+pub struct Decoder {
     opts: disasm_core::Options,
     opts_arch: Options,
 }
 
 impl Decoder {
-    fn new(opts: &disasm_core::Options, opts_arch: &Options) -> Self {
+    pub fn new(opts: &disasm_core::Options, opts_arch: &Options) -> Self {
         Self {
             opts: *opts,
             opts_arch: *opts_arch,
@@ -3078,8 +3078,4 @@ fn sign_extend(value: u64, from: usize, to: usize) -> u64 {
 fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
     let m = self::opcode::mnemonic(insn.opcode())?;
     Some((m, ""))
-}
-
-pub fn decoder(opts: &disasm_core::Options, opts_arch: &Options) -> Box<dyn ArchDecoder> {
-    Box::new(Decoder::new(opts, opts_arch))
 }
