@@ -182,7 +182,7 @@ impl<'a> Parser<'a> {
         Ok(!output.bytes.is_empty())
     }
 
-    pub fn parse_all(src: &str) -> Result<(u64, Vec<u8>, Symbols), String> {
+    pub fn parse_all(src: &str, use_address: bool) -> Result<(u64, Vec<u8>, Symbols), String> {
         let mut parser = Parser::new("input", src);
         let mut test = Test::default();
         let mut start = 0;
@@ -191,13 +191,15 @@ impl<'a> Parser<'a> {
         loop {
             match parser.parse(&mut test) {
                 Ok(true) => {
-                    if address == 0 {
-                        start = parser.first_symbol_address().unwrap_or(test.address);
-                        address = start;
-                    }
-                    while address != test.address {
-                        data.push(0);
-                        address += 1;
+                    if use_address {
+                        if address == 0 {
+                            start = parser.first_symbol_address().unwrap_or(test.address);
+                            address = start;
+                        }
+                        while test.address != 0 && address != test.address {
+                            data.push(0);
+                            address += 1;
+                        }
                     }
                     data.extend_from_slice(&test.bytes);
                     address += test.bytes.len() as u64;

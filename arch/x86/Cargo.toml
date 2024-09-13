@@ -26,3 +26,8 @@ disasm-gen = { workspace = true }
 
 [dev-dependencies]
 disasm-test = { workspace = true }
+criterion = { workspace = true }
+
+[[bench]]
+name = "x86"
+harness = false

@@ -32,3 +32,8 @@ disasm-test         = { version = "0.5.0", path = "test" }
 disasm-e2k          = { version = "0.5.0", path = "arch/e2k" }
 disasm-riscv        = { version = "0.5.0", path = "arch/riscv" }
 disasm-x86          = { version = "0.5.0", path = "arch/x86" }
+
+[workspace.dependencies.criterion]
+version = "0.5"
+default-features = false
+features = ["cargo_bench_support", "rayon"]

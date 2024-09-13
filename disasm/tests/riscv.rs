@@ -5,7 +5,7 @@ use disasm_test::{test::Parser, utils::check};
 
 fn run_test(expect: &str) -> Result<(), String> {
     let section_name = ".text";
-    let (address, data, mut symbols) = Parser::parse_all(expect)?;
+    let (address, data, mut symbols) = Parser::parse_all(expect, true)?;
     let arch = Arch::Riscv(riscv::Options {
         xlen: riscv::Xlen::X64,
         ext: riscv::Extensions::all(),
