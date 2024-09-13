@@ -58,12 +58,6 @@ const PREFIX_REPZ: u8 = 0xf3;
 const PREFIX_REX: u8 = 0x40;
 const PREFIX_REX_MASK: u8 = 0xf0;
 
-// legacy_fixed_prefix.pp, vex.pp and evex.pp values
-const PP_NONE: u8 = 0b00;
-const PP_66: u8 = 0b01;
-const PP_F3: u8 = 0b10;
-const PP_F2: u8 = 0b11;
-
 const MODE_REGISTER_DIRECT: u8 = 3;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -285,18 +279,6 @@ impl RawInsn {
 
     fn set_f3(&mut self) {
         self.raw[1] |= 0x40;
-    }
-
-    fn set_pp(&mut self, pp: u8) {
-        self.raw[1] &= 0x8c;
-        self.raw[1] |= pp;
-        self.raw[1] |= match pp & 3 {
-            PP_NONE => 0x00,
-            PP_66 => 0x10, // prefix 66
-            PP_F2 => 0x20, // prefix f2
-            PP_F3 => 0x40, // prefix f3
-            _ => unreachable!(),
-        };
     }
 
     fn set_w(&mut self, cond: bool) {
@@ -817,8 +799,6 @@ impl<'a> Inner<'a> {
         self.mem_size = Size::Long;
         self.reg_size = Size::Long;
 
-        let mut pp = PP_NONE;
-
         out.clear();
         let insn = out.peek();
 
@@ -834,7 +814,6 @@ impl<'a> Inner<'a> {
                     self.reg_size = Size::Word;
                     self.prefix_66 += 1;
                     self.raw.set_66();
-                    pp = PP_66;
                 }
                 PREFIX_ADDRESS_SIZE => {
                     self.addr_size = if self.cond_amd64() {
@@ -850,12 +829,10 @@ impl<'a> Inner<'a> {
                 PREFIX_REPZ => {
                     self.repeat = Repeat::RepZ;
                     self.raw.set_f3();
-                    pp = PP_F3;
                 }
                 PREFIX_REPNZ => {
                     self.repeat = Repeat::RepNZ;
                     self.raw.set_f2();
-                    pp = PP_F2;
                 }
                 PREFIX_CS => self.segment = insn::SEGMENT_CS,
                 PREFIX_ES => self.segment = insn::SEGMENT_ES,
@@ -896,7 +873,6 @@ impl<'a> Inner<'a> {
                             0x3a => (self.bytes.read_u8()?, OPCODE_MAP_0F_3A),
                             byte => (byte, OPCODE_MAP_0F),
                         };
-                        self.raw.set_pp(pp);
                         self.raw.set_opcode_map(map);
                         opcode
                     } else {
