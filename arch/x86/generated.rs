@@ -18,9 +18,9 @@ pub mod opcode {
 }
 
 include!(concat!(env!("OUT_DIR"), "/generated_set.rs"));
-
 include!(concat!(env!("OUT_DIR"), "/generated_decode.rs"));
-
+include!(concat!(env!("OUT_DIR"), "/generated_decode_0f.rs"));
+include!(concat!(env!("OUT_DIR"), "/generated_decode_0f_38.rs"));
+include!(concat!(env!("OUT_DIR"), "/generated_decode_0f_3a.rs"));
 include!(concat!(env!("OUT_DIR"), "/generated_decode_vex.rs"));
-
 include!(concat!(env!("OUT_DIR"), "/generated_decode_evex.rs"));
