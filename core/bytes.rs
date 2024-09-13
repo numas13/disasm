@@ -85,8 +85,11 @@ impl<'a> Bytes<'a> {
         Ok(raw)
     }
 
+    #[inline(always)]
     pub fn read_u8(&mut self) -> Result<u8, Error> {
-        Ok(self.read_array::<1>()?[0])
+        let byte = self.data.get(self.offset).copied().ok_or(Error::More(8))?;
+        self.offset += 1;
+        Ok(byte)
     }
 
     pub fn read_u16(&mut self) -> Result<u16, Error> {

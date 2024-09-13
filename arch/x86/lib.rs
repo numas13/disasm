@@ -28,8 +28,6 @@ pub use self::printer::Printer;
 
 const GPR_MASK: u64 = 15;
 
-const INSN_MAX: usize = 15;
-
 type Result<T = (), E = Error> = core::result::Result<T, E>;
 
 const NONE: Reg = Reg::new(RegClass::INT, 0x1000);
@@ -40,8 +38,10 @@ const OPCODE_MAP_0F: u8 = 0x01;
 const OPCODE_MAP_0F_38: u8 = 0x02;
 const OPCODE_MAP_0F_3A: u8 = 0x03;
 
-// length of a fixed prefix for legacy encodings
-const FIXED_PREFIX: usize = 2;
+const INSN_MAX_LEN: usize = 15;
+
+// size of fixed legacy prefix and an opcode
+const FIXED_PREFIX_SIZE: usize = 24;
 
 // x86 prefixes
 const PREFIX_OPERAND_SIZE: u8 = 0x66;
@@ -303,10 +303,6 @@ impl RawInsn {
         if cond {
             self.raw[1] |= 0x80;
         }
-    }
-
-    fn append<const N: usize, const S: usize>(&mut self, slice: [u8; N]) {
-        self.raw[S..S + N].copy_from_slice(&slice);
     }
 
     fn as_u64(&self) -> u64 {
@@ -582,52 +578,37 @@ impl<'a> Inner<'a> {
         self.raw.raw[0] |= (rex & 7) << 5;
     }
 
-    fn set_vl(&mut self, vl: u8) -> Result<()> {
+    fn set_vl(&mut self, vl: u8) {
         self.vl = vl;
         self.vec_size = match vl {
             0 => Size::Xmm,
             1 => Size::Ymm,
             _ => Size::Zmm,
         };
-        Ok(())
     }
 
-    fn set_vex(&mut self, vex: [u8; 4]) -> Result<()> {
-        if vex[2] & 0x80 != 0 {
+    fn set_vex(&mut self, vex: [u8; 3]) {
+        if vex[1] & 0x80 != 0 {
             self.set_w();
         }
-        self.set_vl(zextract(vex[2], 2, 1))?;
-
-        self.raw.raw[0] = vex[1];
-        self.raw.raw[1] = vex[2];
-        self.raw.raw[2] = vex[3];
-
-        Ok(())
+        self.set_vl(zextract(vex[1], 2, 1));
     }
 
-    fn set_evex(&mut self, evex: [u8; 6]) -> Result<()> {
+    fn set_evex(&mut self, evex: [u8; 5]) {
         self.evex = true;
-        if evex[2] & 0x80 != 0 {
+        if evex[1] & 0x80 != 0 {
             self.set_w();
         }
-        self.vext = zextract(evex[3], 3, 1) ^ 1;
-        self.set_vl(zextract(evex[3], 5, 2))?;
+        self.vext = zextract(evex[2], 3, 1) ^ 1;
+        self.set_vl(zextract(evex[2], 5, 2));
 
-        self.broadcast = evex[3] & 0x10 != 0;
+        self.broadcast = evex[2] & 0x10 != 0;
 
-        let mask = (zextract(evex[3], 7, 1) << 3) | zextract(evex[3], 0, 3);
+        let mask = (zextract(evex[2], 7, 1) << 3) | zextract(evex[2], 0, 3);
         if mask & 7 != 0 {
             let mask = Reg::new(reg_class::K_MASK, mask.into()).read();
             self.operand_mask = Some(Operand::reg(mask));
         }
-
-        self.raw.raw[0] = evex[1];
-        self.raw.raw[1] = evex[2];
-        self.raw.raw[2] = evex[3];
-        self.raw.raw[3] = evex[4];
-        self.raw.raw[4] = evex[5];
-
-        Ok(())
     }
 
     fn imm_size(&self, value: i32) -> usize {
@@ -838,9 +819,16 @@ impl<'a> Inner<'a> {
 
         let mut pp = PP_NONE;
 
+        out.clear();
+        let insn = out.peek();
+
         // collect legacy prefixes
-        while let Some(byte) = self.bytes.peek_u8() {
-            match byte {
+        let result = loop {
+            if self.bytes.offset() >= INSN_MAX_LEN {
+                return Err(Error::Failed(INSN_MAX_LEN * 8));
+            }
+
+            match self.bytes.read_u8()? {
                 PREFIX_OPERAND_SIZE => {
                     self.mem_size = Size::Word;
                     self.reg_size = Size::Word;
@@ -875,69 +863,65 @@ impl<'a> Inner<'a> {
                 PREFIX_DS => self.segment = insn::SEGMENT_DS,
                 PREFIX_FS => self.segment = insn::SEGMENT_FS,
                 PREFIX_GS => self.segment = insn::SEGMENT_GS,
-                _ => break,
-            }
-
-            self.bytes.advance(1);
-
-            if self.bytes.offset() >= INSN_MAX {
-                return Err(Error::Failed(INSN_MAX * 8));
-            }
-        }
-
-        out.clear();
-        let insn = out.peek();
-
-        self.bytes
-            .peek_u8()
-            .ok_or(Error::More(8))
-            .and_then(|byte| match byte {
                 0x62 if self.cond_amd64() => {
-                    let evex = self.bytes.read_array::<6>()?;
-                    self.set_evex(evex)?;
-                    X86DecodeEvex::decode(self, self.raw.as_u64(), insn)
+                    let evex = self.bytes.read_array::<5>()?;
+                    self.raw.raw[..5].copy_from_slice(&evex);
+                    self.set_evex(evex);
+                    break X86DecodeEvex::decode(self, self.raw.as_u64(), insn);
                 }
-                0xc4 | 0xc5 => {
+                byte @ (0xc4 | 0xc5) => {
                     let vex = if byte == 0xc4 {
-                        self.bytes.read_array::<4>()?
+                        self.bytes.read_array::<3>()?
                     } else {
-                        let vex = self.bytes.read_array::<3>()?;
-                        [0xc4, (vex[1] & 0x80) | 0x61, vex[1] & 0x7f, vex[2]]
+                        let vex = self.bytes.read_array::<2>()?;
+                        [(vex[0] & 0x80) | 0x61, vex[0] & 0x7f, vex[1]]
                     };
-                    self.set_vex(vex)?;
+                    self.raw.raw[..3].copy_from_slice(&vex);
+                    self.set_vex(vex);
                     // vzeroupper and vzeroall do not use modrm
-                    if vex[3] != 0b01110111 {
+                    if vex[2] != 0b01110111 {
                         self.raw.raw[3] = self.bytes.read_u8()?;
                     }
-                    X86DecodeVex::decode(self, self.raw.as_u64(), insn)
+                    break X86DecodeVex::decode(self, self.raw.as_u64(), insn);
                 }
-                _ => {
+                mut byte => {
                     if byte & PREFIX_REX_MASK == PREFIX_REX && self.cond_amd64() {
-                        self.bytes.advance(1);
                         self.set_rex(byte);
+                        byte = self.bytes.read_u8()?;
                     }
 
-                    if let (_, [0x0f, byte]) = self.bytes.peek_array::<2>() {
-                        let (count, opcode) = match byte {
-                            0x38 => (2, OPCODE_MAP_0F_38),
-                            0x3a => (2, OPCODE_MAP_0F_3A),
-                            _ => (1, OPCODE_MAP_0F),
+                    self.raw.raw[2] = if byte == 0x0f {
+                        let (opcode, map) = match self.bytes.read_u8()? {
+                            0x38 => (self.bytes.read_u8()?, OPCODE_MAP_0F_38),
+                            0x3a => (self.bytes.read_u8()?, OPCODE_MAP_0F_3A),
+                            byte => (byte, OPCODE_MAP_0F),
                         };
-                        self.bytes.advance(count);
                         self.raw.set_pp(pp);
-                        self.raw.set_opcode_map(opcode);
-                    }
+                        self.raw.set_opcode_map(map);
+                        opcode
+                    } else {
+                        byte
+                    };
 
-                    let (len, arr) = self.bytes.peek_array();
-                    self.raw.append::<FIXED_PREFIX, 2>(arr);
+                    let (size, modrm) = match self.bytes.peek_u8() {
+                        Some(modrm) => (8, modrm),
+                        None => (0, 0),
+                    };
+                    self.raw.raw[3] = modrm;
                     let raw = self.raw.as_u64();
-                    X86Decode::decode(self, raw, (FIXED_PREFIX + len) * 8, insn)
+                    break X86Decode::decode(self, raw, FIXED_PREFIX_SIZE + size, insn);
                 }
-            })
-            .map_err(|err| match err {
+            }
+        };
+
+        if self.bytes.offset() >= INSN_MAX_LEN {
+            return Err(Error::Failed(INSN_MAX_LEN * 8));
+        } else if let Err(err) = result {
+            return Err(match err {
                 Error::Failed(_) => Error::Failed((self.bytes.offset() + 1) * 8),
                 Error::More(bits) => Error::More(self.bytes.offset() * 8 + bits),
-            })?;
+            });
+        }
 
         // TODO: HLE
         insn.flags_mut()
@@ -2840,7 +2824,7 @@ macro_rules! impl_cond_ext {
 
 impl X86Decode for Inner<'_> {
     fn need_more(&self, size: usize) -> Self::Error {
-        Error::More(size - FIXED_PREFIX * 2)
+        Error::More(size - FIXED_PREFIX_SIZE)
     }
 
     fn fail(&self) -> Self::Error {
@@ -2848,7 +2832,7 @@ impl X86Decode for Inner<'_> {
     }
 
     fn advance(&mut self, count: usize) {
-        self.bytes.advance(count / 8 - FIXED_PREFIX)
+        self.bytes.advance((count - FIXED_PREFIX_SIZE) / 8)
     }
 
     #[inline(always)]
