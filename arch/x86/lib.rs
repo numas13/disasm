@@ -1241,7 +1241,7 @@ impl<'a> Inner<'a> {
     fn set_evex_rm_vr(&mut self, out: &mut Insn, args: &args_evex_rm_vr, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 1, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
@@ -1261,7 +1261,7 @@ impl<'a> Inner<'a> {
 
     fn set_evex_mr_rv(&mut self, out: &mut Insn, args: &args_evex_mr_rv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, rw, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 1, rw, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, size, Access::Read)?;
         Ok(())
     }
@@ -1368,7 +1368,7 @@ impl<'a> Inner<'a> {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
         self.set_vec_reg(out, args.v, size, Access::Read)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
@@ -1658,12 +1658,12 @@ impl SetValue for Inner<'_> {
 
     fn set_args_mem(&mut self, out: &mut Insn, args: &args_mem) -> Result {
         let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)
+        self.set_gpr_mem(out, args.b, 0, access, args.mode, args.msz)
     }
 
     fn set_args_shift_cl(&mut self, out: &mut Insn, args: &args_mem) -> Result {
         let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, access, args.mode, args.msz)?;
         let has_gpr = self.has_gpr;
         self.set_gpr_reg(out, 1, Access::Read, 8)?;
         self.has_gpr = has_gpr; // ignore cl register
@@ -1683,13 +1683,13 @@ impl SetValue for Inner<'_> {
     fn set_args_rvm_rrr(&mut self, out: &mut Insn, args: &args_rvm_rrr) -> Result {
         self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
         self.set_gpr_vvv(out, args.v, Access::Read, args.vsz)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
     fn set_args_rmv_rrr(&mut self, out: &mut Insn, args: &args_rmv_rrr) -> Result {
         self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
         self.set_gpr_vvv(out, args.v, Access::Read, args.vsz)?;
         Ok(())
     }
@@ -1718,13 +1718,13 @@ impl SetValue for Inner<'_> {
     fn set_args_rm_mr(&mut self, out: &mut Insn, args: &args_rm_mr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Mm, access)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
     fn set_args_mr_rm(&mut self, out: &mut Insn, args: &args_mr_rm) -> Result {
         let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, access, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, Size::Mm, Access::Read)?;
         Ok(())
     }
@@ -1753,7 +1753,7 @@ impl SetValue for Inner<'_> {
     fn set_args_rm_xr(&mut self, out: &mut Insn, args: &args_rm_xr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Xmm, access)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 
@@ -1773,7 +1773,7 @@ impl SetValue for Inner<'_> {
 
     fn set_args_mr_rx(&mut self, out: &mut Insn, args: &args_mr_rx) -> Result {
         let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, access, args.mode, args.msz)?;
         self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)?;
         Ok(())
     }
@@ -1789,35 +1789,40 @@ impl SetValue for Inner<'_> {
     fn set_args_rm_rr(&mut self, out: &mut Insn, args: &args_rm_rr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, access, args.rsz)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)
     }
 
     fn set_args_mr_rr(&mut self, out: &mut Insn, args: &args_mr_rr) -> Result {
         let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, access, args.mode, args.msz)?;
         self.set_gpr_reg(out, args.r, Access::Read, args.rsz)
     }
 
-    fn set_args_rm_sr(&mut self, out: &mut Insn, args: &args_rm_rr) -> Result {
-        let seg = args.r & 7;
-        if seg >= 6 {
+    fn set_args_rm_sr(&mut self, out: &mut Insn, args: &args_mov_seg) -> Result {
+        if args.seg >= 6 {
             return Err(Error::Failed(0));
         }
-        let access = access_from_mask(args.rw);
-        let reg = Reg::new(reg_class::SEGMENT, seg as u64);
-        out.push_reg(reg.access(access));
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)
+        out.push_reg(Reg::new(reg_class::SEGMENT, args.seg as u64).write());
+        self.set_gpr_mem(out, args.base, 1, Access::Read, args.mode, 16)?;
+        if self.opts_arch.suffix_always {
+            out.flags_mut()
+                .field_set(insn::FIELD_SUFFIX, insn::SUFFIX_W)
+                .set(insn::SUFFIX);
+        };
+        Ok(())
     }
 
-    fn set_args_mr_rs(&mut self, out: &mut Insn, args: &args_mr_rr) -> Result {
-        let seg = args.r & 7;
-        if seg >= 6 {
+    fn set_args_mr_rs(&mut self, out: &mut Insn, args: &args_mov_seg) -> Result {
+        if args.seg >= 6 {
             return Err(Error::Failed(0));
         }
-        let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, args.bsz, access, args.mode, args.msz)?;
-        let reg = Reg::new(reg_class::SEGMENT, seg as u64);
-        out.push_reg(reg.access(Access::Read));
+        self.set_gpr_mem(out, args.base, 1, Access::Write, args.mode, 16)?;
+        out.push_reg(Reg::new(reg_class::SEGMENT, args.seg as u64).read());
+        if self.opts_arch.suffix_always {
+            out.flags_mut()
+                .field_set(insn::FIELD_SUFFIX, insn::SUFFIX_W)
+                .set(insn::SUFFIX);
+        }
         Ok(())
     }
 
@@ -2278,7 +2283,7 @@ impl SetValue for Inner<'_> {
     fn set_args_evex_rm_kr(&mut self, out: &mut Insn, args: &args_evex_rm_kr) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_k_reg(out, args.r, rw)?;
-        self.set_gpr_mem(out, args.b, args.bsz, Access::Read, args.mode, args.msz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
         Ok(())
     }
 

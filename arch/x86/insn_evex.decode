@@ -21,13 +21,13 @@
 ##############################################################################
 
 &evex_rm_rv       rw mode r b msz rsz
-&evex_mr_rv       rw mode r b msz bsz
-&evex_rm_vr       rw mode r b msz bsz
+&evex_mr_rv       rw mode r b msz
+&evex_rm_vr       rw mode r b msz
 &evex_rm_vv       rw mode r b msz bcst
 &evex_rm_vk       rw mode r b msz
 
 &evex_rvm_vvv     rw mode r v b msz bcst
-&evex_rvm_vvr     rw mode r v b msz bsz
+&evex_rvm_vvr     rw mode r v b msz
 
 &evex_gather      mode r b msz
 &evex_scatter     mode r b msz
@@ -156,9 +156,9 @@
                   evex_rm_rx_sae=&evex_rm_rv %mode r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
 
 @rm_vr            ........ ........ ........ ........ ........ \
-                  evex_rm_vr=&evex_rm_vr %mode r=%mm_reg b=%gpr_base msz=1 bsz=1 rw=2
+                  evex_rm_vr=&evex_rm_vr %mode r=%mm_reg b=%gpr_base msz=1 rw=2
 @rm_xr            ........ ........ ........ ........ ........ \
-                  evex_rm_xr=&evex_rm_vr %mode r=%mm_reg b=%gpr_base msz=1 bsz=1 rw=2
+                  evex_rm_xr=&evex_rm_vr %mode r=%mm_reg b=%gpr_base msz=1 rw=2
 
 @mr_xx            ........ ........ ........ ........ ........ \
                   evex_mr_xx=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
@@ -170,7 +170,7 @@
                   evex_mr_yz=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
 
 @mr_rx            ........ ........ ........ ........ ........ \
-                  evex_mr_rx=&evex_mr_rv %mode r=%mm_reg b=%mm_base msz=1 bsz=1 rw=2
+                  evex_mr_rx=&evex_mr_rv %mode r=%mm_reg b=%mm_base msz=1 rw=2
 
 @rvm_yyx          ........ ........ ........ ........ ........ \
                   evex_rvm_yyx=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
@@ -183,10 +183,10 @@
                   evex_mvr_xxx=&evex_rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
 
 @rvm_xxr          ........ ........ ........ ........ ........ \
-                  evex_rvm_xxr=&evex_rvm_vvr %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bsz=0 rw=2
+                  evex_rvm_xxr=&evex_rvm_vvr %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 rw=2
 
 @rvm_xxr_er       ........ ........ ........ ........ ........ \
-                  tuple=1 evex_rvm_xxr_er=&evex_rvm_vvr %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bsz=0 rw=2
+                  tuple=1 evex_rvm_xxr_er=&evex_rvm_vvr %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 rw=2
 
 @rvm_kxx_sae      ........ ........ ........ ........ ........ \
                   tuple=1 evex_rvm_kxx_sae=&evex_rvm_vvv %mode r=%k_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
@@ -313,9 +313,18 @@ vpmovw2m          11...... 00101001 ........ 1 .... 110 ... .0010 @rm_kv ? avx51
 vpmovwb           ........ 00110000 ........ 0 .... 110 ... .0010 @mr_hv ? avx512bw avx512vl
 
 vpalignr          ........ 00001111 ........ - .... 101 ... .0011 @rvm_vvv uimm=8 ? avx512bw avx512vl
-vpextrb           ........ 00010100 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=8 bsz=32 ? avx512bw
-vpextrw           ........ 00010101 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=16 bsz=32 ? avx512bw
-vpinsrb           ........ 00100000 .00..... - .... 101 ... .0011 tuple=1 @rvm_xxr uimm=8 msz=8 bsz=32 ? avx512bw
+{
+  vpextrb         11...... 00010100 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=32 ? avx512bw
+  vpextrb         ........ 00010100 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=8  ? avx512bw
+}
+{
+  vpextrw         11...... 00010101 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=32 ? avx512bw
+  vpextrw         ........ 00010101 .00.1... - 1111 101 ... .0011 tuple=1 @mr_rx uimm=8 msz=16 ? avx512bw
+}
+{
+  vpinsrb         11...... 00100000 .00..... - .... 101 ... .0011 tuple=1 @rvm_xxr uimm=8 msz=32 ? avx512bw
+  vpinsrb         ........ 00100000 .00..... - .... 101 ... .0011 tuple=1 @rvm_xxr uimm=8 msz=8  ? avx512bw
+}
 vdbpsadbw         ........ 01000010 ........ 0 .... 101 ... .0011 @rvm_vvv uimm=8 ? avx512bw avx512vl
 
 ##############################################################################

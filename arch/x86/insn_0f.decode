@@ -20,23 +20,23 @@
 
 &segment    rw seg !extern
 
-&mem        rw mode b msz bsz !extern
+&mem        rw mode b msz !extern
 &mem_vec    rw mode b msz !extern
 &mem_bnd    rw mode b msz !extern
 
-&rm_rr      rw mode b r msz bsz rsz !extern
+&rm_rr      rw mode b r msz rsz !extern
 &rm_rm      rw mode b r msz rsz !extern
 &rm_rx      rw mode r b msz rsz !extern
-&rm_mr      rw mode r b msz bsz !extern
+&rm_mr      rw mode r b msz !extern
 &rm_mx      rw mode r b msz !extern
 &rm_mm      rw mode r b msz !extern
-&rm_xr      rw mode r b msz bsz !extern
+&rm_xr      rw mode r b msz !extern
 &rm_xm      rw mode r b msz !extern
 &rm_xx      rw mode r b msz !extern
 
-&mr_rr      rw mode b r msz bsz rsz !extern
-&mr_rm      rw mode r b msz bsz !extern
-&mr_rx      rw mode r b msz bsz !extern
+&mr_rr      rw mode b r msz rsz !extern
+&mr_rm      rw mode r b msz !extern
+&mr_rx      rw mode r b msz !extern
 &mr_mm      rw mode r b msz !extern
 &mr_xx      rw mode r b msz !extern
 
@@ -53,11 +53,11 @@
 @fs_w                      ........ . .... ... ... ..... &segment seg=4 rw=2
 @gs_w                      ........ . .... ... ... ..... &segment seg=5 rw=2
 
-@b_r                       ........ . .... ... ... ..... &mem mode=3 b=%base0 rw=3 msz=1 bsz=0
+@b_r                       ........ . .... ... ... ..... &mem mode=3 b=%base0 rw=3 msz=1
 
 @r_r              ........ ........ . .... ... ... ..... &reg %reg rw=3 rsz=1
 @r_m              ........ ........ . .... ... ... ..... &reg_vec %reg rw=3 rsz=64
-@m_r              ........ ........ . .... ... ... ..... &mem %mode b=%base rw=3 msz=1 bsz=0
+@m_r              ........ ........ . .... ... ... ..... &mem %mode b=%base rw=3 msz=1
 @m_m              ........ ........ . .... ... ... ..... m_m=&mem_vec %mode b=%base rw=3 msz=1
 @m_x              ........ ........ . .... ... ... ..... m_x=&mem_vec %mode b=%base rw=3 msz=1
 @cr_r             ........ ........ . .... ... ... ..... cr_r=%reg
@@ -66,20 +66,20 @@
 @br_w             ........ ........ . .... ... ... ..... br_w=%bnd_reg1
 @bm_r             ........ ........ . .... ... ... ..... &mem_bnd %mode b=%base rw=1 msz=1
 @bm_w             ........ ........ . .... ... ... ..... &mem_bnd %mode b=%base rw=2 msz=1
-@mr_rr            ........ ........ . .... ... ... ..... &mr_rr %mode b=%base r=%reg msz=1 bsz=0 rsz=1 rw=3
-@rm_rr            ........ ........ . .... ... ... ..... &rm_rr %mode b=%base r=%reg msz=1 bsz=0 rsz=1 rw=3
+@mr_rr            ........ ........ . .... ... ... ..... &mr_rr %mode b=%base r=%reg msz=1 rsz=1 rw=3
+@rm_rr            ........ ........ . .... ... ... ..... &rm_rr %mode b=%base r=%reg msz=1 rsz=1 rw=3
 @rm_rm            ........ ........ . .... ... ... ..... &rm_rm rw=3 %mode b=%base r=%reg msz=1 rsz=1
 @rm_mm            ........ ........ . .... ... ... ..... &rm_mm rw=3 %mode r=%reg b=%base msz=1
 @mr_mm            ........ ........ . .... ... ... ..... &mr_mm rw=3 %mode r=%reg b=%base msz=1
-@mr_rm            ........ ........ . .... ... ... ..... &mr_rm rw=3 %mode r=%reg b=%base msz=1 bsz=0
-@rm_mr            ........ ........ . .... ... ... ..... &rm_mr rw=3 %mode r=%reg b=%base msz=1 bsz=0
+@mr_rm            ........ ........ . .... ... ... ..... &mr_rm rw=3 %mode r=%reg b=%base msz=1
+@rm_mr            ........ ........ . .... ... ... ..... &rm_mr rw=3 %mode r=%reg b=%base msz=1
 @rm_xx            ........ ........ . .... ... ... ..... &rm_xx rw=3 %mode r=%reg b=%base msz=1
 @rm_xm            ........ ........ . .... ... ... ..... &rm_xm rw=3 %mode r=%reg b=%base msz=1
 @rm_mx            ........ ........ . .... ... ... ..... &rm_mx rw=3 %mode r=%reg b=%base msz=1
 @mr_xx            ........ ........ . .... ... ... ..... &mr_xx rw=2 %mode r=%reg b=%base msz=1
-@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 %mode r=%reg b=%base msz=1 bsz=0
+@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 %mode r=%reg b=%base msz=1
 @rm_rx            ........ ........ . .... ... ... ..... &rm_rx rw=3 %mode r=%reg b=%base msz=1 rsz=1
-@mr_rx            ........ ........ . .... ... ... ..... &mr_rx rw=3 %mode r=%reg b=%base msz=1 bsz=0
+@mr_rx            ........ ........ . .... ... ... ..... &mr_rx rw=3 %mode r=%reg b=%base msz=1
 
 ##############################################################################
 # 2-byte opcode map (0f opcode)
@@ -485,7 +485,10 @@ ldmxcsr           0.010... 10101110 - 000- --- ... ----- @m_r rw=1 msz=32 ? sse
 ldmxcsr           10010... 10101110 - 000- --- ... ----- @m_r rw=1 msz=32 ? sse
 stmxcsr           0.011... 10101110 - 000- --- ... ----- @m_r rw=2 msz=32 ? sse
 stmxcsr           10011... 10101110 - 000- --- ... ----- @m_r rw=2 msz=32 ? sse
-pinsrw            ........ 11000100 - 000- --- ... ----- @rm_mr rw=2 uimm=8 msz=16 bsz=32 ? sse
+{
+  pinsrw          11...... 11000100 - 000- --- ... ----- @rm_mr rw=2 uimm=8 msz=32 ? sse
+  pinsrw          ........ 11000100 - 000- --- ... ----- @rm_mr rw=2 uimm=8 msz=16 ? sse
+}
 pextrw            11...... 11000101 - 000- --- ... ----- @rm_rm rw=2 uimm=8 rsz=32 ? sse
 shufps            ........ 11000110 - 000- --- ... ----- @rm_xx uimm=8 ? sse
 pmovmskb          11...... 11010111 - 000- --- ... ----- @rm_rm rw=2 rsz=32 msz=32 ? sse
@@ -537,7 +540,10 @@ cmpordss          00000111 11000010 - 100- 1-- ... ----- ? never
 # Extension SSE2
 ##############################################################################
 
-pinsrw            ........ 11000100 - 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=16 bsz=32 ? sse2
+{
+  pinsrw          11...... 11000100 - 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=32 ? sse2
+  pinsrw          ........ 11000100 - 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=16 ? sse2
+}
 
 mfence            11110000 10101110 - 000- --- ... ----- ? sse2
 lfence            11101000 10101110 0 000- --- ... ----- ? sse2

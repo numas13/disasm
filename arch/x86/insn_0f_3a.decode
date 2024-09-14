@@ -16,9 +16,9 @@
 ##############################################################################
 
 &rm_mm      rw mode r b msz !extern
-&rm_xr      rw mode r b msz bsz !extern
+&rm_xr      rw mode r b msz !extern
 &rm_xx      rw mode r b msz !extern
-&mr_rx      rw mode r b msz bsz !extern
+&mr_rx      rw mode r b msz !extern
 
 ##############################################################################
 # Formats
@@ -26,8 +26,8 @@
 
 @rm_mm            ........ ........ . .... ... ... ..... &rm_mm rw=3 %mode r=%reg b=%base msz=1
 @rm_xx            ........ ........ . .... ... ... ..... &rm_xx rw=3 %mode r=%reg b=%base msz=1
-@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 %mode r=%reg b=%base msz=1 bsz=0
-@mr_rx            ........ ........ . .... ... ... ..... &mr_rx rw=3 %mode r=%reg b=%base msz=1 bsz=0
+@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 %mode r=%reg b=%base msz=1
+@mr_rx            ........ ........ . .... ... ... ..... &mr_rx rw=3 %mode r=%reg b=%base msz=1
 
 ##############################################################################
 # Extension SSE3
@@ -44,12 +44,21 @@ roundsd           ........ 00001011 - 001- --- ... ----- @rm_xx rw=2 uimm=8 msz=
 blendps           ........ 00001100 - 001- --- ... ----- @rm_xx uimm=8 ? sse4_1
 blendpd           ........ 00001101 - 001- --- ... ----- @rm_xx uimm=8 ? sse4_1
 pblendw           ........ 00001110 - 001- --- ... ----- @rm_xx uimm=8 ? sse4_1
-pextrb            ........ 00010100 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=8  bsz=32 ? sse4_1
-pextrw            ........ 00010101 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=16 bsz=32 ? sse4_1
+{
+  pextrb          11...... 00010100 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=32 ? sse4_1
+  pextrb          ........ 00010100 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=8  ? sse4_1
+}
+{
+  pextrw          11...... 00010101 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=32 ? sse4_1
+  pextrw          ........ 00010101 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=16 ? sse4_1
+}
 pextrd            ........ 00010110 0 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=32 ? sse4_1
 pextrq            ........ 00010110 1 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=64 ? sse4_1
 extractps         ........ 00010111 - 001- --- ... ----- @mr_rx rw=2 uimm=8 msz=32 ? sse4_1
-pinsrb            ........ 00100000 - 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=8 bsz=32 ? sse4_1
+{
+  pinsrb          11...... 00100000 - 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=32 ? sse4_1
+  pinsrb          ........ 00100000 - 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=8  ? sse4_1
+}
 insertps          ........ 00100001 - 001- --- ... ----- @rm_xx uimm=8 msz=32 ? sse4_1
 pinsrd            ........ 00100010 0 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=32 ? sse4_1
 pinsrq            ........ 00100010 1 001- --- ... ----- @rm_xr rw=2 uimm=8 msz=64 ? sse4_1

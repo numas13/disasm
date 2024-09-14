@@ -23,24 +23,24 @@
 # Argument sets
 ##############################################################################
 
-&mem              rw mode b msz bsz !extern
+&mem              rw mode b msz !extern
 
-&rm_rr            rw mode b r msz rsz bsz !extern
+&rm_rr            rw mode b r msz rsz !extern
 
-&rvm_rrr          rw mode b r v msz rsz bsz vsz
-&rmv_rrr          rw mode b r v msz rsz bsz vsz
+&rvm_rrr          rw mode b r v msz rsz vsz
+&rmv_rrr          rw mode b r v msz rsz vsz
 
-&evex_mr_rv       rw mode b r msz bsz !extern
+&evex_mr_rv       rw mode b r msz !extern
 &evex_mr_kk       rw mode b r msz
 &evex_rm_kk       rw mode b r msz
 &evex_rm_rk       rw mode b r msz rsz
-&evex_rm_kr       rw mode b r msz bsz
+&evex_rm_kr       rw mode b r msz
 &evex_rm_rv       rw mode b r msz rsz !extern
-&evex_rm_vr       rw mode b r msz bsz !extern
+&evex_rm_vr       rw mode b r msz !extern
 &evex_rm_vv       rw mode b r msz bcst !extern
 
 &evex_rvm_vvv     rw mode b r v msz bcst !extern
-&evex_rvm_vvr     rw mode b r v msz bsz !extern
+&evex_rvm_vvr     rw mode b r v msz !extern
 &evex_rvm_kkk     rw mode b r v msz
 
 &gather           mode b r v msz isz
@@ -50,15 +50,15 @@
 ##############################################################################
 
 @rm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 %mode r=%gpr_reg b=%gpr_base msz=1 bsz=0 rsz=1
+                  &rm_rr rw=2 %mode r=%gpr_reg b=%gpr_base msz=1 rsz=1
 @vm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 %mode r=%mm_v b=%gpr_base msz=1 bsz=0 rsz=1
+                  &rm_rr rw=2 %mode r=%mm_v b=%gpr_base msz=1 rsz=1
 
 @rvm_rrr          ........ ........ ........ ........ \
-                  &rvm_rrr rw=2 %mode r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1 bsz=0
+                  &rvm_rrr rw=2 %mode r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
 
 @rmv_rrr          ........ ........ ........ ........ \
-                  &rmv_rrr rw=2 %mode r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1 bsz=0
+                  &rmv_rrr rw=2 %mode r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
 
 @rm_rx            ........ ........ ........ ........ \
                   evex_rm_rx=&evex_rm_rv rw=2 %mode r=%gpr_reg b=%mm_base msz=1 rsz=1
@@ -75,7 +75,7 @@
                   evex_mvr_yyy=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
 
 @rvm_xxr          ........ ........ ........ ........ \
-                  evex_rvm_xxr=&evex_rvm_vvr rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bsz=0
+                  evex_rvm_xxr=&evex_rvm_vvr rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1
 
 @fmax             ........ ........ ........ ........ \
                   evex_fmax=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
@@ -99,7 +99,7 @@
                   evex_rm_rk=&evex_rm_rk rw=2 %mode r=%gpr_reg b=%gpr_base msz=1 rsz=1
 
 @rm_kr            ........ ........ ........ ........ \
-                  evex_rm_kr=&evex_rm_kr rw=2 %mode r=%k_reg b=%gpr_base msz=1 bsz=0
+                  evex_rm_kr=&evex_rm_kr rw=2 %mode r=%k_reg b=%gpr_base msz=1
 
 @mr_kk            ........ ........ ........ ........ \
                   evex_mr_kk=&evex_mr_kk rw=2 %mode r=%k_reg b=%gpr_base msz=1
@@ -130,15 +130,15 @@
                   evex_rm_yy=&evex_rm_vv rw=2 %mode r=%mm_v b=%mm_base msz=1 bcst=0
 
 @mr_rx            ........ ........ ........ ........ \
-                  evex_mr_rx=&evex_mr_rv rw=2 %mode r=%mm_reg b=%mm_base msz=1 bsz=1
+                  evex_mr_rx=&evex_mr_rv rw=2 %mode r=%mm_reg b=%mm_base msz=1
 
 @rm_xr            ........ ........ ........ ........ \
-                  evex_rm_xr=&evex_rm_vr rw=2 %mode r=%mm_reg b=%gpr_base msz=1 bsz=1
+                  evex_rm_xr=&evex_rm_vr rw=2 %mode r=%mm_reg b=%gpr_base msz=1
 
 @mr_yy            ........ ........ ........ ........ \
                   evex_mr_yy=&evex_rm_vv rw=2 %mode r=%mm_reg b=%mm_base msz=1 bcst=0
 
-@m_r              ........ ........ . .... ... ... ..... &mem %mode b=%gpr_base rw=2 msz=1 bsz=0
+@m_r              ........ ........ . .... ... ... ..... &mem %mode b=%gpr_base rw=2 msz=1
 
 @vi               ........ ........ . .... ... ... ..... vi_r=1
 
