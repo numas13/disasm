@@ -1499,6 +1499,49 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
+    fn impl_args_rvm_vvv(&mut self, out: &mut Insn, args: &args_rvm_vvv, access: Access) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, access)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_rvm_vvv_bcst(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_vvv,
+        access: Access,
+        bcst: i32,
+    ) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rvm_vvv(out, args, access)
+    }
+
+    fn impl_args_rvm_vvv_bcst_er(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_vvv,
+        access: Access,
+        bcst: i32,
+    ) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rvm_vvv_bcst(out, args, access, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rvm_vvv_bcst_sae(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_vvv,
+        access: Access,
+        bcst: i32,
+    ) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rvm_vvv_bcst(out, args, access, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
     fn impl_args_fmadds(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
         self.set_vec_reg(out, args.r, Size::Xmm, Access::ReadWrite)?;
         self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
@@ -2255,6 +2298,27 @@ impl SetValue for Inner<'_> {
         self.set_evex_rvm_kvv(out, args, self.vec_size)?;
         out.push_operand_if_some(sae);
         Ok(())
+    }
+
+    forward! {
+        args_rvm_vvv {
+            fn set_args_rvm_vvv_rw = impl_args_rvm_vvv(Access::ReadWrite),
+
+            // fn set_args_rvm_vvv_bcst16 = impl_args_rvm_vvv_bcst(Access::Write, 16),
+            fn set_args_rvm_vvv_bcst32 = impl_args_rvm_vvv_bcst(Access::Write, 32),
+            fn set_args_rvm_vvv_bcst64 = impl_args_rvm_vvv_bcst(Access::Write, 64),
+
+            fn set_args_rvm_vvv_bcst32_rw = impl_args_rvm_vvv_bcst(Access::ReadWrite, 32),
+            fn set_args_rvm_vvv_bcst64_rw = impl_args_rvm_vvv_bcst(Access::ReadWrite, 64),
+
+            fn set_args_rvm_vvv_bcst16_er = impl_args_rvm_vvv_bcst_er(Access::Write, 16),
+            fn set_args_rvm_vvv_bcst32_er = impl_args_rvm_vvv_bcst_er(Access::Write, 32),
+            fn set_args_rvm_vvv_bcst64_er = impl_args_rvm_vvv_bcst_er(Access::Write, 64),
+
+            fn set_args_rvm_vvv_bcst16_sae = impl_args_rvm_vvv_bcst_sae(Access::Write, 16),
+            fn set_args_rvm_vvv_bcst32_sae = impl_args_rvm_vvv_bcst_sae(Access::Write, 32),
+            fn set_args_rvm_vvv_bcst64_sae = impl_args_rvm_vvv_bcst_sae(Access::Write, 64),
+        }
     }
 
     forward! {
