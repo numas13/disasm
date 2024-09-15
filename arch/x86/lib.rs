@@ -798,7 +798,6 @@ impl<'a> Inner<'a> {
         out.clear();
         let insn = out.peek();
 
-        // collect legacy prefixes
         let result = loop {
             if self.bytes.offset() >= INSN_MAX_LEN {
                 return Err(Error::Failed(INSN_MAX_LEN * 8));
@@ -868,34 +867,46 @@ impl<'a> Inner<'a> {
                         opcode = self.bytes.read_u8()?;
                     }
 
-                    let decode = if opcode == 0x0f {
+                    break if opcode == 0x0f {
                         match self.bytes.read_u8()? {
                             0x38 => {
-                                opcode = self.bytes.read_u8()?;
-                                X86Decode0f38::decode
+                                let opcode = self.bytes.read_u8()?;
+                                let modrm = self.bytes.read_u8()?;
+                                self.set_legacy_opcode(opcode);
+                                self.set_legacy_modrm(modrm);
+                                X86Decode0f38::decode(self, self.raw as u32, insn)
                             }
                             0x3a => {
-                                opcode = self.bytes.read_u8()?;
-                                X86Decode0f3a::decode
+                                let opcode = self.bytes.read_u8()?;
+                                let modrm = self.bytes.read_u8()?;
+                                self.set_legacy_opcode(opcode);
+                                self.set_legacy_modrm(modrm);
+                                X86Decode0f3a::decode(self, self.raw as u32, insn)
                             }
-                            byte => {
-                                opcode = byte;
-                                X86Decode0f::decode
+                            opcode => {
+                                self.set_legacy_opcode(opcode);
+                                let (size, modrm) = match self.bytes.peek_u8() {
+                                    Some(modrm) => (8, modrm),
+                                    None => (0, 0),
+                                };
+                                self.set_legacy_modrm(modrm);
+                                X86Decode0f::decode(
+                                    self,
+                                    self.raw as u32,
+                                    INSN_FIXED_SIZE + size,
+                                    insn,
+                                )
                             }
                         }
                     } else {
-                        X86Decode::decode
+                        self.set_legacy_opcode(opcode);
+                        let (size, modrm) = match self.bytes.peek_u8() {
+                            Some(modrm) => (8, modrm),
+                            None => (0, 0),
+                        };
+                        self.set_legacy_modrm(modrm);
+                        X86Decode::decode(self, self.raw as u32, INSN_FIXED_SIZE + size, insn)
                     };
-
-                    let (size, modrm) = match self.bytes.peek_u8() {
-                        Some(modrm) => (8, modrm),
-                        None => (0, 0),
-                    };
-
-                    self.set_legacy_opcode(opcode);
-                    self.set_legacy_modrm(modrm);
-
-                    break decode(self, self.raw as u32, INSN_FIXED_SIZE + size, insn);
                 }
             }
         };
@@ -2416,7 +2427,7 @@ impl SetValue for Inner<'_> {
         let disp = match self.mem_size {
             Size::Long => self.bytes.read_i32()? as i64,
             Size::Word => self.bytes.read_i16()? as i64,
-            Size::Quad => self.bytes.read_i64()? as i64,
+            Size::Quad => self.bytes.read_i64()?,
             _ => todo!(),
         };
         self.set_rel_impl(out, disp)
@@ -2957,16 +2968,8 @@ impl X86Decode0f for Inner<'_> {
 }
 
 impl X86Decode0f38 for Inner<'_> {
-    fn need_more(&self, size: usize) -> Self::Error {
-        Error::More(size - INSN_FIXED_SIZE)
-    }
-
     fn fail(&self) -> Self::Error {
         Error::Failed(0)
-    }
-
-    fn advance(&mut self, count: usize) {
-        self.bytes.advance((count - INSN_FIXED_SIZE) / 8)
     }
 
     impl_cond_ext! {
@@ -2984,16 +2987,8 @@ impl X86Decode0f38 for Inner<'_> {
 }
 
 impl X86Decode0f3a for Inner<'_> {
-    fn need_more(&self, size: usize) -> Self::Error {
-        Error::More(size - INSN_FIXED_SIZE)
-    }
-
     fn fail(&self) -> Self::Error {
         Error::Failed(0)
-    }
-
-    fn advance(&mut self, count: usize) {
-        self.bytes.advance((count - INSN_FIXED_SIZE) / 8)
     }
 
     #[inline(always)]

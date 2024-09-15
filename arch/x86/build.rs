@@ -33,7 +33,6 @@ fn main() {
             DecodeOptions {
                 trait_name: "X86Decode0f38",
                 insn_size: &[32],
-                variable_size: true,
                 insn_type: "u32",
                 ..DecodeOptions::default()
             },
@@ -44,7 +43,6 @@ fn main() {
             DecodeOptions {
                 trait_name: "X86Decode0f3a",
                 insn_size: &[32],
-                variable_size: true,
                 insn_type: "u32",
                 ..DecodeOptions::default()
             },
