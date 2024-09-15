@@ -45,6 +45,8 @@
 
 &gather           mode b r v msz isz
 
+&rvm_vvv          mode r v b
+
 ##############################################################################
 # Formats
 ##############################################################################
@@ -77,20 +79,34 @@
 @rvm_xxr          ........ ........ ........ ........ \
                   evex_rvm_xxr=&evex_rvm_vvr rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1
 
-@fmax             ........ ........ ........ ........ \
-                  evex_fmax=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@fmay             ........ ........ ........ ........ \
-                  evex_fmay=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+@fmaddss          ........ ........ ........ ........ \
+                  fmaddss=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsd          ........ ........ ........ ........ \
+                  fmaddsd=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 
-@fma4x            ........ ........ ........ ........ \
-                  evex_fma4x=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@fma4y            ........ ........ ........ ........ \
-                  evex_fma4y=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+@fmaddps          ........ ........ ........ ........ \
+                  fmaddps=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddpd          ........ ........ ........ ........ \
+                  fmaddpd=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 
-@fma4x2           ........ ........ ........ ........ \
-                  evex_fma4x2=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@fma4y2           ........ ........ ........ ........ \
-                  evex_fma4y2=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+@fmaddss_4a        ........ ........ ........ ........ \
+                  fmaddss_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsd_4a        ........ ........ ........ ........ \
+                  fmaddsd_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddss_4b        ........ ........ ........ ........ \
+                  fmaddss_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsd_4b        ........ ........ ........ ........ \
+                  fmaddsd_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+
+@fmaddps_4a        ........ ........ ........ ........ \
+                  fmaddps_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddps_4b        ........ ........ ........ ........ \
+                  fmaddps_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+
+@fmaddpd_4a        ........ ........ ........ ........ \
+                  fmaddpd_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddpd_4b        ........ ........ ........ ........ \
+                  fmaddpd_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 
 @rvm_kkk          ........ ........ ........ ........ \
                   &evex_rvm_kkk rw=2 %mode r=%k_reg v=%k_v b=%gpr_base msz=1
@@ -1039,171 +1055,112 @@ vaeskeygenassist  ........ 11011111 - 1111 001 ... 00011 @rm_xx uimm=8 ? aes_or_
 # Extension FMA
 ##############################################################################
 
-vfmaddsub132ps    ........ 10010110 0 .... 001 ... 00010 @fmax ? fma
-vfmaddsub132ps    ........ 10010110 0 .... 101 ... 00010 @fmay ? fma
-vfmaddsub132pd    ........ 10010110 1 .... 001 ... 00010 @fmax ? fma
-vfmaddsub132pd    ........ 10010110 1 .... 101 ... 00010 @fmay ? fma
-vfmsubadd132ps    ........ 10010111 0 .... 001 ... 00010 @fmax ? fma
-vfmsubadd132ps    ........ 10010111 0 .... 101 ... 00010 @fmay ? fma
-vfmsubadd132pd    ........ 10010111 1 .... 001 ... 00010 @fmax ? fma
-vfmsubadd132pd    ........ 10010111 1 .... 101 ... 00010 @fmay ? fma
-vfmadd132ps       ........ 10011000 0 .... 001 ... 00010 @fmax ? fma
-vfmadd132ps       ........ 10011000 0 .... 101 ... 00010 @fmay ? fma
-vfmadd132pd       ........ 10011000 1 .... 001 ... 00010 @fmax ? fma
-vfmadd132pd       ........ 10011000 1 .... 101 ... 00010 @fmay ? fma
-vfmadd132ss       ........ 10011001 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfmadd132sd       ........ 10011001 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfmsub132ps       ........ 10011010 0 .... 001 ... 00010 @fmax ? fma
-vfmsub132ps       ........ 10011010 0 .... 101 ... 00010 @fmay ? fma
-vfmsub132pd       ........ 10011010 1 .... 001 ... 00010 @fmax ? fma
-vfmsub132pd       ........ 10011010 1 .... 101 ... 00010 @fmay ? fma
-vfmsub132ss       ........ 10011011 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfmsub132sd       ........ 10011011 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfnmadd132ps      ........ 10011100 0 .... 001 ... 00010 @fmax ? fma
-vfnmadd132ps      ........ 10011100 0 .... 101 ... 00010 @fmay ? fma
-vfnmadd132pd      ........ 10011100 1 .... 001 ... 00010 @fmax ? fma
-vfnmadd132pd      ........ 10011100 1 .... 101 ... 00010 @fmay ? fma
-vfnmadd132ss      ........ 10011101 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfnmadd132sd      ........ 10011101 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfnmsub132ps      ........ 10011110 0 .... 001 ... 00010 @fmax ? fma
-vfnmsub132ps      ........ 10011110 0 .... 101 ... 00010 @fmay ? fma
-vfnmsub132pd      ........ 10011110 1 .... 001 ... 00010 @fmax ? fma
-vfnmsub132pd      ........ 10011110 1 .... 101 ... 00010 @fmay ? fma
-vfnmsub132ss      ........ 10011111 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfnmsub132sd      ........ 10011111 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfmaddsub213ps    ........ 10100110 0 .... 001 ... 00010 @fmax ? fma
-vfmaddsub213ps    ........ 10100110 0 .... 101 ... 00010 @fmay ? fma
-vfmaddsub213pd    ........ 10100110 1 .... 001 ... 00010 @fmax ? fma
-vfmaddsub213pd    ........ 10100110 1 .... 101 ... 00010 @fmay ? fma
-vfmsubadd213ps    ........ 10100111 0 .... 001 ... 00010 @fmax ? fma
-vfmsubadd213ps    ........ 10100111 0 .... 101 ... 00010 @fmay ? fma
-vfmsubadd213pd    ........ 10100111 1 .... 001 ... 00010 @fmax ? fma
-vfmsubadd213pd    ........ 10100111 1 .... 101 ... 00010 @fmay ? fma
-vfmadd213ps       ........ 10101000 0 .... 001 ... 00010 @fmax ? fma
-vfmadd213ps       ........ 10101000 0 .... 101 ... 00010 @fmay ? fma
-vfmadd213pd       ........ 10101000 1 .... 001 ... 00010 @fmax ? fma
-vfmadd213pd       ........ 10101000 1 .... 101 ... 00010 @fmay ? fma
-vfmadd213ss       ........ 10101001 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfmadd213sd       ........ 10101001 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfmsub213ps       ........ 10101010 0 .... 001 ... 00010 @fmax ? fma
-vfmsub213ps       ........ 10101010 0 .... 101 ... 00010 @fmay ? fma
-vfmsub213pd       ........ 10101010 1 .... 001 ... 00010 @fmax ? fma
-vfmsub213pd       ........ 10101010 1 .... 101 ... 00010 @fmay ? fma
-vfmsub213ss       ........ 10101011 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfmsub213sd       ........ 10101011 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfnmadd213ps      ........ 10101100 0 .... 001 ... 00010 @fmax ? fma
-vfnmadd213ps      ........ 10101100 0 .... 101 ... 00010 @fmay ? fma
-vfnmadd213pd      ........ 10101100 1 .... 001 ... 00010 @fmax ? fma
-vfnmadd213pd      ........ 10101100 1 .... 101 ... 00010 @fmay ? fma
-vfnmadd213ss      ........ 10101101 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfnmadd213sd      ........ 10101101 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfnmsub213ps      ........ 10101110 0 .... 001 ... 00010 @fmax ? fma
-vfnmsub213ps      ........ 10101110 0 .... 101 ... 00010 @fmay ? fma
-vfnmsub213pd      ........ 10101110 1 .... 001 ... 00010 @fmax ? fma
-vfnmsub213pd      ........ 10101110 1 .... 101 ... 00010 @fmay ? fma
-vfnmsub213ss      ........ 10101111 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfnmsub213sd      ........ 10101111 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfmaddsub231ps    ........ 10110110 0 .... 001 ... 00010 @fmax ? fma
-vfmaddsub231ps    ........ 10110110 0 .... 101 ... 00010 @fmay ? fma
-vfmaddsub231pd    ........ 10110110 1 .... 001 ... 00010 @fmax ? fma
-vfmaddsub231pd    ........ 10110110 1 .... 101 ... 00010 @fmay ? fma
-vfmsubadd231ps    ........ 10110111 0 .... 001 ... 00010 @fmax ? fma
-vfmsubadd231ps    ........ 10110111 0 .... 101 ... 00010 @fmay ? fma
-vfmsubadd231pd    ........ 10110111 1 .... 001 ... 00010 @fmax ? fma
-vfmsubadd231pd    ........ 10110111 1 .... 101 ... 00010 @fmay ? fma
-vfmadd231ps       ........ 10111000 0 .... 001 ... 00010 @fmax ? fma
-vfmadd231ps       ........ 10111000 0 .... 101 ... 00010 @fmay ? fma
-vfmadd231pd       ........ 10111000 1 .... 001 ... 00010 @fmax ? fma
-vfmadd231pd       ........ 10111000 1 .... 101 ... 00010 @fmay ? fma
-vfmadd231ss       ........ 10111001 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfmadd231sd       ........ 10111001 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfmsub231ps       ........ 10111010 0 .... 001 ... 00010 @fmax ? fma
-vfmsub231ps       ........ 10111010 0 .... 101 ... 00010 @fmay ? fma
-vfmsub231pd       ........ 10111010 1 .... 001 ... 00010 @fmax ? fma
-vfmsub231pd       ........ 10111010 1 .... 101 ... 00010 @fmay ? fma
-vfmsub231ss       ........ 10111011 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfmsub231sd       ........ 10111011 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfnmadd231ps      ........ 10111100 0 .... 001 ... 00010 @fmax ? fma
-vfnmadd231ps      ........ 10111100 0 .... 101 ... 00010 @fmay ? fma
-vfnmadd231pd      ........ 10111100 1 .... 001 ... 00010 @fmax ? fma
-vfnmadd231pd      ........ 10111100 1 .... 101 ... 00010 @fmay ? fma
-vfnmadd231ss      ........ 10111101 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfnmadd231sd      ........ 10111101 1 .... -01 ... 00010 @fmax msz=64 ? fma
-vfnmsub231ps      ........ 10111110 0 .... 001 ... 00010 @fmax ? fma
-vfnmsub231ps      ........ 10111110 0 .... 101 ... 00010 @fmay ? fma
-vfnmsub231pd      ........ 10111110 1 .... 001 ... 00010 @fmax ? fma
-vfnmsub231pd      ........ 10111110 1 .... 101 ... 00010 @fmay ? fma
-vfnmsub231ss      ........ 10111111 0 .... -01 ... 00010 @fmax msz=32 ? fma
-vfnmsub231sd      ........ 10111111 1 .... -01 ... 00010 @fmax msz=64 ? fma
+vfmaddsub132ps    ........ 10010110 0 .... .01 ... 00010 @fmaddps ? fma
+vfmaddsub132pd    ........ 10010110 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmsubadd132ps    ........ 10010111 0 .... .01 ... 00010 @fmaddps ? fma
+vfmsubadd132pd    ........ 10010111 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmadd132ps       ........ 10011000 0 .... .01 ... 00010 @fmaddps ? fma
+vfmadd132pd       ........ 10011000 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmadd132ss       ........ 10011001 0 .... -01 ... 00010 @fmaddss ? fma
+vfmadd132sd       ........ 10011001 1 .... -01 ... 00010 @fmaddsd ? fma
+vfmsub132ps       ........ 10011010 0 .... .01 ... 00010 @fmaddps ? fma
+vfmsub132pd       ........ 10011010 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmsub132ss       ........ 10011011 0 .... -01 ... 00010 @fmaddss ? fma
+vfmsub132sd       ........ 10011011 1 .... -01 ... 00010 @fmaddsd ? fma
+vfnmadd132ps      ........ 10011100 0 .... .01 ... 00010 @fmaddps ? fma
+vfnmadd132pd      ........ 10011100 1 .... .01 ... 00010 @fmaddpd ? fma
+vfnmadd132ss      ........ 10011101 0 .... -01 ... 00010 @fmaddss ? fma
+vfnmadd132sd      ........ 10011101 1 .... -01 ... 00010 @fmaddsd ? fma
+vfnmsub132ps      ........ 10011110 0 .... .01 ... 00010 @fmaddps ? fma
+vfnmsub132pd      ........ 10011110 1 .... .01 ... 00010 @fmaddpd ? fma
+vfnmsub132ss      ........ 10011111 0 .... -01 ... 00010 @fmaddss ? fma
+vfnmsub132sd      ........ 10011111 1 .... -01 ... 00010 @fmaddsd ? fma
+vfmaddsub213ps    ........ 10100110 0 .... .01 ... 00010 @fmaddps ? fma
+vfmaddsub213pd    ........ 10100110 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmsubadd213ps    ........ 10100111 0 .... .01 ... 00010 @fmaddps ? fma
+vfmsubadd213pd    ........ 10100111 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmadd213ps       ........ 10101000 0 .... .01 ... 00010 @fmaddps ? fma
+vfmadd213pd       ........ 10101000 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmadd213ss       ........ 10101001 0 .... -01 ... 00010 @fmaddss ? fma
+vfmadd213sd       ........ 10101001 1 .... -01 ... 00010 @fmaddsd ? fma
+vfmsub213ps       ........ 10101010 0 .... .01 ... 00010 @fmaddps ? fma
+vfmsub213pd       ........ 10101010 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmsub213ss       ........ 10101011 0 .... -01 ... 00010 @fmaddss ? fma
+vfmsub213sd       ........ 10101011 1 .... -01 ... 00010 @fmaddsd ? fma
+vfnmadd213ps      ........ 10101100 0 .... .01 ... 00010 @fmaddps ? fma
+vfnmadd213pd      ........ 10101100 1 .... .01 ... 00010 @fmaddpd ? fma
+vfnmadd213ss      ........ 10101101 0 .... -01 ... 00010 @fmaddss ? fma
+vfnmadd213sd      ........ 10101101 1 .... -01 ... 00010 @fmaddsd ? fma
+vfnmsub213ps      ........ 10101110 0 .... .01 ... 00010 @fmaddps ? fma
+vfnmsub213pd      ........ 10101110 1 .... .01 ... 00010 @fmaddpd ? fma
+vfnmsub213ss      ........ 10101111 0 .... -01 ... 00010 @fmaddss ? fma
+vfnmsub213sd      ........ 10101111 1 .... -01 ... 00010 @fmaddsd ? fma
+vfmaddsub231ps    ........ 10110110 0 .... .01 ... 00010 @fmaddps ? fma
+vfmaddsub231pd    ........ 10110110 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmsubadd231ps    ........ 10110111 0 .... .01 ... 00010 @fmaddps ? fma
+vfmsubadd231pd    ........ 10110111 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmadd231ps       ........ 10111000 0 .... .01 ... 00010 @fmaddps ? fma
+vfmadd231pd       ........ 10111000 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmadd231ss       ........ 10111001 0 .... -01 ... 00010 @fmaddss ? fma
+vfmadd231sd       ........ 10111001 1 .... -01 ... 00010 @fmaddsd ? fma
+vfmsub231ps       ........ 10111010 0 .... .01 ... 00010 @fmaddps ? fma
+vfmsub231pd       ........ 10111010 1 .... .01 ... 00010 @fmaddpd ? fma
+vfmsub231ss       ........ 10111011 0 .... -01 ... 00010 @fmaddss ? fma
+vfmsub231sd       ........ 10111011 1 .... -01 ... 00010 @fmaddsd ? fma
+vfnmadd231ps      ........ 10111100 0 .... .01 ... 00010 @fmaddps ? fma
+vfnmadd231pd      ........ 10111100 1 .... .01 ... 00010 @fmaddpd ? fma
+vfnmadd231ss      ........ 10111101 0 .... -01 ... 00010 @fmaddss ? fma
+vfnmadd231sd      ........ 10111101 1 .... -01 ... 00010 @fmaddsd ? fma
+vfnmsub231ps      ........ 10111110 0 .... .01 ... 00010 @fmaddps ? fma
+vfnmsub231pd      ........ 10111110 1 .... .01 ... 00010 @fmaddpd ? fma
+vfnmsub231ss      ........ 10111111 0 .... -01 ... 00010 @fmaddss ? fma
+vfnmsub231sd      ........ 10111111 1 .... -01 ... 00010 @fmaddsd ? fma
 
 ##############################################################################
 # Extension FMA4
 ##############################################################################
 
-vfmaddsubps       ........ 01011100 0 .... 001 ... 00011 @fma4x ? fma4
-vfmaddsubps       ........ 01011100 0 .... 101 ... 00011 @fma4y ? fma4
-vfmaddsubps       ........ 01011100 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmaddsubps       ........ 01011100 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmaddsubpd       ........ 01011101 0 .... 001 ... 00011 @fma4x ? fma4
-vfmaddsubpd       ........ 01011101 0 .... 101 ... 00011 @fma4y ? fma4
-vfmaddsubpd       ........ 01011101 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmaddsubpd       ........ 01011101 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmsubaddps       ........ 01011110 0 .... 001 ... 00011 @fma4x ? fma4
-vfmsubaddps       ........ 01011110 0 .... 101 ... 00011 @fma4y ? fma4
-vfmsubaddps       ........ 01011110 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmsubaddps       ........ 01011110 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmsubaddpd       ........ 01011111 0 .... 001 ... 00011 @fma4x ? fma4
-vfmsubaddpd       ........ 01011111 0 .... 101 ... 00011 @fma4y ? fma4
-vfmsubaddpd       ........ 01011111 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmsubaddpd       ........ 01011111 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmaddps          ........ 01101000 0 .... 001 ... 00011 @fma4x ? fma4
-vfmaddps          ........ 01101000 0 .... 101 ... 00011 @fma4y ? fma4
-vfmaddps          ........ 01101000 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmaddps          ........ 01101000 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmaddpd          ........ 01101001 0 .... 001 ... 00011 @fma4x ? fma4
-vfmaddpd          ........ 01101001 0 .... 101 ... 00011 @fma4y ? fma4
-vfmaddpd          ........ 01101001 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmaddpd          ........ 01101001 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmaddss          ........ 01101010 0 .... 001 ... 00011 @fma4x  msz=32 ? fma4
-vfmaddss          ........ 01101010 1 .... 001 ... 00011 @fma4x2 msz=32 ? fma4
-vfmaddsd          ........ 01101011 0 .... 001 ... 00011 @fma4x  msz=64 ? fma4
-vfmaddsd          ........ 01101011 1 .... 001 ... 00011 @fma4x2 msz=64 ? fma4
-vfmsubps          ........ 01101100 0 .... 001 ... 00011 @fma4x ? fma4
-vfmsubps          ........ 01101100 0 .... 101 ... 00011 @fma4y ? fma4
-vfmsubps          ........ 01101100 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmsubps          ........ 01101100 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmsubpd          ........ 01101101 0 .... 001 ... 00011 @fma4x ? fma4
-vfmsubpd          ........ 01101101 0 .... 101 ... 00011 @fma4y ? fma4
-vfmsubpd          ........ 01101101 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfmsubpd          ........ 01101101 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfmsubss          ........ 01101110 0 .... 001 ... 00011 @fma4x  msz=32 ? fma4
-vfmsubss          ........ 01101110 1 .... 001 ... 00011 @fma4x2 msz=32 ? fma4
-vfmsubsd          ........ 01101111 0 .... 001 ... 00011 @fma4x  msz=64 ? fma4
-vfmsubsd          ........ 01101111 1 .... 001 ... 00011 @fma4x2 msz=64 ? fma4
-vfnmaddps         ........ 01111000 0 .... 001 ... 00011 @fma4x ? fma4
-vfnmaddps         ........ 01111000 0 .... 101 ... 00011 @fma4y ? fma4
-vfnmaddps         ........ 01111000 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfnmaddps         ........ 01111000 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfnmaddpd         ........ 01111001 0 .... 001 ... 00011 @fma4x ? fma4
-vfnmaddpd         ........ 01111001 0 .... 101 ... 00011 @fma4y ? fma4
-vfnmaddpd         ........ 01111001 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfnmaddpd         ........ 01111001 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfnmaddss         ........ 01111010 0 .... 001 ... 00011 @fma4x  msz=32 ? fma4
-vfnmaddss         ........ 01111010 1 .... 001 ... 00011 @fma4x2 msz=32 ? fma4
-vfnmaddsd         ........ 01111011 0 .... 001 ... 00011 @fma4x  msz=64 ? fma4
-vfnmaddsd         ........ 01111011 1 .... 001 ... 00011 @fma4x2 msz=64 ? fma4
-vfnmsubps         ........ 01111100 0 .... 001 ... 00011 @fma4x ? fma4
-vfnmsubps         ........ 01111100 0 .... 101 ... 00011 @fma4y ? fma4
-vfnmsubps         ........ 01111100 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfnmsubps         ........ 01111100 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfnmsubpd         ........ 01111101 0 .... 001 ... 00011 @fma4x ? fma4
-vfnmsubpd         ........ 01111101 0 .... 101 ... 00011 @fma4y ? fma4
-vfnmsubpd         ........ 01111101 1 .... 001 ... 00011 @fma4x2 ? fma4
-vfnmsubpd         ........ 01111101 1 .... 101 ... 00011 @fma4y2 ? fma4
-vfnmsubss         ........ 01111110 0 .... 001 ... 00011 @fma4x  msz=32 ? fma4
-vfnmsubss         ........ 01111110 1 .... 001 ... 00011 @fma4x2 msz=32 ? fma4
-vfnmsubsd         ........ 01111111 0 .... 001 ... 00011 @fma4x  msz=64 ? fma4
-vfnmsubsd         ........ 01111111 1 .... 001 ... 00011 @fma4x2 msz=64 ? fma4
+vfmaddsubps       ........ 01011100 0 .... .01 ... 00011 @fmaddps_4a ? fma4
+vfmaddsubpd       ........ 01011101 0 .... .01 ... 00011 @fmaddpd_4a ? fma4
+vfmsubaddps       ........ 01011110 0 .... .01 ... 00011 @fmaddps_4a ? fma4
+vfmsubaddpd       ........ 01011111 0 .... .01 ... 00011 @fmaddpd_4a ? fma4
+vfmaddps          ........ 01101000 0 .... .01 ... 00011 @fmaddps_4a ? fma4
+vfmaddpd          ........ 01101001 0 .... .01 ... 00011 @fmaddpd_4a ? fma4
+vfmaddss          ........ 01101010 0 .... 001 ... 00011 @fmaddss_4a ? fma4
+vfmaddsd          ........ 01101011 0 .... 001 ... 00011 @fmaddsd_4a ? fma4
+vfmsubps          ........ 01101100 0 .... .01 ... 00011 @fmaddps_4a ? fma4
+vfmsubpd          ........ 01101101 0 .... .01 ... 00011 @fmaddpd_4a ? fma4
+vfmsubss          ........ 01101110 0 .... 001 ... 00011 @fmaddss_4a ? fma4
+vfmsubsd          ........ 01101111 0 .... 001 ... 00011 @fmaddsd_4a ? fma4
+vfnmaddps         ........ 01111000 0 .... .01 ... 00011 @fmaddps_4a ? fma4
+vfnmaddpd         ........ 01111001 0 .... .01 ... 00011 @fmaddpd_4a ? fma4
+vfnmaddss         ........ 01111010 0 .... 001 ... 00011 @fmaddss_4a ? fma4
+vfnmaddsd         ........ 01111011 0 .... 001 ... 00011 @fmaddsd_4a ? fma4
+vfnmsubps         ........ 01111100 0 .... .01 ... 00011 @fmaddps_4a ? fma4
+vfnmsubpd         ........ 01111101 0 .... .01 ... 00011 @fmaddpd_4a ? fma4
+vfnmsubss         ........ 01111110 0 .... 001 ... 00011 @fmaddss_4a ? fma4
+vfnmsubsd         ........ 01111111 0 .... 001 ... 00011 @fmaddsd_4a ? fma4
+
+vfmaddsubps       ........ 01011100 1 .... .01 ... 00011 @fmaddps_4b ? fma4
+vfmaddsubpd       ........ 01011101 1 .... .01 ... 00011 @fmaddpd_4b ? fma4
+vfmsubaddps       ........ 01011110 1 .... .01 ... 00011 @fmaddps_4b ? fma4
+vfmsubaddpd       ........ 01011111 1 .... .01 ... 00011 @fmaddpd_4b ? fma4
+vfmaddps          ........ 01101000 1 .... .01 ... 00011 @fmaddps_4b ? fma4
+vfmaddpd          ........ 01101001 1 .... .01 ... 00011 @fmaddpd_4b ? fma4
+vfmaddss          ........ 01101010 1 .... 001 ... 00011 @fmaddss_4b ? fma4
+vfmaddsd          ........ 01101011 1 .... 001 ... 00011 @fmaddsd_4b ? fma4
+vfmsubps          ........ 01101100 1 .... .01 ... 00011 @fmaddps_4b ? fma4
+vfmsubpd          ........ 01101101 1 .... .01 ... 00011 @fmaddpd_4b ? fma4
+vfmsubss          ........ 01101110 1 .... 001 ... 00011 @fmaddss_4b ? fma4
+vfmsubsd          ........ 01101111 1 .... 001 ... 00011 @fmaddsd_4b ? fma4
+vfnmaddps         ........ 01111000 1 .... .01 ... 00011 @fmaddps_4b ? fma4
+vfnmaddpd         ........ 01111001 1 .... .01 ... 00011 @fmaddpd_4b ? fma4
+vfnmaddss         ........ 01111010 1 .... 001 ... 00011 @fmaddss_4b ? fma4
+vfnmaddsd         ........ 01111011 1 .... 001 ... 00011 @fmaddsd_4b ? fma4
+vfnmsubps         ........ 01111100 1 .... .01 ... 00011 @fmaddps_4b ? fma4
+vfnmsubpd         ........ 01111101 1 .... .01 ... 00011 @fmaddpd_4b ? fma4
+vfnmsubss         ........ 01111110 1 .... 001 ... 00011 @fmaddss_4b ? fma4
+vfnmsubsd         ........ 01111111 1 .... 001 ... 00011 @fmaddsd_4b ? fma4
 
 ##############################################################################
 # Extension VPCLMULQDQ

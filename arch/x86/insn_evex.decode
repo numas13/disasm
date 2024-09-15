@@ -32,6 +32,8 @@
 &evex_gather      mode r b msz
 &evex_scatter     mode r b msz
 
+&rvm_vvv          mode r v b !extern
+
 ##############################################################################
 # Formats
 ##############################################################################
@@ -86,12 +88,26 @@
 @rvm_kvv_sae      ........ ........ ........ ........ ........ \
                   evex_rvm_kvv_sae=&evex_rvm_vvv %mode r=%k_reg v=%mm_v b=%mm_base msz=1 bcst=0 rw=2
 
-@fmaddp           ........ ........ ........ ........ ........ \
-                  fmaddp=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@fmaddp_er        ........ ........ ........ ........ ........ \
-                  fmaddp_er=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@fmadds_er        ........ ........ ........ ........ ........ \
-                  tuple=1 fmadds_er=&evex_rvm_vvv rw=3 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
+@fmaddcsh_er      ........ ........ ........ ........ ........ \
+                  fmaddcsh_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsh_er       ........ ........ ........ ........ ........ \
+                  fmaddsh_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddss_er       ........ ........ ........ ........ ........ \
+                  fmaddss_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsd_er       ........ ........ ........ ........ ........ \
+                  fmaddsd_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+
+@pmaddp_bcst      ........ ........ ........ ........ ........ \
+                  pmaddp_bcst=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+
+@fmaddcph_bcst_er ........ ........ ........ ........ ........ \
+                  fmaddcph_bcst_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddph_bcst_er  ........ ........ ........ ........ ........ \
+                  fmaddph_bcst_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddps_bcst_er  ........ ........ ........ ........ ........ \
+                  fmaddps_bcst_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@fmaddpd_bcst_er  ........ ........ ........ ........ ........ \
+                  fmaddpd_bcst_er=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 
 @rm_hv            ........ ........ ........ ........ ........ \
                   evex_rm_hv=&evex_rm_vv %mode r=%mm_reg b=%mm_base msz=1 bcst=0 rw=2
@@ -713,26 +729,26 @@ vgatherdps        10...1.. 10010010 ........ 0 1111 101 ... .0010 @gather_vv msz
 vgatherdpd        10...1.. 10010010 ........ 1 1111 101 ... .0010 @gather_vh msz=64 ? avx512f avx512vl mask
 vgatherqps        10...1.. 10010011 ........ 0 1111 101 ... .0010 @gather_hv msz=32 ? avx512f avx512vl mask
 vgatherqpd        10...1.. 10010011 ........ 1 1111 101 ... .0010 @gather_vv msz=64 ? avx512f avx512vl mask
-vfmaddsub132ps    ........ 10010110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmaddsub132pd    ........ 10010110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsubadd132ps    ........ 10010111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsubadd132pd    ........ 10010111 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd132ps       ........ 10011000 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd132pd       ........ 10011000 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd132ss       ........ 10011001 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfmadd132sd       ........ 10011001 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfmsub132ps       ........ 10011010 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsub132pd       ........ 10011010 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsub132ss       ........ 10011011 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfmsub132sd       ........ 10011011 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfnmadd132ps      ........ 10011100 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmadd132pd      ........ 10011100 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmadd132ss      ........ 10011101 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfnmadd132sd      ........ 10011101 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfnmsub132ps      ........ 10011110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmsub132pd      ........ 10011110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmsub132ss      ........ 10011111 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfnmsub132sd      ........ 10011111 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmaddsub132ps    ........ 10010110 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmaddsub132pd    ........ 10010110 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmsubadd132ps    ........ 10010111 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmsubadd132pd    ........ 10010111 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmadd132ps       ........ 10011000 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmadd132pd       ........ 10011000 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmadd132ss       ........ 10011001 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfmadd132sd       ........ 10011001 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfmsub132ps       ........ 10011010 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmsub132pd       ........ 10011010 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmsub132ss       ........ 10011011 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfmsub132sd       ........ 10011011 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfnmadd132ps      ........ 10011100 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfnmadd132pd      ........ 10011100 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfnmadd132ss      ........ 10011101 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfnmadd132sd      ........ 10011101 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfnmsub132ps      ........ 10011110 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfnmsub132pd      ........ 10011110 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfnmsub132ss      ........ 10011111 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfnmsub132sd      ........ 10011111 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
 vpscatterdd       .....1.. 10100000 ........ 0 1111 101 ... .0010 @scatter_vv msz=32 ? avx512f avx512vl mask
 vpscatterdq       .....1.. 10100000 ........ 1 1111 101 ... .0010 @scatter_vh msz=64 ? avx512f avx512vl mask
 vpscatterqd       .....1.. 10100001 ........ 0 1111 101 ... .0010 @scatter_hv msz=32 ? avx512f avx512vl mask
@@ -741,46 +757,46 @@ vscatterdps       .....1.. 10100010 ........ 0 1111 101 ... .0010 @scatter_vv ms
 vscatterdpd       .....1.. 10100010 ........ 1 1111 101 ... .0010 @scatter_vh msz=64 ? avx512f avx512vl mask
 vscatterqps       .....1.. 10100011 ........ 0 1111 101 ... .0010 @scatter_hv msz=32 ? avx512f avx512vl mask
 vscatterqpd       .....1.. 10100011 ........ 1 1111 101 ... .0010 @scatter_vv msz=64 ? avx512f avx512vl mask
-vfmaddsub213ps    ........ 10100110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmaddsub213pd    ........ 10100110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsubadd213ps    ........ 10100111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsubadd213pd    ........ 10100111 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd213ps       ........ 10101000 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd213pd       ........ 10101000 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd213ss       ........ 10101001 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfmadd213sd       ........ 10101001 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfmsub213ps       ........ 10101010 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsub213pd       ........ 10101010 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsub213ss       ........ 10101011 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfmsub213sd       ........ 10101011 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfnmadd213ps      ........ 10101100 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmadd213pd      ........ 10101100 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmadd213ss      ........ 10101101 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfnmadd213sd      ........ 10101101 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfnmsub213ps      ........ 10101110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmsub213pd      ........ 10101110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmsub213ss      ........ 10101111 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfnmsub213sd      ........ 10101111 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfmaddsub231ps    ........ 10110110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmaddsub231pd    ........ 10110110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsubadd231ps    ........ 10110111 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsubadd231pd    ........ 10110111 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd231ps       ........ 10111000 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd231pd       ........ 10111000 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmadd231ss       ........ 10111001 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfmadd231sd       ........ 10111001 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfmsub231ps       ........ 10111010 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsub231pd       ........ 10111010 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfmsub231ss       ........ 10111011 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfmsub231sd       ........ 10111011 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfnmadd231ps      ........ 10111100 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmadd231pd      ........ 10111100 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmadd231ss      ........ 10111101 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfnmadd231sd      ........ 10111101 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
-vfnmsub231ps      ........ 10111110 ........ 0 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmsub231pd      ........ 10111110 ........ 1 .... 101 ... .0010 @fmaddp_er bcst=1 ? avx512f
-vfnmsub231ss      ........ 10111111 ........ 0 .... 101 ... .0010 @fmadds_er msz=32 ? avx512f
-vfnmsub231sd      ........ 10111111 ........ 1 .... 101 ... .0010 @fmadds_er msz=64 ? avx512f
+vfmaddsub213ps    ........ 10100110 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmaddsub213pd    ........ 10100110 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmsubadd213ps    ........ 10100111 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmsubadd213pd    ........ 10100111 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmadd213ps       ........ 10101000 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmadd213pd       ........ 10101000 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmadd213ss       ........ 10101001 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfmadd213sd       ........ 10101001 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfmsub213ps       ........ 10101010 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmsub213pd       ........ 10101010 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmsub213ss       ........ 10101011 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfmsub213sd       ........ 10101011 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfnmadd213ps      ........ 10101100 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfnmadd213pd      ........ 10101100 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfnmadd213ss      ........ 10101101 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfnmadd213sd      ........ 10101101 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfnmsub213ps      ........ 10101110 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfnmsub213pd      ........ 10101110 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfnmsub213ss      ........ 10101111 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfnmsub213sd      ........ 10101111 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfmaddsub231ps    ........ 10110110 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmaddsub231pd    ........ 10110110 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmsubadd231ps    ........ 10110111 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmsubadd231pd    ........ 10110111 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmadd231ps       ........ 10111000 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmadd231pd       ........ 10111000 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmadd231ss       ........ 10111001 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfmadd231sd       ........ 10111001 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfmsub231ps       ........ 10111010 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfmsub231pd       ........ 10111010 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfmsub231ss       ........ 10111011 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfmsub231sd       ........ 10111011 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfnmadd231ps      ........ 10111100 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfnmadd231pd      ........ 10111100 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfnmadd231ss      ........ 10111101 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfnmadd231sd      ........ 10111101 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
+vfnmsub231ps      ........ 10111110 ........ 0 .... 101 ... .0010 @fmaddps_bcst_er ? avx512f
+vfnmsub231pd      ........ 10111110 ........ 1 .... 101 ... .0010 @fmaddpd_bcst_er ? avx512f
+vfnmsub231ss      ........ 10111111 ........ 0 .... 101 ... .0010 @fmaddss_er ? avx512f
+vfnmsub231sd      ........ 10111111 ........ 1 .... 101 ... .0010 @fmaddsd_er ? avx512f
 
 vpmovusdb         ........ 00010001 ........ 0 .... 110 ... .0010 @mr_qv ? avx512f avx512vl
 vpmovusqb         ........ 00010010 ........ 0 .... 110 ... .0010 @mr_ev ? avx512f avx512vl
@@ -1092,44 +1108,44 @@ vrcpph            ........ 01001100 ....1... 0 1111 101 ... .0110 @rm_vv bcst=16
 vrcpsh            ........ 01001101 .--..... 0 .... 101 ... .0110 tuple=1 @rvm_vvv msz=16 ? avx512fp16
 vrsqrtph          ........ 01001110 ....1... 0 1111 101 ... .0110 @rm_vv bcst=16 ? avx512fp16 avx512vl
 vrsqrtsh          ........ 01001111 .--..... 0 .... 101 ... .0110 tuple=1 @rvm_vvv msz=16 ? avx512fp16
-vfmaddsub132ph    ........ 10010110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmsubadd132ph    ........ 10010111 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmadd132ph       ........ 10011000 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmadd132sh       ........ 10011001 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfmsub132ph       ........ 10011010 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmsub132sh       ........ 10011011 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfnmadd132ph      ........ 10011100 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfnmadd132sh      ........ 10011101 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfnmsub132ph      ........ 10011110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfnmsub132sh      ........ 10011111 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfmaddsub213ph    ........ 10100110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmsubadd213ph    ........ 10100111 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmadd213ph       ........ 10101000 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmadd213sh       ........ 10101001 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfmsub213ph       ........ 10101010 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmsub213sh       ........ 10101011 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfnmadd213ph      ........ 10101100 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfnmadd213sh      ........ 10101101 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfnmsub213ph      ........ 10101110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfnmsub213sh      ........ 10101111 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfmaddsub231ph    ........ 10110110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmsubadd231ph    ........ 10110111 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmadd231ph       ........ 10111000 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmadd231sh       ........ 10111001 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfmsub231ph       ........ 10111010 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfmsub231sh       ........ 10111011 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfnmadd231ph      ........ 10111100 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfnmadd231sh      ........ 10111101 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
-vfnmsub231ph      ........ 10111110 ........ 0 .... 101 ... .0110 @fmaddp_er bcst=16 ? avx512fp16
-vfnmsub231sh      ........ 10111111 ........ 0 .... 101 ... .0110 @fmadds_er msz=16 ? avx512fp16
+vfmaddsub132ph    ........ 10010110 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmsubadd132ph    ........ 10010111 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmadd132ph       ........ 10011000 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmadd132sh       ........ 10011001 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfmsub132ph       ........ 10011010 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmsub132sh       ........ 10011011 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfnmadd132ph      ........ 10011100 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfnmadd132sh      ........ 10011101 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfnmsub132ph      ........ 10011110 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfnmsub132sh      ........ 10011111 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfmaddsub213ph    ........ 10100110 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmsubadd213ph    ........ 10100111 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmadd213ph       ........ 10101000 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmadd213sh       ........ 10101001 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfmsub213ph       ........ 10101010 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmsub213sh       ........ 10101011 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfnmadd213ph      ........ 10101100 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfnmadd213sh      ........ 10101101 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfnmsub213ph      ........ 10101110 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfnmsub213sh      ........ 10101111 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfmaddsub231ph    ........ 10110110 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmsubadd231ph    ........ 10110111 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmadd231ph       ........ 10111000 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmadd231sh       ........ 10111001 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfmsub231ph       ........ 10111010 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfmsub231sh       ........ 10111011 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfnmadd231ph      ........ 10111100 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfnmadd231sh      ........ 10111101 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
+vfnmsub231ph      ........ 10111110 ........ 0 .... 101 ... .0110 @fmaddph_bcst_er ? avx512fp16
+vfnmsub231sh      ........ 10111111 ........ 0 .... 101 ... .0110 @fmaddsh_er ? avx512fp16
 
-vfmaddcph         ........ 01010110 ........ 0 .... 110 ... .0110 @fmaddp_er bcst=32 ? avx512fp16 avx512vl
-vfmaddcsh         ........ 01010111 ........ 0 .... 110 ... .0110 @fmadds_er  msz=32 ? avx512fp16 avx512vl
+vfmaddcph         ........ 01010110 ........ 0 .... 110 ... .0110 @fmaddcph_bcst_er ? avx512fp16 avx512vl
+vfmaddcsh         ........ 01010111 ........ 0 .... 110 ... .0110 @fmaddcsh_er ? avx512fp16 avx512vl
 vfmulcph          ........ 11010110 ........ 0 .... 110 ... .0110 @rvm_vvv_er bcst=1 ? avx512fp16 avx512vl
 vfmulcsh          ........ 11010111 ........ 0 .... 110 ... .0110 @rvm_xxx_er msz=32 ? avx512fp16
 
-vfcmaddcph        ........ 01010110 ........ 0 .... 111 ... .0110 @fmaddp_er bcst=32 ? avx512fp16 avx512vl
-vfcmaddcsh        ........ 01010111 ........ 0 .... 111 ... .0110 @fmadds_er  msz=32 ? avx512fp16 avx512vl
+vfcmaddcph        ........ 01010110 ........ 0 .... 111 ... .0110 @fmaddcph_bcst_er ? avx512fp16 avx512vl
+vfcmaddcsh        ........ 01010111 ........ 0 .... 111 ... .0110 @fmaddcsh_er ? avx512fp16 avx512vl
 vfcmulcph         ........ 11010110 ........ 0 .... 111 ... .0110 @rvm_vvv_er bcst=1 ? avx512fp16 avx512vl
 vfcmulcsh         ........ 11010111 ........ 0 .... 111 ... .0110 @rvm_xxx_er msz=32 ? avx512fp16
 
@@ -1206,8 +1222,8 @@ vpdpwssds         ........ 01010011 ........ 0 .... 101 ... .0010 @rvm_vvv bcst=
 # Extension AVX-512-IFMA
 ##############################################################################
 
-vpmadd52luq       ........ 10110100 ........ 1 .... 101 ... .0010 @fmaddp bcst=1 ? avx512_ifma avx512vl
-vpmadd52huq       ........ 10110101 ........ 1 .... 101 ... .0010 @fmaddp bcst=1 ? avx512_ifma avx512vl
+vpmadd52luq       ........ 10110100 ........ 1 .... 101 ... .0010 @pmaddp_bcst ? avx512_ifma avx512vl
+vpmadd52huq       ........ 10110101 ........ 1 .... 101 ... .0010 @pmaddp_bcst ? avx512_ifma avx512vl
 
 ##############################################################################
 # Extension AVX-512-VPOPCNTDQ

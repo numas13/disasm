@@ -1328,42 +1328,6 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_fma_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_bcst(args.bcst);
-        self.set_vec_reg(out, args.r, size, rw)?;
-        self.set_vec_reg(out, args.v, size, Access::Read)?;
-        self.set_vec_mem(out, args.b, size, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
-    fn set_fma4_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, size, rw)?;
-        self.set_vec_reg(out, args.v, size, Access::Read)?;
-        self.set_vec_mem(out, args.b, size, Access::Read, args.mode, args.msz)?;
-        self.set_vec_is4(out, 1, size, Access::Read)?;
-        Ok(())
-    }
-
-    fn set_fma4a_vvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, size, rw)?;
-        self.set_vec_reg(out, args.v, size, Access::Read)?;
-        let mem = self.set_vec_mem_impl(
-            out,
-            args.b,
-            size,
-            Access::Read,
-            args.mode,
-            args.msz,
-            self.addr_size,
-        )?;
-        self.set_vec_is4(out, 1, size, Access::Read)?;
-        self.push_operand_with_mask(out, mem);
-        Ok(())
-    }
-
     fn set_evex_rvm_vvr(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, size, rw)?;
@@ -1529,6 +1493,101 @@ impl<'a> Inner<'a> {
         out.push_pc_rel(address, disp);
         Ok(())
     }
+
+    fn impl_args_fmadds(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::ReadWrite)?;
+        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_fmadds_er(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
+        self.mem_access = MemAccess::Tuple1;
+        let er = self.get_er_sae(args.mode);
+        self.impl_args_fmadds(out, args, msz)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_fmaddp(&mut self, out: &mut Insn, args: &args_rvm_vvv) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, Access::ReadWrite)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_fmaddp_bcst(&mut self, out: &mut Insn, args: &args_rvm_vvv, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_fmaddp(out, args)
+    }
+
+    fn impl_args_fmaddp_bcst_er(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_vvv,
+        bcst: i32,
+    ) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_fmaddp_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_fmadds_4a(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
+        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)?;
+        self.set_vec_is4(out, 1, Size::Xmm, Access::Read)
+    }
+
+    fn impl_args_fmadds_4b(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
+        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
+        let mem = self.set_vec_mem_impl(
+            out,
+            args.b,
+            Size::Xmm,
+            Access::Read,
+            args.mode,
+            msz,
+            self.addr_size,
+        )?;
+        self.set_vec_is4(out, 1, Size::Xmm, Access::Read)?;
+        self.push_operand_with_mask(out, mem);
+        Ok(())
+    }
+
+    fn impl_args_fmaddp_4a(&mut self, out: &mut Insn, args: &args_rvm_vvv) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)?;
+        self.set_vec_is4(out, 1, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_fmaddp_4b(&mut self, out: &mut Insn, args: &args_rvm_vvv) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        let mem = self.set_vec_mem_impl(
+            out,
+            args.b,
+            self.vec_size,
+            Access::Read,
+            args.mode,
+            1,
+            self.addr_size,
+        )?;
+        self.set_vec_is4(out, 1, self.vec_size, Access::Read)?;
+        self.push_operand_with_mask(out, mem);
+        Ok(())
+    }
+}
+
+macro_rules! forward {
+    ($($args:ty {
+       $(fn $from:ident = $to:ident($($arg:expr),* $(,)?)),* $(,)?
+    })*) => (
+        $($(fn $from(&mut self, out: &mut Insn, args: &$args) -> Result {
+            self.$to(out, args $(, $arg)*)
+        })*)*
+    );
 }
 
 impl SetValue for Inner<'_> {
@@ -2193,69 +2252,45 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_fmadds_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let er = self.get_er_sae(args.mode);
-        self.set_vec_reg(out, args.r, Size::Xmm, Access::ReadWrite)?;
-        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, args.msz)?;
-        out.push_operand_if_some(er);
-        Ok(())
+    forward! {
+        args_rvm_vvv {
+            fn set_args_fmaddss = impl_args_fmadds(32),
+            fn set_args_fmaddsd = impl_args_fmadds(64),
+
+            fn set_args_fmaddps = impl_args_fmaddp(),
+            fn set_args_fmaddpd = impl_args_fmaddp(),
+        }
     }
 
-    fn set_args_fmaddp(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_bcst(args.bcst);
-        self.set_vec_reg(out, args.r, self.vec_size, Access::ReadWrite)?;
-        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
-        self.set_vec_mem(
-            out,
-            args.b,
-            self.vec_size,
-            Access::Read,
-            args.mode,
-            args.msz,
-        )?;
-        Ok(())
+    forward! {
+        args_rvm_vvv {
+            fn set_args_fmaddsh_er = impl_args_fmadds_er(16),
+            fn set_args_fmaddss_er = impl_args_fmadds_er(32),
+            fn set_args_fmaddsd_er = impl_args_fmadds_er(64),
+            fn set_args_fmaddcsh_er = impl_args_fmadds_er(32),
+
+            fn set_args_pmaddp_bcst = impl_args_fmaddp_bcst(64),
+            fn set_args_fmaddph_bcst_er = impl_args_fmaddp_bcst_er(16),
+            fn set_args_fmaddps_bcst_er = impl_args_fmaddp_bcst_er(32),
+            fn set_args_fmaddpd_bcst_er = impl_args_fmaddp_bcst_er(64),
+            fn set_args_fmaddcph_bcst_er = impl_args_fmaddp_bcst_er(32),
+        }
     }
 
-    fn set_args_fmaddp_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        self.set_vec_reg(out, args.r, self.vec_size, Access::ReadWrite)?;
-        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
-        self.set_vec_mem(
-            out,
-            args.b,
-            self.vec_size,
-            Access::Read,
-            args.mode,
-            args.msz,
-        )?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
+    forward! {
+        args_rvm_vvv {
+            fn set_args_fmaddss_4a = impl_args_fmadds_4a(32),
+            fn set_args_fmaddss_4b = impl_args_fmadds_4b(32),
 
-    fn set_args_evex_fmax(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_evex_fma_vvv(out, args, Size::Xmm)
-    }
+            fn set_args_fmaddsd_4a = impl_args_fmadds_4a(64),
+            fn set_args_fmaddsd_4b = impl_args_fmadds_4b(64),
 
-    fn set_args_evex_fmay(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_evex_fma_vvv(out, args, Size::Ymm)
-    }
+            fn set_args_fmaddps_4a = impl_args_fmaddp_4a(),
+            fn set_args_fmaddps_4b = impl_args_fmaddp_4b(),
 
-    fn set_args_evex_fma4x(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_fma4_vvv(out, args, Size::Xmm)
-    }
-
-    fn set_args_evex_fma4y(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_fma4_vvv(out, args, Size::Ymm)
-    }
-
-    fn set_args_evex_fma4x2(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_fma4a_vvv(out, args, Size::Xmm)
-    }
-
-    fn set_args_evex_fma4y2(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_fma4a_vvv(out, args, Size::Ymm)
+            fn set_args_fmaddpd_4a = impl_args_fmaddp_4a(),
+            fn set_args_fmaddpd_4b = impl_args_fmaddp_4b(),
+        }
     }
 
     fn set_args_evex_rvm_kkk(&mut self, out: &mut Insn, args: &args_evex_rvm_kkk) -> Result {
