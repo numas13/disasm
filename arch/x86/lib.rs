@@ -1365,13 +1365,6 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn set_evex_rm_vk(&mut self, out: &mut Insn, args: &args_evex_rm_vv, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, size, rw)?;
-        self.set_k_mem(out, args.b, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
     fn set_evex_rvm_kvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv, size: Size) -> Result {
         let rw = access_from_mask(args.rw);
         self.set_bcst(args.bcst);
@@ -1435,13 +1428,6 @@ impl<'a> Inner<'a> {
         if msz != 1 {
             self.mem_size_override = true;
         }
-    }
-
-    fn set_evex_rm_qv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.broadcast_force = true;
-        self.set_evex_rm_vv(out, &args, Size::Xmm, self.vec_size)
     }
 
     fn vec_half(&self) -> (Size, i32) {
@@ -1533,15 +1519,260 @@ impl<'a> Inner<'a> {
         self.impl_args_rm_vv(out, args, access, 1)
     }
 
-    fn impl_args_mr_vv(
+    fn impl_args_rm_vv_bcst_er(
         &mut self,
         out: &mut Insn,
-        args: &args_mr_vv,
+        args: &args_rm_vv,
         access: Access,
+        bcst: i32,
+    ) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rm_vv_bcst(out, args, access, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vv_bcst_sae(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_vv,
+        access: Access,
+        bcst: i32,
+    ) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_vv_bcst(out, args, access, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vy(&mut self, out: &mut Insn, args: &args_rm_vy, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_mem(out, args.b, Size::Ymm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_vy_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_vy,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.impl_args_rm_vy(out, args, msz)
+    }
+
+    fn impl_args_rm_vx_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_vx,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_xx_mem(&mut self, out: &mut Insn, args: &args_rm_xx_new, msz: i32) -> Result {
+        self.mem_access = MemAccess::Tuple1;
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_xx_mem_sae(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_xx_new,
         msz: i32,
     ) -> Result {
-        self.set_vec_mem(out, args.b, self.vec_size, access, args.mode, msz)?;
+        let sae = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_xx_mem(out, args, msz)?;
+        out.push_operand_if_some(sae);
+        Ok(())
+    }
+
+    fn impl_args_rm_hv(&mut self, out: &mut Insn, args: &args_rm_hv) -> Result {
+        let size = self.vec_reg_half();
+        self.set_vec_reg(out, args.r, size, Access::Write)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_rm_hv_bcst(&mut self, out: &mut Insn, args: &args_rm_hv, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rm_hv(out, args)
+    }
+
+    fn impl_args_rm_hv_bcst_er(&mut self, out: &mut Insn, args: &args_rm_hv, bcst: i32) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rm_hv_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_hv_sae(&mut self, out: &mut Insn, args: &args_rm_hv) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_hv(out, args)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_hv_bcst_sae(&mut self, out: &mut Insn, args: &args_rm_hv, bcst: i32) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_hv_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_qv(&mut self, out: &mut Insn, args: &args_rm_qv) -> Result {
+        self.broadcast_force = true;
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_rm_qv_bcst(&mut self, out: &mut Insn, args: &args_rm_qv, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rm_qv(out, args)
+    }
+
+    fn impl_args_rm_qv_bcst_er(&mut self, out: &mut Insn, args: &args_rm_qv, bcst: i32) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rm_qv_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vh(&mut self, out: &mut Insn, args: &args_rm_vh) -> Result {
+        let (size, msz) = self.vec_mem_half();
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_mem(out, args.b, size, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_vh_sae(&mut self, out: &mut Insn, args: &args_rm_vh) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_vh(out, args)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vh_bcst(&mut self, out: &mut Insn, args: &args_rm_vh, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rm_vh(out, args)
+    }
+
+    fn impl_args_rm_vh_bcst_er(&mut self, out: &mut Insn, args: &args_rm_vh, bcst: i32) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rm_vh_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vh_bcst_sae(&mut self, out: &mut Insn, args: &args_rm_vh, bcst: i32) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_vh_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vq(&mut self, out: &mut Insn, args: &args_rm_vq) -> Result {
+        let (size, msz) = self.vec_mem_quarter();
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_mem(out, args.b, size, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_vq_bcst(&mut self, out: &mut Insn, args: &args_rm_vq, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rm_vq(out, args)
+    }
+
+    fn impl_args_rm_vq_bcst_er(&mut self, out: &mut Insn, args: &args_rm_vq, bcst: i32) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rm_vq_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_vq_bcst_sae(&mut self, out: &mut Insn, args: &args_rm_vq, bcst: i32) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rm_vq_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rm_ve(&mut self, out: &mut Insn, args: &args_rm_ve) -> Result {
+        let (size, msz) = self.vec_mem_eighth();
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_mem(out, args.b, size, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_mr_vv(&mut self, out: &mut Insn, args: &args_mr_vv) -> Result {
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Write, args.mode, 1)?;
         self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_mr_vv_mem(&mut self, out: &mut Insn, args: &args_mr_vv, mem: MemAccess) -> Result {
+        self.mem_access = mem;
+        self.impl_args_mr_vv(out, args)
+    }
+
+    fn impl_args_mr_hv(&mut self, out: &mut Insn, args: &args_mr_hv) -> Result {
+        let (size, msz) = self.vec_mem_half();
+        self.set_vec_mem(out, args.b, size, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_mr_hv_sae(&mut self, out: &mut Insn, args: &args_mr_hv) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_mr_hv(out, args)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_mr_qv(&mut self, out: &mut Insn, args: &args_mr_qv) -> Result {
+        let (size, msz) = self.vec_mem_quarter();
+        self.set_vec_mem(out, args.b, size, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_mr_ev(&mut self, out: &mut Insn, args: &args_mr_ev) -> Result {
+        let (size, msz) = self.vec_mem_eighth();
+        self.set_vec_mem(out, args.b, size, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_mr_yv_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_mr_yv,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.set_vec_mem(out, args.b, Size::Ymm, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_mr_xv_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_mr_xv,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
+    fn impl_args_mr_xx_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_mr_xx_new,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)
     }
 
     fn impl_args_rvm_vvv(
@@ -1568,16 +1799,28 @@ impl<'a> Inner<'a> {
         self.impl_args_rvm_vvv(out, args, access, msz)
     }
 
-    fn impl_args_rvm_xxx_mem(
+    fn impl_args_rvm_vvy_mem(
         &mut self,
         out: &mut Insn,
-        args: &args_rvm_vvv,
-        access: Access,
-        msz: i32,
+        args: &args_rvm_vvy,
         mem: MemAccess,
     ) -> Result {
-        self.vec_size = Size::Xmm;
-        self.impl_args_rvm_vvv_mem(out, args, access, msz, mem)
+        self.mem_access = mem;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        self.set_vec_mem(out, args.b, Size::Ymm, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_rvm_vvx_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_vvx,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, 1)
     }
 
     fn impl_args_rvm_vvx_128(
@@ -1590,20 +1833,6 @@ impl<'a> Inner<'a> {
         self.set_vec_reg(out, args.r, self.vec_size, access)?;
         self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
         self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, 1)
-    }
-
-    fn impl_args_rvm_xxx_mem_er(
-        &mut self,
-        out: &mut Insn,
-        args: &args_rvm_vvv,
-        access: Access,
-        msz: i32,
-        mem: MemAccess,
-    ) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.impl_args_rvm_xxx_mem(out, args, access, msz, mem)?;
-        out.push_operand_if_some(er);
-        Ok(())
     }
 
     fn impl_args_rvm_vvv_bcst(
@@ -1639,6 +1868,58 @@ impl<'a> Inner<'a> {
     ) -> Result {
         let er = self.get_sae_zmm(args.mode);
         self.impl_args_rvm_vvv_bcst(out, args, access, bcst)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rvm_xxx(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_xxx,
+        access: Access,
+        msz: i32,
+    ) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, access)?;
+        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rvm_xxx_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_xxx,
+        access: Access,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.impl_args_rvm_xxx(out, args, access, msz)
+    }
+
+    fn impl_args_rvm_xxx_mem_er(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_xxx,
+        access: Access,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        let er = self.get_er_sae_zmm(args.mode);
+        self.impl_args_rvm_xxx_mem(out, args, access, msz, mem)?;
+        out.push_operand_if_some(er);
+        Ok(())
+    }
+
+    fn impl_args_rvm_xxx_mem_sae(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_xxx,
+        access: Access,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rvm_xxx_mem(out, args, access, msz, mem)?;
         out.push_operand_if_some(er);
         Ok(())
     }
@@ -1725,6 +2006,51 @@ impl<'a> Inner<'a> {
         )?;
         self.set_vec_is4(out, 1, self.vec_size, Access::Read)?;
         self.push_operand_with_mask(out, mem);
+        Ok(())
+    }
+
+    fn impl_args_mvr_xxx(&mut self, out: &mut Insn, args: &args_mvr_xxx) -> Result {
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Write, args.mode, 1)?;
+        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)
+    }
+
+    fn impl_args_rm_kv(&mut self, out: &mut Insn, args: &args_rm_kv) -> Result {
+        self.set_k_reg(out, args.r, Access::Write)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)?;
+        Ok(())
+    }
+
+    fn impl_args_rm_kv_bcst(&mut self, out: &mut Insn, args: &args_rm_kv, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rm_kv(out, args)
+    }
+
+    fn impl_args_rm_vk(&mut self, out: &mut Insn, args: &args_rm_vk) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_k_mem(out, args.b, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_rvm_kvv(&mut self, out: &mut Insn, args: &args_rvm_kvv) -> Result {
+        self.set_k_reg(out, args.r, Access::Write)?;
+        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, 1)
+    }
+
+    fn impl_args_rvm_kvv_bcst(&mut self, out: &mut Insn, args: &args_rvm_kvv, bcst: i32) -> Result {
+        self.set_bcst(bcst);
+        self.impl_args_rvm_kvv(out, args)
+    }
+
+    fn impl_args_rvm_kvv_bcst_sae(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rvm_kvv,
+        bcst: i32,
+    ) -> Result {
+        let er = self.get_sae_zmm(args.mode);
+        self.impl_args_rvm_kvv_bcst(out, args, bcst)?;
+        out.push_operand_if_some(er);
         Ok(())
     }
 }
@@ -1986,14 +2312,6 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_rm_vx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, self.vec_size, Size::Xmm)
-    }
-
-    fn set_args_evex_rm_vy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, self.vec_size, Size::Ymm)
-    }
-
     fn set_args_rm_rr(&mut self, out: &mut Insn, args: &args_rm_rr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, access, args.rsz)?;
@@ -2034,121 +2352,6 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_rm_hv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        let size = self.vec_reg_half();
-        self.set_evex_rm_vv(out, &args, size, self.vec_size)
-    }
-
-    fn set_args_evex_rm_hv_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_args_evex_rm_hv(out, &args)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_qv_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_evex_rm_qv(out, &args)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_vh_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_args_evex_rm_vh(out, &args)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_vq_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_args_evex_rm_vq(out, &args)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_hv_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_args_evex_rm_hv(out, &args)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_vq_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_args_evex_rm_vq(out, &args)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_vh(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let (size, msz) = self.vec_mem_half();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_rm_vv(out, &args, self.vec_size, size)
-    }
-
-    fn set_args_evex_rm_vq(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let (size, msz) = self.vec_mem_quarter();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_rm_vv(out, &args, self.vec_size, size)
-    }
-
-    fn set_args_evex_rm_ve(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let (size, msz) = self.vec_mem_eighth();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_rm_vv(out, &args, self.vec_size, size)
-    }
-
-    fn set_args_evex_rm_vh_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let sae = self.get_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        let args = args_evex_rm_vv { bcst: 0, ..*args };
-        self.set_args_evex_rm_vh(out, &args)?;
-        out.push_operand_if_some(sae);
-        Ok(())
-    }
-
-    fn set_args_evex_mr_hv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let (size, msz) = self.vec_mem_half();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_mr_vv(out, &args, size, self.vec_size)
-    }
-
-    fn set_args_evex_mr_hv_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let sae = self.get_sae_zmm(args.mode);
-        let (size, msz) = self.vec_mem_half();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_mr_vv(out, &args, size, self.vec_size)?;
-        out.push_operand_if_some(sae);
-        Ok(())
-    }
-
-    fn set_args_evex_mr_qv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let (size, msz) = self.vec_mem_quarter();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_mr_vv(out, &args, size, self.vec_size)
-    }
-
-    fn set_args_evex_mr_ev(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let (size, msz) = self.vec_mem_eighth();
-        let args = args_evex_rm_vv { msz, ..*args };
-        self.set_evex_mr_vv(out, &args, size, self.vec_size)
-    }
-
     fn set_args_evex_rm_xx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Xmm, Size::Xmm)
     }
@@ -2163,21 +2366,6 @@ impl SetValue for Inner<'_> {
 
     fn set_args_evex_rm_yy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_vv(out, args, Size::Ymm, Size::Ymm)
-    }
-
-    fn set_args_evex_rm_zx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, Size::Zmm, Size::Xmm)
-    }
-
-    fn set_args_evex_rm_zy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, Size::Zmm, Size::Ymm)
-    }
-
-    fn set_args_evex_rm_xx_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let sae = self.get_sae(args.mode);
-        self.set_evex_rm_vv(out, args, Size::Xmm, Size::Xmm)?;
-        out.push_operand_if_some(sae);
-        Ok(())
     }
 
     fn set_args_evex_rm_rx(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
@@ -2218,16 +2406,8 @@ impl SetValue for Inner<'_> {
         self.set_evex_mr_vv(out, args, Size::Xmm, Size::Ymm)
     }
 
-    fn set_args_evex_mr_xz(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_mr_vv(out, args, Size::Xmm, Size::Zmm)
-    }
-
     fn set_args_evex_mr_yy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_mr_vv(out, args, Size::Ymm, Size::Ymm)
-    }
-
-    fn set_args_evex_mr_yz(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_mr_vv(out, args, Size::Ymm, Size::Zmm)
     }
 
     fn set_args_evex_mr_rx(&mut self, out: &mut Insn, args: &args_evex_mr_rv) -> Result {
@@ -2245,14 +2425,6 @@ impl SetValue for Inner<'_> {
 
     fn set_args_evex_rvm_yyy(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         self.set_evex_rvm_vvv(out, args, Size::Ymm, Size::Ymm, Size::Ymm)
-    }
-
-    fn set_args_evex_rvm_zzx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_evex_rvm_vvv(out, args, Size::Zmm, Size::Zmm, Size::Xmm)
-    }
-
-    fn set_args_evex_rvm_zzy(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_evex_rvm_vvv(out, args, Size::Zmm, Size::Zmm, Size::Ymm)
     }
 
     fn set_args_evex_mvr_xxx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
@@ -2274,37 +2446,13 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_rm_kv(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_kv(out, args, self.vec_size)
-    }
-
     fn set_args_evex_rm_kx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
         self.set_evex_rm_kv(out, args, Size::Xmm)
-    }
-
-    fn set_args_evex_rm_vk(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vk(out, args, self.vec_size)
     }
 
     fn set_args_evex_rvm_kxx_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
         let er = self.get_sae(args.mode);
         self.set_evex_rvm_kvv(out, args, Size::Xmm)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_vv_er(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        self.set_evex_rm_vv(out, args, self.vec_size, self.vec_size)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rm_vv_sae(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        let er = self.get_sae_zmm(args.mode);
-        self.set_bcst(args.bcst);
-        self.set_evex_rm_vv(out, args, self.vec_size, self.vec_size)?;
         out.push_operand_if_some(er);
         Ok(())
     }
@@ -2345,51 +2493,6 @@ impl SetValue for Inner<'_> {
         self.set_evex_scatter(out, args, half, self.vec_size)
     }
 
-    fn set_args_evex_rvm_vvv_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let er = self.get_er_sae_zmm(args.mode);
-        self.set_evex_rvm_vvv(out, args, self.vec_size, self.vec_size, self.vec_size)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rvm_vvv_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let er = self.get_sae_zmm(args.mode);
-        self.set_evex_rvm_vvv(out, args, self.vec_size, self.vec_size, self.vec_size)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rvm_xxx_er(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let er = self.get_er_sae(args.mode);
-        self.set_evex_rvm_vvv(out, args, Size::Xmm, Size::Xmm, Size::Xmm)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn set_args_evex_rvm_xxx_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let sae = self.get_sae(args.mode);
-        self.set_evex_rvm_vvv(out, args, Size::Xmm, Size::Xmm, Size::Xmm)?;
-        out.push_operand_if_some(sae);
-        Ok(())
-    }
-
-    fn set_args_evex_rvm_kvv(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_evex_rvm_kvv(out, args, self.vec_size)
-    }
-
-    fn set_args_evex_rvm_kvv_sae(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        let sae = self.get_sae_zmm(args.mode);
-        self.set_evex_rvm_kvv(out, args, self.vec_size)?;
-        out.push_operand_if_some(sae);
-        Ok(())
-    }
-
-    forward! {
-        args_mr_vv {
-            fn set_args_mr_vv = impl_args_mr_vv(Access::Write, 1),
-        }
-    }
-
     forward! {
         args_rm_vv {
             fn set_args_rm_vv = impl_args_rm_vv(Access::Write, 1),
@@ -2398,6 +2501,118 @@ impl SetValue for Inner<'_> {
             fn set_args_rm_vv_bcst16 = impl_args_rm_vv_bcst(Access::Write, 16),
             fn set_args_rm_vv_bcst32 = impl_args_rm_vv_bcst(Access::Write, 32),
             fn set_args_rm_vv_bcst64 = impl_args_rm_vv_bcst(Access::Write, 64),
+            fn set_args_rm_vv_bcst16_er = impl_args_rm_vv_bcst_er(Access::Write, 16),
+            fn set_args_rm_vv_bcst32_er = impl_args_rm_vv_bcst_er(Access::Write, 32),
+            fn set_args_rm_vv_bcst64_er = impl_args_rm_vv_bcst_er(Access::Write, 64),
+            fn set_args_rm_vv_bcst16_sae = impl_args_rm_vv_bcst_sae(Access::Write, 16),
+            fn set_args_rm_vv_bcst32_sae = impl_args_rm_vv_bcst_sae(Access::Write, 32),
+            fn set_args_rm_vv_bcst64_sae = impl_args_rm_vv_bcst_sae(Access::Write, 64),
+        }
+    }
+
+    forward! {
+        args_rm_vy {
+            fn set_args_rm_vy_32x8 = impl_args_rm_vy_mem(32, MemAccess::Tuple8),
+            fn set_args_rm_vy_64x4 = impl_args_rm_vy_mem(64, MemAccess::Tuple4),
+        }
+    }
+
+    forward! {
+        args_rm_vx {
+            fn set_args_rm_vx_8x1 = impl_args_rm_vx_mem(8, MemAccess::Tuple1),
+            fn set_args_rm_vx_16x1 = impl_args_rm_vx_mem(16, MemAccess::Tuple1),
+            fn set_args_rm_vx_32x1 = impl_args_rm_vx_mem(32, MemAccess::Tuple1),
+            fn set_args_rm_vx_32x2 = impl_args_rm_vx_mem(32, MemAccess::Tuple2),
+            fn set_args_rm_vx_32x4 = impl_args_rm_vx_mem(32, MemAccess::Tuple4),
+            fn set_args_rm_vx_64x1 = impl_args_rm_vx_mem(64, MemAccess::Tuple1),
+            fn set_args_rm_vx_64x2 = impl_args_rm_vx_mem(64, MemAccess::Tuple2),
+        }
+    }
+
+    forward! {
+        args_rm_xx_new {
+            fn set_args_rm_xx_16x1 = impl_args_rm_xx_mem(16),
+            fn set_args_rm_xx_32x1 = impl_args_rm_xx_mem(32),
+            fn set_args_rm_xx_64x1 = impl_args_rm_xx_mem(64),
+            fn set_args_rm_xx_16x1_sae = impl_args_rm_xx_mem_sae(16),
+            fn set_args_rm_xx_32x1_sae = impl_args_rm_xx_mem_sae(32),
+            fn set_args_rm_xx_64x1_sae = impl_args_rm_xx_mem_sae(64),
+        }
+    }
+
+    forward! {
+        args_rm_hv {
+            fn set_args_rm_hv_bcst32 = impl_args_rm_hv_bcst(32),
+            fn set_args_rm_hv_bcst32_er = impl_args_rm_hv_bcst_er(32),
+            fn set_args_rm_hv_bcst64_er = impl_args_rm_hv_bcst_er(64),
+            fn set_args_rm_hv_sae = impl_args_rm_hv_sae(),
+            fn set_args_rm_hv_bcst64_sae = impl_args_rm_hv_bcst_sae(64),
+        }
+    }
+
+    forward! {
+        args_rm_qv {
+            fn set_args_rm_qv_bcst64_er = impl_args_rm_qv_bcst_er(64),
+        }
+    }
+
+    forward! {
+        args_rm_vh {
+            fn set_args_rm_vh = impl_args_rm_vh(),
+            fn set_args_rm_vh_bcst32 = impl_args_rm_vh_bcst(32),
+            fn set_args_rm_vh_bcst16_er = impl_args_rm_vh_bcst_er(16),
+            fn set_args_rm_vh_bcst32_er = impl_args_rm_vh_bcst_er(32),
+            fn set_args_rm_vh_sae = impl_args_rm_vh_sae(),
+            fn set_args_rm_vh_bcst16_sae = impl_args_rm_vh_bcst_sae(16),
+            fn set_args_rm_vh_bcst32_sae = impl_args_rm_vh_bcst_sae(32),
+        }
+    }
+
+    forward! {
+        args_rm_vq {
+            fn set_args_rm_vq = impl_args_rm_vq(),
+            fn set_args_rm_vq_bcst16_er = impl_args_rm_vq_bcst_er(16),
+            fn set_args_rm_vq_bcst16_sae = impl_args_rm_vq_bcst_sae(16),
+        }
+    }
+
+    forward! {
+        args_rm_ve {
+            fn set_args_rm_ve = impl_args_rm_ve(),
+        }
+    }
+
+    forward! {
+        args_mr_vv {
+            fn set_args_mr_vv = impl_args_mr_vv(),
+            fn set_args_mr_vv_x1 = impl_args_mr_vv_mem(MemAccess::Tuple1),
+        }
+        args_mr_hv {
+            fn set_args_mr_hv = impl_args_mr_hv(),
+            fn set_args_mr_hv_sae = impl_args_mr_hv_sae(),
+        }
+        args_mr_qv {
+            fn set_args_mr_qv = impl_args_mr_qv(),
+        }
+        args_mr_ev {
+            fn set_args_mr_ev = impl_args_mr_ev(),
+        }
+    }
+
+    forward! {
+        args_mr_xx_new {
+            fn set_args_mr_xx_16x1 = impl_args_mr_xx_mem(16, MemAccess::Tuple1),
+            fn set_args_mr_xx_32x1 = impl_args_mr_xx_mem(32, MemAccess::Tuple1),
+            fn set_args_mr_xx_32x2 = impl_args_mr_xx_mem(32, MemAccess::Tuple2),
+            fn set_args_mr_xx_64x1 = impl_args_mr_xx_mem(64, MemAccess::Tuple1),
+        }
+        args_mr_xv {
+            fn set_args_mr_xv_x2 = impl_args_mr_xv_mem(1, MemAccess::Tuple2),
+            fn set_args_mr_xv_x4 = impl_args_mr_xv_mem(1, MemAccess::Tuple4),
+        }
+        args_mr_yv {
+            fn set_args_mr_yv_x4 = impl_args_mr_yv_mem(1, MemAccess::Tuple4),
+            fn set_args_mr_yv_x8 = impl_args_mr_yv_mem(1, MemAccess::Tuple8),
         }
     }
 
@@ -2413,13 +2628,33 @@ impl SetValue for Inner<'_> {
     }
 
     forward! {
-        args_rvm_vvv {
+        args_rvm_vvy {
+            fn set_args_rvm_vvy_x4 = impl_args_rvm_vvy_mem(MemAccess::Tuple4),
+            fn set_args_rvm_vvy_x8 = impl_args_rvm_vvy_mem(MemAccess::Tuple8),
+        }
+    }
+
+    forward! {
+        args_rvm_vvx {
+            fn set_args_rvm_vvx_x2 = impl_args_rvm_vvx_mem(MemAccess::Tuple2),
+            fn set_args_rvm_vvx_x4 = impl_args_rvm_vvx_mem(MemAccess::Tuple4),
+        }
+    }
+
+    forward! {
+        args_rvm_xxx {
             fn set_args_rvm_xxx_x1 = impl_args_rvm_xxx_mem(Access::Write, 1, MemAccess::Tuple1),
             fn set_args_rvm_xxx_16x1 = impl_args_rvm_xxx_mem(Access::Write, 16, MemAccess::Tuple1),
             fn set_args_rvm_xxx_32x1 = impl_args_rvm_xxx_mem(Access::Write, 32, MemAccess::Tuple1),
             fn set_args_rvm_xxx_64x1 = impl_args_rvm_xxx_mem(Access::Write, 64, MemAccess::Tuple1),
 
             fn set_args_rvm_xxx_16x1_er = impl_args_rvm_xxx_mem_er(Access::Write, 16, MemAccess::Tuple1),
+            fn set_args_rvm_xxx_32x1_er = impl_args_rvm_xxx_mem_er(Access::Write, 32, MemAccess::Tuple1),
+            fn set_args_rvm_xxx_64x1_er = impl_args_rvm_xxx_mem_er(Access::Write, 64, MemAccess::Tuple1),
+
+            fn set_args_rvm_xxx_16x1_sae = impl_args_rvm_xxx_mem_sae(Access::Write, 16, MemAccess::Tuple1),
+            fn set_args_rvm_xxx_32x1_sae = impl_args_rvm_xxx_mem_sae(Access::Write, 32, MemAccess::Tuple1),
+            fn set_args_rvm_xxx_64x1_sae = impl_args_rvm_xxx_mem_sae(Access::Write, 64, MemAccess::Tuple1),
         }
     }
 
@@ -2482,6 +2717,41 @@ impl SetValue for Inner<'_> {
 
             fn set_args_fmaddpd_4a = impl_args_fmaddp_4a(),
             fn set_args_fmaddpd_4b = impl_args_fmaddp_4b(),
+        }
+    }
+
+    forward! {
+        args_mvr_xxx {
+            fn set_args_mvr_xxx = impl_args_mvr_xxx(),
+        }
+    }
+
+    forward! {
+        args_rm_kv {
+            fn set_args_rm_kv = impl_args_rm_kv(),
+
+            fn set_args_rm_kv_bcst16 = impl_args_rm_kv_bcst(-16),
+            fn set_args_rm_kv_bcst32 = impl_args_rm_kv_bcst(-32),
+            fn set_args_rm_kv_bcst64 = impl_args_rm_kv_bcst(-64),
+        }
+    }
+
+    forward! {
+        args_rm_vk {
+            fn set_args_rm_vk = impl_args_rm_vk(),
+        }
+    }
+
+    forward! {
+        args_rvm_kvv {
+            fn set_args_rvm_kvv = impl_args_rvm_kvv(),
+
+            fn set_args_rvm_kvv_bcst32 = impl_args_rvm_kvv_bcst(32),
+            fn set_args_rvm_kvv_bcst64 = impl_args_rvm_kvv_bcst(64),
+
+            fn set_args_rvm_kvv_bcst16_sae = impl_args_rvm_kvv_bcst_sae(16),
+            fn set_args_rvm_kvv_bcst32_sae = impl_args_rvm_kvv_bcst_sae(32),
+            fn set_args_rvm_kvv_bcst64_sae = impl_args_rvm_kvv_bcst_sae(64),
         }
     }
 
