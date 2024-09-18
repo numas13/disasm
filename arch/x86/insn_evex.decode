@@ -32,28 +32,28 @@
 &evex_gather      mode r b msz
 &evex_scatter     mode r b msz
 
-&rm_vv            mode r b
+&rm_vv            mode r b !extern
 &rm_hv            mode r b
 &rm_qv            mode r b
 &rm_vh            mode r b
 &rm_vq            mode r b
 &rm_ve            mode r b
 &rm_vy            mode r b
-&rm_vx            mode r b
+&rm_vx            mode r b !extern
 &rm_zy            mode r b
 &rm_zx            mode r b
 &rm_yx            mode r b
-&rm_xx_new        mode r b
+&rm_xx            mode r b !extern
 &rm_kv            mode r b
 &rm_vk            mode r b
 
-&mr_vv            mode r b
+&mr_vv            mode r b !extern
 &mr_hv            mode r b
 &mr_qv            mode r b
 &mr_ev            mode r b
 &mr_yv            mode r b
-&mr_xv            mode r b
-&mr_xx_new        mode r b
+&mr_xv            mode r b !extern
+&mr_xx            mode r b !extern
 
 &rvm_vvv          mode r v b !extern
 &rvm_vvy          mode r v b
@@ -175,13 +175,13 @@
 @rm_vx_64x1           ........ ........ ........ ........ ........ rm_vx_64x1=&rm_vx %mode r=%mm_reg b=%mm_base
 @rm_vx_64x2           ........ ........ ........ ........ ........ rm_vx_64x2=&rm_vx %mode r=%mm_reg b=%mm_base
 
-@rm_xx_16x1           ........ ........ ........ ........ ........ rm_xx_16x1=&rm_xx_new %mode r=%mm_reg b=%mm_base
-@rm_xx_32x1           ........ ........ ........ ........ ........ rm_xx_32x1=&rm_xx_new %mode r=%mm_reg b=%mm_base
-@rm_xx_64x1           ........ ........ ........ ........ ........ rm_xx_64x1=&rm_xx_new %mode r=%mm_reg b=%mm_base
+@rm_xx_16x1           ........ ........ ........ ........ ........ rm_xx_16x1=&rm_xx %mode r=%mm_reg b=%mm_base
+@rm_xx_32x1           ........ ........ ........ ........ ........ rm_xx_32x1=&rm_xx %mode r=%mm_reg b=%mm_base
+@rm_xx_64x1           ........ ........ ........ ........ ........ rm_xx_64x1=&rm_xx %mode r=%mm_reg b=%mm_base
 
-@rm_xx_16x1_sae       ........ ........ ........ ........ ........ rm_xx_16x1_sae=&rm_xx_new %mode r=%mm_reg b=%mm_base
-@rm_xx_32x1_sae       ........ ........ ........ ........ ........ rm_xx_32x1_sae=&rm_xx_new %mode r=%mm_reg b=%mm_base
-@rm_xx_64x1_sae       ........ ........ ........ ........ ........ rm_xx_64x1_sae=&rm_xx_new %mode r=%mm_reg b=%mm_base
+@rm_xx_16x1_sae       ........ ........ ........ ........ ........ rm_xx_16x1_sae=&rm_xx %mode r=%mm_reg b=%mm_base
+@rm_xx_32x1_sae       ........ ........ ........ ........ ........ rm_xx_32x1_sae=&rm_xx %mode r=%mm_reg b=%mm_base
+@rm_xx_64x1_sae       ........ ........ ........ ........ ........ rm_xx_64x1_sae=&rm_xx %mode r=%mm_reg b=%mm_base
 
 @mr_vv                ........ ........ ........ ........ ........ &mr_vv %mode r=%mm_reg b=%mm_base
 @mr_vv_x1             ........ ........ ........ ........ ........ mr_vv_x1=&mr_vv %mode r=%mm_reg b=%mm_base
@@ -190,10 +190,10 @@
 @mr_qv                ........ ........ ........ ........ ........ &mr_qv %mode r=%mm_reg b=%mm_base
 @mr_ev                ........ ........ ........ ........ ........ &mr_ev %mode r=%mm_reg b=%mm_base
 
-@mr_xx_16x1           ........ ........ ........ ........ ........ mr_xx_16x1=&mr_xx_new %mode r=%mm_reg b=%mm_base
-@mr_xx_32x1           ........ ........ ........ ........ ........ mr_xx_32x1=&mr_xx_new %mode r=%mm_reg b=%mm_base
-@mr_xx_32x2           ........ ........ ........ ........ ........ mr_xx_32x2=&mr_xx_new %mode r=%mm_reg b=%mm_base
-@mr_xx_64x1           ........ ........ ........ ........ ........ mr_xx_64x1=&mr_xx_new %mode r=%mm_reg b=%mm_base
+@mr_xx_16x1           ........ ........ ........ ........ ........ mr_xx_16x1=&mr_xx %mode r=%mm_reg b=%mm_base
+@mr_xx_32x1           ........ ........ ........ ........ ........ mr_xx_32x1=&mr_xx %mode r=%mm_reg b=%mm_base
+@mr_xx_32x2           ........ ........ ........ ........ ........ mr_xx_32x2=&mr_xx %mode r=%mm_reg b=%mm_base
+@mr_xx_64x1           ........ ........ ........ ........ ........ mr_xx_64x1=&mr_xx %mode r=%mm_reg b=%mm_base
 
 @mr_xv_x2             ........ ........ ........ ........ ........ mr_xv_x2=&mr_xv %mode r=%mm_reg b=%mm_base
 @mr_xv_x4             ........ ........ ........ ........ ........ mr_xv_x4=&mr_xv %mode r=%mm_reg b=%mm_base

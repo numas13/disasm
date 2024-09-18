@@ -1545,6 +1545,11 @@ impl<'a> Inner<'a> {
         self.impl_args_rm_vy(out, args, msz)
     }
 
+    fn impl_args_rm_vx(&mut self, out: &mut Insn, args: &args_rm_vx, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    }
+
     fn impl_args_rm_vx_mem(
         &mut self,
         out: &mut Insn,
@@ -1553,26 +1558,68 @@ impl<'a> Inner<'a> {
         mem: MemAccess,
     ) -> Result {
         self.mem_access = mem;
-        self.set_vec_reg(out, args.r, self.vec_size, Access::Write)?;
+        self.impl_args_rm_vx(out, args, msz)
+    }
+
+    fn impl_args_rm_xv(&mut self, out: &mut Insn, args: &args_rm_xv, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
+        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_xx(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_xx,
+        msz: i32,
+        access: Access,
+    ) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, access)?;
         self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
     }
 
-    fn impl_args_rm_xx_mem(&mut self, out: &mut Insn, args: &args_rm_xx_new, msz: i32) -> Result {
-        self.mem_access = MemAccess::Tuple1;
-        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    fn impl_args_rm_xx_mem(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_xx,
+        msz: i32,
+        mem: MemAccess,
+    ) -> Result {
+        self.mem_access = mem;
+        self.impl_args_rm_xx(out, args, msz, Access::Write)
     }
 
     fn impl_args_rm_xx_mem_sae(
         &mut self,
         out: &mut Insn,
-        args: &args_rm_xx_new,
+        args: &args_rm_xx,
         msz: i32,
+        mem: MemAccess,
     ) -> Result {
         let sae = self.get_sae_zmm(args.mode);
-        self.impl_args_rm_xx_mem(out, args, msz)?;
+        self.impl_args_rm_xx_mem(out, args, msz, mem)?;
         out.push_operand_if_some(sae);
         Ok(())
+    }
+
+    fn impl_args_rm_xm(&mut self, out: &mut Insn, args: &args_rm_xm, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
+        self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_mx(&mut self, out: &mut Insn, args: &args_rm_mx, msz: i32) -> Result {
+        self.set_vec_reg(out, args.r, Size::Mm, Access::Write)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, msz)
+    }
+
+    fn impl_args_rm_mm(
+        &mut self,
+        out: &mut Insn,
+        args: &args_rm_mm,
+        msz: i32,
+        access: Access,
+    ) -> Result {
+        self.set_vec_reg(out, args.r, Size::Mm, access)?;
+        self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, msz)
     }
 
     fn impl_args_rm_hv(&mut self, out: &mut Insn, args: &args_rm_hv) -> Result {
@@ -1735,6 +1782,11 @@ impl<'a> Inner<'a> {
         self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
     }
 
+    fn impl_args_mr_xv(&mut self, out: &mut Insn, args: &args_mr_xv, msz: i32) -> Result {
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+    }
+
     fn impl_args_mr_xv_mem(
         &mut self,
         out: &mut Insn,
@@ -1743,20 +1795,28 @@ impl<'a> Inner<'a> {
         mem: MemAccess,
     ) -> Result {
         self.mem_access = mem;
+        self.impl_args_mr_xv(out, args, msz)
+    }
+
+    fn impl_args_mr_xx(&mut self, out: &mut Insn, args: &args_mr_xx, msz: i32) -> Result {
         self.set_vec_mem(out, args.b, Size::Xmm, Access::Write, args.mode, msz)?;
-        self.set_vec_reg(out, args.r, self.vec_size, Access::Read)
+        self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)
     }
 
     fn impl_args_mr_xx_mem(
         &mut self,
         out: &mut Insn,
-        args: &args_mr_xx_new,
+        args: &args_mr_xx,
         msz: i32,
         mem: MemAccess,
     ) -> Result {
         self.mem_access = mem;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Write, args.mode, msz)?;
-        self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)
+        self.impl_args_mr_xx(out, args, msz)
+    }
+
+    fn impl_args_mr_mm(&mut self, out: &mut Insn, args: &args_mr_mm, msz: i32) -> Result {
+        self.set_vec_mem(out, args.b, Size::Mm, Access::Write, args.mode, msz)?;
+        self.set_vec_reg(out, args.r, Size::Mm, Access::Read)
     }
 
     fn impl_args_rvm_vvv(
@@ -2162,14 +2222,10 @@ impl SetValue for Inner<'_> {
         self.set_gpr_reg(out, args.reg, access, args.rsz)
     }
 
-    fn set_args_reg_vec(&mut self, out: &mut Insn, args: &args_reg_vec) -> Result {
+    fn set_args_xmm(&mut self, out: &mut Insn, args: &args_reg_vec) -> Result {
         let size = self.vec_size(args.rsz)?;
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.reg, size, access)
-    }
-
-    fn set_args_xmm(&mut self, out: &mut Insn, args: &args_reg_vec) -> Result {
-        self.set_args_reg_vec(out, args)
     }
 
     fn set_args_mem(&mut self, out: &mut Insn, args: &args_mem) -> Result {
@@ -2210,20 +2266,6 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_rm_mm(&mut self, out: &mut Insn, args: &args_rm_mm) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, Size::Mm, access)?;
-        self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_mr_mm(&mut self, out: &mut Insn, args: &args_mr_mm) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_mem(out, args.b, Size::Mm, access, args.mode, args.msz)?;
-        self.set_vec_reg(out, args.r, Size::Mm, Access::Read)?;
-        Ok(())
-    }
-
     fn set_args_rm_rm(&mut self, out: &mut Insn, args: &args_rm_rm) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.r, access, args.rsz)?;
@@ -2245,38 +2287,10 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_rm_xx(&mut self, out: &mut Insn, args: &args_rm_xx) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, Size::Xmm, access)?;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_rm_xm(&mut self, out: &mut Insn, args: &args_rm_xm) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, Size::Xmm, access)?;
-        self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_rm_mx(&mut self, out: &mut Insn, args: &args_rm_mx) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, Size::Mm, access)?;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
     fn set_args_rm_xr(&mut self, out: &mut Insn, args: &args_rm_xr) -> Result {
         let access = access_from_mask(args.rw);
         self.set_vec_reg(out, args.r, Size::Xmm, access)?;
         self.set_gpr_mem(out, args.b, 0, Access::Read, args.mode, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_mr_xx(&mut self, out: &mut Insn, args: &args_mr_xx) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_mem(out, args.b, Size::Xmm, access, args.mode, args.msz)?;
-        self.set_vec_reg(out, args.r, Size::Xmm, Access::Read)?;
         Ok(())
     }
 
@@ -2334,22 +2348,6 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_evex_rm_xx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, Size::Xmm, Size::Xmm)
-    }
-
-    fn set_args_evex_rm_xy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, Size::Xmm, Size::Ymm)
-    }
-
-    fn set_args_evex_rm_yx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, Size::Ymm, Size::Xmm)
-    }
-
-    fn set_args_evex_rm_yy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_rm_vv(out, args, Size::Ymm, Size::Ymm)
-    }
-
     fn set_args_evex_rm_rx(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
         self.set_evex_rm_rv(out, args, Size::Xmm)
     }
@@ -2380,24 +2378,8 @@ impl SetValue for Inner<'_> {
         self.set_evex_rm_vr(out, args, Size::Xmm)
     }
 
-    fn set_args_evex_mr_xx(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_mr_vv(out, args, Size::Xmm, Size::Xmm)
-    }
-
-    fn set_args_evex_mr_xy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_mr_vv(out, args, Size::Xmm, Size::Ymm)
-    }
-
-    fn set_args_evex_mr_yy(&mut self, out: &mut Insn, args: &args_evex_rm_vv) -> Result {
-        self.set_evex_mr_vv(out, args, Size::Ymm, Size::Ymm)
-    }
-
     fn set_args_evex_mr_rx(&mut self, out: &mut Insn, args: &args_evex_mr_rv) -> Result {
         self.set_evex_mr_rv(out, args, Size::Xmm)
-    }
-
-    fn set_args_evex_rvm_yyx(&mut self, out: &mut Insn, args: &args_evex_rvm_vvv) -> Result {
-        self.set_evex_rvm_vvv(out, args, Size::Ymm, Size::Ymm, Size::Xmm)
     }
 
     fn set_args_evex_rvm_xxr(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr) -> Result {
@@ -2461,6 +2443,7 @@ impl SetValue for Inner<'_> {
     forward! {
         args_rm_vv {
             fn set_args_rm_vv = impl_args_rm_vv(Access::Write, 1),
+            fn set_args_rm_vv_ro = impl_args_rm_vv(Access::Read, 1),
             fn set_args_rm_vv_64 = impl_args_rm_vv(Access::Write, 64),
             fn set_args_rm_vv_x1 = impl_args_rm_vv_mem(Access::Write, 1, MemAccess::Tuple1),
             fn set_args_rm_vv_bcst16 = impl_args_rm_vv_bcst(Access::Write, 16),
@@ -2484,6 +2467,11 @@ impl SetValue for Inner<'_> {
 
     forward! {
         args_rm_vx {
+            fn set_args_rm_vx = impl_args_rm_vx(1),
+            fn set_args_rm_vx_8 = impl_args_rm_vx(8),
+            fn set_args_rm_vx_16 = impl_args_rm_vx(16),
+            fn set_args_rm_vx_32 = impl_args_rm_vx(32),
+            fn set_args_rm_vx_64 = impl_args_rm_vx(64),
             fn set_args_rm_vx_8x1 = impl_args_rm_vx_mem(8, MemAccess::Tuple1),
             fn set_args_rm_vx_16x1 = impl_args_rm_vx_mem(16, MemAccess::Tuple1),
             fn set_args_rm_vx_32x1 = impl_args_rm_vx_mem(32, MemAccess::Tuple1),
@@ -2495,13 +2483,46 @@ impl SetValue for Inner<'_> {
     }
 
     forward! {
-        args_rm_xx_new {
-            fn set_args_rm_xx_16x1 = impl_args_rm_xx_mem(16),
-            fn set_args_rm_xx_32x1 = impl_args_rm_xx_mem(32),
-            fn set_args_rm_xx_64x1 = impl_args_rm_xx_mem(64),
-            fn set_args_rm_xx_16x1_sae = impl_args_rm_xx_mem_sae(16),
-            fn set_args_rm_xx_32x1_sae = impl_args_rm_xx_mem_sae(32),
-            fn set_args_rm_xx_64x1_sae = impl_args_rm_xx_mem_sae(64),
+        args_rm_xv {
+            fn set_args_rm_xv = impl_args_rm_xv(1),
+        }
+    }
+
+    forward! {
+        args_rm_xx {
+            fn set_args_rm_xx = impl_args_rm_xx(1, Access::Write),
+            fn set_args_rm_xx_rw = impl_args_rm_xx(1, Access::ReadWrite),
+            fn set_args_rm_xx_ro = impl_args_rm_xx(1, Access::Read),
+            fn set_args_rm_xx_8 = impl_args_rm_xx(8, Access::Write),
+            fn set_args_rm_xx_16 = impl_args_rm_xx(16, Access::Write),
+            fn set_args_rm_xx_32 = impl_args_rm_xx(32, Access::Write),
+            fn set_args_rm_xx_64 = impl_args_rm_xx(64, Access::Write),
+            fn set_args_rm_xx_32_rw = impl_args_rm_xx(32, Access::ReadWrite),
+            fn set_args_rm_xx_32_ro = impl_args_rm_xx(32, Access::Read),
+            fn set_args_rm_xx_64_rw = impl_args_rm_xx(64, Access::ReadWrite),
+            fn set_args_rm_xx_64_ro = impl_args_rm_xx(64, Access::Read),
+            fn set_args_rm_xx_16x1 = impl_args_rm_xx_mem(16, MemAccess::Tuple1),
+            fn set_args_rm_xx_32x1 = impl_args_rm_xx_mem(32, MemAccess::Tuple1),
+            fn set_args_rm_xx_64x1 = impl_args_rm_xx_mem(64, MemAccess::Tuple1),
+            fn set_args_rm_xx_16x1_sae = impl_args_rm_xx_mem_sae(16, MemAccess::Tuple1),
+            fn set_args_rm_xx_32x1_sae = impl_args_rm_xx_mem_sae(32, MemAccess::Tuple1),
+            fn set_args_rm_xx_64x1_sae = impl_args_rm_xx_mem_sae(64, MemAccess::Tuple1),
+        }
+    }
+
+    forward! {
+        args_rm_xm {
+            fn set_args_rm_xm = impl_args_rm_xm(1),
+        }
+        args_rm_mx {
+            fn set_args_rm_mx = impl_args_rm_mx(1),
+            fn set_args_rm_mx_64 = impl_args_rm_mx(64),
+        }
+        args_rm_mm {
+            fn set_args_rm_mm = impl_args_rm_mm(1, Access::Write),
+            fn set_args_rm_mm_rw = impl_args_rm_mm(1, Access::ReadWrite),
+            fn set_args_rm_mm_ro = impl_args_rm_mm(1, Access::Read),
+            fn set_args_rm_mm_32_rw = impl_args_rm_mm(32, Access::ReadWrite),
         }
     }
 
@@ -2565,19 +2586,29 @@ impl SetValue for Inner<'_> {
     }
 
     forward! {
-        args_mr_xx_new {
+        args_mr_xx {
+            fn set_args_mr_xx = impl_args_mr_xx(1),
+            fn set_args_mr_xx_32 = impl_args_mr_xx(32),
+            fn set_args_mr_xx_64 = impl_args_mr_xx(64),
             fn set_args_mr_xx_16x1 = impl_args_mr_xx_mem(16, MemAccess::Tuple1),
             fn set_args_mr_xx_32x1 = impl_args_mr_xx_mem(32, MemAccess::Tuple1),
             fn set_args_mr_xx_32x2 = impl_args_mr_xx_mem(32, MemAccess::Tuple2),
             fn set_args_mr_xx_64x1 = impl_args_mr_xx_mem(64, MemAccess::Tuple1),
         }
         args_mr_xv {
+            fn set_args_mr_xv = impl_args_mr_xv(1),
             fn set_args_mr_xv_x2 = impl_args_mr_xv_mem(1, MemAccess::Tuple2),
             fn set_args_mr_xv_x4 = impl_args_mr_xv_mem(1, MemAccess::Tuple4),
         }
         args_mr_yv {
             fn set_args_mr_yv_x4 = impl_args_mr_yv_mem(1, MemAccess::Tuple4),
             fn set_args_mr_yv_x8 = impl_args_mr_yv_mem(1, MemAccess::Tuple8),
+        }
+    }
+
+    forward! {
+        args_mr_mm {
+            fn set_args_mr_mm = impl_args_mr_mm(1),
         }
     }
 
