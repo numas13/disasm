@@ -21,27 +21,27 @@
 &segment    rw seg !extern
 
 &mem        rw mode b msz !extern
-&mem_vec    rw mode b msz !extern
-&mem_bnd    rw mode b msz !extern
+&mem_vec    rw mode b msz
+&mem_bnd    rw mode b msz
 
 &rm_rr      rw mode b r msz rsz !extern
-&rm_rm      rw mode b r msz rsz !extern
-&rm_rx      rw mode r b msz rsz !extern
-&rm_mr      rw mode r b msz !extern
-&rm_mx      rw mode r b msz !extern
-&rm_mm      rw mode r b msz !extern
-&rm_xr      rw mode r b msz !extern
-&rm_xm      rw mode r b msz !extern
-&rm_xx      rw mode r b msz !extern
+&rm_rm      rw mode b r msz rsz
+&rm_rx      rw mode r b msz rsz
+&rm_mr      rw mode r b msz
+&rm_mx      rw mode r b msz
+&rm_mm      rw mode r b msz
+&rm_xr      rw mode r b msz
+&rm_xm      rw mode r b msz
+&rm_xx      rw mode r b msz
 
 &mr_rr      rw mode b r msz rsz !extern
-&mr_rm      rw mode r b msz !extern
-&mr_rx      rw mode r b msz !extern
-&mr_mm      rw mode r b msz !extern
-&mr_xx      rw mode r b msz !extern
+&mr_rm      rw mode r b msz
+&mr_rx      rw mode r b msz
+&mr_mm      rw mode r b msz
+&mr_xx      rw mode r b msz
 
 &reg        rw reg rsz !extern
-&reg_vec    rw reg rsz !extern
+&reg_vec    rw reg rsz
 
 ##############################################################################
 # Formats
