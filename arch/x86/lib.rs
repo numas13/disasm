@@ -1082,6 +1082,8 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
+    // FIXME:
+    #[allow(clippy::too_many_arguments)]
     fn set_vec_mem_impl(
         &mut self,
         out: &mut Insn,
