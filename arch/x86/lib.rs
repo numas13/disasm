@@ -507,6 +507,14 @@ impl<'a> Inner<'a> {
         }
     }
 
+    fn operand_size_bwlq(&self) -> Size {
+        if self.raw & 0x10000 == 0 {
+            Size::Byte
+        } else {
+            self.operand_size
+        }
+    }
+
     #[inline(always)]
     fn set_66(&mut self) {
         self.raw |= 0x1000;
@@ -998,6 +1006,16 @@ impl<'a> Inner<'a> {
         })
     }
 
+    fn set_imm(&mut self, out: &mut Insn, size: Size) -> Result {
+        match size {
+            Size::Quad => self.set_simm(out, 32),
+            Size::Long => self.set_uimm(out, 32),
+            Size::Word => self.set_uimm(out, 16),
+            Size::Byte => self.set_uimm(out, 8),
+            _ => unreachable!(),
+        }
+    }
+
     fn set_gpr_reg(&mut self, out: &mut Insn, index: i32, access: Access, rsz: i32) -> Result {
         let size = self.gpr_size(rsz);
         let reg = Reg::new(RegClass::INT, size.encode_gpr(index as u8, self.rex)).access(access);
@@ -1405,6 +1423,74 @@ impl<'a> Inner<'a> {
         let address = self.address.wrapping_add(self.bytes.offset() as u64);
         out.push_pc_rel(address, disp);
         Ok(())
+    }
+
+    fn impl_args_m(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+        let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_rm(&mut self, out: &mut Insn, args: &args_rm, access: Access) -> Result {
+        let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_gpr_reg(out, args.r, access, sz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mr(&mut self, out: &mut Insn, args: &args_mr, access: Access) -> Result {
+        let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        self.set_gpr_reg(out, args.r, Access::Read, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mr_cl(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+        let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        self.set_gpr_reg(out, 1, Access::Read, 8)?;
+        self.has_gpr = false; // ignore cl
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_ri(&mut self, out: &mut Insn, args: &args_r, access: Access) -> Result {
+        let size = self.operand_size_bwlq();
+        let sz = size.bits() as i32;
+        self.set_gpr_reg(out, args.r, access, sz)?;
+        self.set_imm(out, size)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mi(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+        let size = self.operand_size_bwlq();
+        let sz = size.bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        self.set_imm(out, size)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mi_u8(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+        let size = self.operand_size_bwlq();
+        let sz = size.bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        self.set_uimm(out, 8)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mi_s8(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+        let size = self.operand_size_bwlq();
+        let sz = size.bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        self.set_simm(out, 8)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mi_one(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+        let size = self.operand_size_bwlq();
+        let sz = size.bits() as i32;
+        self.set_gpr_mem(out, args.b, 0, access, sz)?;
+        out.push_imm(1);
+        self.set_suffix(out, sz)
     }
 
     fn impl_args_rm_vv(
@@ -2137,12 +2223,52 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_moffs_ro(&mut self, out: &mut Insn, value: i32) -> Result {
-        self.set_moffset(out, value, Access::Read)
+    fn set_moffs_ro(&mut self, out: &mut Insn, _: i32) -> Result {
+        let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_gpr_reg(out, 0, Access::Write, sz)?;
+        self.set_moffset(out, sz, Access::Read)?;
+        self.set_suffix(out, sz)
     }
 
-    fn set_moffs_wr(&mut self, out: &mut Insn, value: i32) -> Result {
-        self.set_moffset(out, value, Access::Write)
+    fn set_moffs_wr(&mut self, out: &mut Insn, _: i32) -> Result {
+        let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_moffset(out, sz, Access::Write)?;
+        self.set_gpr_reg(out, 0, Access::Read, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    forward! {
+        args_r {
+            fn set_args_ri_ro = impl_args_ri(Access::Read),
+            fn set_args_ri_rw = impl_args_ri(Access::ReadWrite),
+        }
+        args_m {
+            fn set_args_m = impl_args_m(Access::Write),
+            fn set_args_m_rw = impl_args_m(Access::ReadWrite),
+            fn set_args_mr_cl_rw = impl_args_mr_cl(Access::ReadWrite),
+        }
+        args_m {
+            fn set_args_mi_ro = impl_args_mi(Access::Read),
+            fn set_args_mi_rw = impl_args_mi(Access::ReadWrite),
+        }
+        args_m {
+            fn set_args_mi_u8_rw = impl_args_mi_u8(Access::ReadWrite),
+        }
+        args_m {
+            fn set_args_mi_s8_ro = impl_args_mi_s8(Access::Read),
+            fn set_args_mi_s8_rw = impl_args_mi_s8(Access::ReadWrite),
+        }
+        args_m {
+            fn set_args_mi_one_rw = impl_args_mi_one(Access::ReadWrite),
+        }
+        args_rm {
+            fn set_args_rm_ro = impl_args_rm(Access::Read),
+            fn set_args_rm_rw = impl_args_rm(Access::ReadWrite),
+        }
+        args_mr {
+            fn set_args_mr_ro = impl_args_mr(Access::Read),
+            fn set_args_mr_rw = impl_args_mr(Access::ReadWrite),
+        }
     }
 
     fn set_args_segment(&mut self, out: &mut Insn, args: &args_segment) -> Result {
@@ -2180,15 +2306,6 @@ impl SetValue for Inner<'_> {
     fn set_args_mem(&mut self, out: &mut Insn, args: &args_mem) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_mem(out, args.b, 0, access, args.msz)
-    }
-
-    fn set_args_shift_cl(&mut self, out: &mut Insn, args: &args_mem) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, 0, access, args.msz)?;
-        let has_gpr = self.has_gpr;
-        self.set_gpr_reg(out, 1, Access::Read, 8)?;
-        self.has_gpr = has_gpr; // ignore cl register
-        Ok(())
     }
 
     fn set_args_m_m(&mut self, out: &mut Insn, args: &args_mem_vec) -> Result {
@@ -2888,11 +3005,6 @@ impl SetValue for Inner<'_> {
     fn set_rel32(&mut self, out: &mut Insn, _: i32) -> Result {
         let disp = self.bytes.read_i32()?;
         self.set_rel_impl(out, disp as i64)
-    }
-
-    fn set_i(&mut self, out: &mut Insn, value: i32) -> Result {
-        out.push_imm(value as i64);
-        Ok(())
     }
 
     fn set_vi_r(&mut self, out: &mut Insn, value: i32) -> Result {
