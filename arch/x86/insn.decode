@@ -11,21 +11,19 @@
 %reg          7:1 27:3
 %seg          27:3
 
-%mode         30:2
-
 ##############################################################################
 # Argument sets
 ##############################################################################
 
 &segment    rw seg
 
-&mem        rw mode b msz
-&rm_rr      rw mode b r msz rsz
-&mr_rr      rw mode b r msz rsz
+&mem        rw b msz
+&rm_rr      rw b r msz rsz
+&mr_rr      rw b r msz rsz
 &reg        rw reg rsz
 
 # read/write segment to base/mem
-&mov_seg    mode base seg
+&mov_seg    base seg
 
 ##############################################################################
 # Formats
@@ -56,22 +54,22 @@
 @ds_w                      ........ . .... ... ... ..... &segment seg=3 rw=2
 @fs_w                      ........ . .... ... ... ..... &segment seg=4 rw=2
 @gs_w                      ........ . .... ... ... ..... &segment seg=5 rw=2
-@b_r                       ........ . .... ... ... ..... &mem mode=3 b=%base0 rw=3 msz=1
+@b_r                       ........ . .... ... ... ..... mode=3 &mem b=%base0 rw=3 msz=1
 @r_r              ........ ........ . .... ... ... ..... &reg %reg rw=3 rsz=1
-@m_r              ........ ........ . .... ... ... ..... &mem %mode b=%base rw=3 msz=1
+@m_r              ........ ........ . .... ... ... ..... &mem b=%base rw=3 msz=1
 @st_m             ........ ........ . .... ... ... ..... st_m=1
 @si_r             ........ ........ . .... ... ... ..... si_r=%base
 @si_w             ........ ........ . .... ... ... ..... si_w=%base
 @si_m             ........ ........ . .... ... ... ..... si_m=%base
 @cr_r             ........ ........ . .... ... ... ..... cr_r=%reg
-@cm_w             ........ ........ . .... ... ... ..... mode=%mode cmw=%base
-@mr_rr            ........ ........ . .... ... ... ..... &mr_rr %mode b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_rr            ........ ........ . .... ... ... ..... &rm_rr %mode b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_sr            ........ ........ . .... ... ... ..... rm_sr=&mov_seg %mode %base %seg
-@mr_rs            ........ ........ . .... ... ... ..... mr_rs=&mov_seg %mode %base %seg
+@cm_w             ........ ........ . .... ... ... ..... cmw=%base
+@mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=3
+@rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=3
+@rm_sr            ........ ........ . .... ... ... ..... rm_sr=&mov_seg %base %seg
+@mr_rs            ........ ........ . .... ... ... ..... mr_rs=&mov_seg %base %seg
 @a                ........ ........ . .... ... ... ..... &reg reg=0 rw=3 rsz=1
-@shift1           ........ ........ . .... ... ... ..... &mem %mode b=%base rw=3 msz=1 i=1
-@shift_cl         ........ ........ . .... ... ... ..... shift_cl=&mem %mode b=%base rw=3 msz=1
+@shift1           ........ ........ . .... ... ... ..... &mem b=%base rw=3 msz=1 i=1
+@shift_cl         ........ ........ . .... ... ... ..... shift_cl=&mem b=%base rw=3 msz=1
 
 ##############################################################################
 # 1-byte opcode map
@@ -490,23 +488,23 @@ scas                       10101111 - ---- --- ... ----- rep=2 scas=1
 
 in                         11100100 - ---0 --- ... ----- @a rw=2 uimm=8 suffix=8 rsz=8
 in                         11100101 - ---0 --- ... ----- @a rw=2 uimm=8 suffix=1
-in                         11101100 - ---0 --- ... ----- @mr_rr rw=2 mode=3 b=0 msz=8  r=2 rsz=16 suffix=8
-in                         11101101 - --00 --- ... ----- @mr_rr rw=2 mode=3 b=0 msz=32 r=2 rsz=16 suffix=16
-in                         11101101 - --10 --- ... ----- @mr_rr rw=2 mode=3 b=0 msz=16 r=2 rsz=16 suffix=32
+in                         11101100 - ---0 --- ... ----- in_size=8
+in                         11101101 - --00 --- ... ----- in_size=32
+in                         11101101 - --10 --- ... ----- in_size=16
 
 out                        11100110 - ---0 --- ... ----- uimm=8 @a rw=1 suffix=8 rsz=8
 out                        11100111 - ---0 --- ... ----- uimm=8 @a rw=1 suffix=1
-out                        11101110 - ---0 --- ... ----- @rm_rr rw=1 r=2 rsz=16 mode=3 b=0 msz=8  suffix=8
-out                        11101111 - --00 --- ... ----- @rm_rr rw=1 r=2 rsz=16 mode=3 b=0 msz=32 suffix=16
-out                        11101111 - --10 --- ... ----- @rm_rr rw=1 r=2 rsz=16 mode=3 b=0 msz=16 suffix=32
+out                        11101110 - ---0 --- ... ----- out_size=8
+out                        11101111 - --00 --- ... ----- out_size=32
+out                        11101111 - --10 --- ... ----- out_size=16
 
-ins                        01101100 - ---0 --- ... ----- rep=1 es=1 @mr_rr rw=2 mode=0 b=7 msz=8  r=2 rsz=16 suffix=8
-ins                        01101101 - --00 --- ... ----- rep=1 es=1 @mr_rr rw=2 mode=0 b=7 msz=32 r=2 rsz=16 suffix=32
-ins                        01101101 - --10 --- ... ----- rep=1 es=1 @mr_rr rw=2 mode=0 b=7 msz=16 r=2 rsz=16 suffix=16
+ins                        01101100 - ---0 --- ... ----- ins_size=8
+ins                        01101101 - --00 --- ... ----- ins_size=32
+ins                        01101101 - --10 --- ... ----- ins_size=16
 
-outs                       01101110 - ---0 --- ... ----- rep=1 ds=1 @rm_rr rw=1 r=2 rsz=16 mode=0 b=6 msz=8  suffix=8
-outs                       01101111 - --00 --- ... ----- rep=1 ds=1 @rm_rr rw=1 r=2 rsz=16 mode=0 b=6 msz=32 suffix=32
-outs                       01101111 - --10 --- ... ----- rep=1 ds=1 @rm_rr rw=1 r=2 rsz=16 mode=0 b=6 msz=16 suffix=16
+outs                       01101110 - ---0 --- ... ----- outs_size=8
+outs                       01101111 - --00 --- ... ----- outs_size=32
+outs                       01101111 - --10 --- ... ----- outs_size=16
 
 aam                        11010100 - ---- --- ... ----- uimm=8  ? ~amd64
 aad                        11010101 - ---- --- ... ----- uimm=8  ? ~amd64
@@ -518,7 +516,7 @@ leave                      11001001 - ---- --- ... ----- suffix=2
 int3                       11001100 - ---- --- ... -----
 int                        11001101 - ---- --- ... ----- uimm=8
 into                       11001110 - ---- --- ... ----- ? ~amd64
-xlat                       11010111 - ---- --- ... ----- ds=1 @m_r rw=1 mode=0 b=3 msz=8 rex_w=1
+xlat                       11010111 - ---- --- ... ----- xlat=0
 int1                       11110001 - ---- --- ... -----
 hlt                        11110100 - ---- --- ... -----
 cmc                        11110101 - ---- --- ... -----

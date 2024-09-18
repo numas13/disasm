@@ -9,42 +9,40 @@
 
 %reg          7:1 27:3
 
-%mode         30:2
-
 ##############################################################################
 # Argument sets
 ##############################################################################
 
-&mem_vec    rw mode b msz !extern
+&mem_vec    rw b msz !extern
 
-&rm_rr      rw mode b r msz rsz !extern
-&rm_xr      rw mode r b msz !extern
+&rm_rr      rw b r msz rsz !extern
+&rm_xr      rw r b msz !extern
 
-&mr_rr      rw mode b r msz rsz !extern
+&mr_rr      rw b r msz rsz !extern
 
 &reg_vec    rw reg rsz !extern
 
-&rm_xx            mode r b !extern
-&rm_mm            mode r b !extern
+&rm_xx            r b !extern
+&rm_mm            r b !extern
 
 ##############################################################################
 # Formats
 ##############################################################################
 
-@m_x              ........ ........ . .... ... ... ..... m_x=&mem_vec %mode b=%base rw=3 msz=1
+@m_x              ........ ........ . .... ... ... ..... m_x=&mem_vec b=%base rw=3 msz=1
 @xmm0             ........ ........ . .... ... ... ..... xmm=&reg_vec reg=0 rw=1 rsz=128
-@mr_rr            ........ ........ . .... ... ... ..... &mr_rr %mode b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_rr            ........ ........ . .... ... ... ..... &rm_rr %mode b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 %mode r=%reg b=%base msz=1
+@mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=3
+@rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=3
+@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 r=%reg b=%base msz=1
 
-@rm_xx            ........ ........ . .... ... ... ..... rm_xx=&rm_xx %mode r=%reg b=%base
-@rm_xx_rw         ........ ........ . .... ... ... ..... rm_xx_rw=&rm_xx %mode r=%reg b=%base
-@rm_xx_ro         ........ ........ . .... ... ... ..... rm_xx_ro=&rm_xx %mode r=%reg b=%base
-@rm_xx_16         ........ ........ . .... ... ... ..... rm_xx_16=&rm_xx %mode r=%reg b=%base
-@rm_xx_32         ........ ........ . .... ... ... ..... rm_xx_32=&rm_xx %mode r=%reg b=%base
-@rm_xx_64         ........ ........ . .... ... ... ..... rm_xx_64=&rm_xx %mode r=%reg b=%base
+@rm_xx            ........ ........ . .... ... ... ..... rm_xx=&rm_xx r=%reg b=%base
+@rm_xx_rw         ........ ........ . .... ... ... ..... rm_xx_rw=&rm_xx r=%reg b=%base
+@rm_xx_ro         ........ ........ . .... ... ... ..... rm_xx_ro=&rm_xx r=%reg b=%base
+@rm_xx_16         ........ ........ . .... ... ... ..... rm_xx_16=&rm_xx r=%reg b=%base
+@rm_xx_32         ........ ........ . .... ... ... ..... rm_xx_32=&rm_xx r=%reg b=%base
+@rm_xx_64         ........ ........ . .... ... ... ..... rm_xx_64=&rm_xx r=%reg b=%base
 
-@rm_mm_rw         ........ ........ . .... ... ... ..... rm_mm_rw=&rm_mm %mode r=%reg b=%base
+@rm_mm_rw         ........ ........ . .... ... ... ..... rm_mm_rw=&rm_mm r=%reg b=%base
 
 ##############################################################################
 # 3-byte opcode map (0f 38 opcode)

@@ -12,8 +12,6 @@
 %gpr_reg      7:1 27:3      !function=ex_reg
 %k_reg        27:3
 
-%mode         30:2
-
 %mm_base      6:1 5:1 24:3  !function=ex_base
 %mm_reg       7:1 27:3      !function=ex_reg
 %mm_v         11:4          !function=ex_mm_v
@@ -23,162 +21,162 @@
 # Argument sets
 ##############################################################################
 
-&mem              rw mode b msz !extern
+&mem              rw b msz !extern
 
-&rm_rr            rw mode b r msz rsz !extern
+&rm_rr            rw b r msz rsz !extern
 
-&rvm_rrr          rw mode b r v msz rsz vsz
-&rmv_rrr          rw mode b r v msz rsz vsz
+&rvm_rrr          rw b r v msz rsz vsz
+&rmv_rrr          rw b r v msz rsz vsz
 
-&evex_mr_rv       rw mode b r msz !extern
-&evex_mr_kk       rw mode b r msz
-&evex_rm_kk       rw mode b r msz
-&evex_rm_rk       rw mode b r msz rsz
-&evex_rm_kr       rw mode b r msz
-&evex_rm_rv       rw mode b r msz rsz !extern
-&evex_rm_vr       rw mode b r msz !extern
-&evex_rm_vv       rw mode b r msz bcst !extern
+&evex_mr_rv       rw b r msz !extern
+&evex_mr_kk       rw b r msz
+&evex_rm_kk       rw b r msz
+&evex_rm_rk       rw b r msz rsz
+&evex_rm_kr       rw b r msz
+&evex_rm_rv       rw b r msz rsz !extern
+&evex_rm_vr       rw b r msz !extern
+&evex_rm_vv       rw b r msz bcst !extern
 
-&evex_rvm_vvv     rw mode b r v msz bcst !extern
-&evex_rvm_vvr     rw mode b r v msz !extern
-&evex_rvm_kkk     rw mode b r v msz
+&evex_rvm_vvv     rw b r v msz bcst !extern
+&evex_rvm_vvr     rw b r v msz !extern
+&evex_rvm_kkk     rw b r v msz
 
-&gather           mode b r v msz isz
+&gather           b r v msz isz
 
-&rm_vv            mode r b
-&rm_vx            mode r b
-&rm_xv            mode r b
-&rm_xx            mode r b !extern
+&rm_vv            r b
+&rm_vx            r b
+&rm_xv            r b
+&rm_xx            r b !extern
 
-&mr_vv            mode r b
-&mr_xv            mode r b
-&mr_xx            mode r b !extern
+&mr_vv            r b
+&mr_xv            r b
+&mr_xx            r b !extern
 
-&rvm_vvv          mode r v b
-&rvm_vvx          mode r v b
-&rvm_xxx          mode r v b
-&mvr_vvv          mode r v b
-&mvr_xxx          mode r v b
+&rvm_vvv          r v b
+&rvm_vvx          r v b
+&rvm_xxx          r v b
+&mvr_vvv          r v b
+&mvr_xxx          r v b
 
 ##############################################################################
 # Formats
 ##############################################################################
 
 @rm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 %mode r=%gpr_reg b=%gpr_base msz=1 rsz=1
+                  &rm_rr rw=2 r=%gpr_reg b=%gpr_base msz=1 rsz=1
 @vm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 %mode r=%mm_v b=%gpr_base msz=1 rsz=1
+                  &rm_rr rw=2 r=%mm_v b=%gpr_base msz=1 rsz=1
 
 @rvm_rrr          ........ ........ ........ ........ \
-                  &rvm_rrr rw=2 %mode r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
+                  &rvm_rrr rw=2 r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
 
 @rmv_rrr          ........ ........ ........ ........ \
-                  &rmv_rrr rw=2 %mode r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
+                  &rmv_rrr rw=2 r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
 
 @rm_rx            ........ ........ ........ ........ \
-                  evex_rm_rx=&evex_rm_rv rw=2 %mode r=%gpr_reg b=%mm_base msz=1 rsz=1
+                  evex_rm_rx=&evex_rm_rv rw=2 r=%gpr_reg b=%mm_base msz=1 rsz=1
 @rm_ry            ........ ........ ........ ........ \
-                  evex_rm_ry=&evex_rm_rv rw=2 %mode r=%gpr_reg b=%mm_base msz=1 rsz=1
+                  evex_rm_ry=&evex_rm_rv rw=2 r=%gpr_reg b=%mm_base msz=1 rsz=1
 
 @rvm_xxr          ........ ........ ........ ........ \
-                  evex_rvm_xxr=&evex_rvm_vvr rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1
+                  evex_rvm_xxr=&evex_rvm_vvr rw=2 r=%mm_reg v=%mm_v b=%mm_base msz=1
 
 @fmaddss          ........ ........ ........ ........ \
-                  fmaddss=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddss=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddsd          ........ ........ ........ ........ \
-                  fmaddsd=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddsd=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @fmaddps          ........ ........ ........ ........ \
-                  fmaddps=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddps=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddpd          ........ ........ ........ ........ \
-                  fmaddpd=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddpd=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @fmaddss_4a        ........ ........ ........ ........ \
-                  fmaddss_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddss_4a=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddsd_4a        ........ ........ ........ ........ \
-                  fmaddsd_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddsd_4a=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddss_4b        ........ ........ ........ ........ \
-                  fmaddss_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddss_4b=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddsd_4b        ........ ........ ........ ........ \
-                  fmaddsd_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddsd_4b=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @fmaddps_4a        ........ ........ ........ ........ \
-                  fmaddps_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddps_4a=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddps_4b        ........ ........ ........ ........ \
-                  fmaddps_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddps_4b=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @fmaddpd_4a        ........ ........ ........ ........ \
-                  fmaddpd_4a=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddpd_4a=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 @fmaddpd_4b        ........ ........ ........ ........ \
-                  fmaddpd_4b=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+                  fmaddpd_4b=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @rvm_kkk          ........ ........ ........ ........ \
-                  &evex_rvm_kkk rw=2 %mode r=%k_reg v=%k_v b=%gpr_base msz=1
+                  &evex_rvm_kkk rw=2 r=%k_reg v=%k_v b=%gpr_base msz=1
 
 @rm_rk            ........ ........ ........ ........ \
-                  evex_rm_rk=&evex_rm_rk rw=2 %mode r=%gpr_reg b=%gpr_base msz=1 rsz=1
+                  evex_rm_rk=&evex_rm_rk rw=2 r=%gpr_reg b=%gpr_base msz=1 rsz=1
 
 @rm_kr            ........ ........ ........ ........ \
-                  evex_rm_kr=&evex_rm_kr rw=2 %mode r=%k_reg b=%gpr_base msz=1
+                  evex_rm_kr=&evex_rm_kr rw=2 r=%k_reg b=%gpr_base msz=1
 
 @mr_kk            ........ ........ ........ ........ \
-                  evex_mr_kk=&evex_mr_kk rw=2 %mode r=%k_reg b=%gpr_base msz=1
+                  evex_mr_kk=&evex_mr_kk rw=2 r=%k_reg b=%gpr_base msz=1
 
 @rm_kk            ........ ........ ........ ........ \
-                  &evex_rm_kk rw=2 %mode r=%k_reg b=%gpr_base msz=1
+                  &evex_rm_kk rw=2 r=%k_reg b=%gpr_base msz=1
 
 @mr_rx            ........ ........ ........ ........ \
-                  evex_mr_rx=&evex_mr_rv rw=2 %mode r=%mm_reg b=%mm_base msz=1
+                  evex_mr_rx=&evex_mr_rv rw=2 r=%mm_reg b=%mm_base msz=1
 
 @rm_xr            ........ ........ ........ ........ \
-                  evex_rm_xr=&evex_rm_vr rw=2 %mode r=%mm_reg b=%gpr_base msz=1
+                  evex_rm_xr=&evex_rm_vr rw=2 r=%mm_reg b=%gpr_base msz=1
 
-@m_r              ........ ........ . .... ... ... ..... &mem %mode b=%gpr_base rw=2 msz=1
+@m_r              ........ ........ . .... ... ... ..... &mem b=%gpr_base rw=2 msz=1
 
 @vi               ........ ........ . .... ... ... ..... vi_r=1
 
 
 @gather_xvx       ........ ........ ........ ........ \
-                  gather_xvx=&gather %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 isz=1
+                  gather_xvx=&gather r=%mm_reg v=%mm_v b=%mm_base msz=1 isz=1
 @gather_vvv       ........ ........ ........ ........ \
-                  gather_vvv=&gather %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 isz=1
+                  gather_vvv=&gather r=%mm_reg v=%mm_v b=%mm_base msz=1 isz=1
 
-@rm_vv            ........ ........ ........ ........ &rm_vv %mode r=%mm_reg b=%mm_base
-@rm_vv_ro         ........ ........ ........ ........ rm_vv_ro=&rm_vv %mode r=%mm_reg b=%mm_base
+@rm_vv            ........ ........ ........ ........ &rm_vv r=%mm_reg b=%mm_base
+@rm_vv_ro         ........ ........ ........ ........ rm_vv_ro=&rm_vv r=%mm_reg b=%mm_base
 
-@rm_xv            ........ ........ ........ ........ &rm_xv %mode r=%mm_reg b=%mm_base
-@rm_vx            ........ ........ ........ ........ &rm_vx %mode r=%mm_reg b=%mm_base
-@rm_vx_8          ........ ........ ........ ........ rm_vx_8=&rm_vx %mode r=%mm_reg b=%mm_base
-@rm_vx_16         ........ ........ ........ ........ rm_vx_16=&rm_vx %mode r=%mm_reg b=%mm_base
-@rm_vx_32         ........ ........ ........ ........ rm_vx_32=&rm_vx %mode r=%mm_reg b=%mm_base
-@rm_vx_64         ........ ........ ........ ........ rm_vx_64=&rm_vx %mode r=%mm_reg b=%mm_base
+@rm_xv            ........ ........ ........ ........ &rm_xv r=%mm_reg b=%mm_base
+@rm_vx            ........ ........ ........ ........ &rm_vx r=%mm_reg b=%mm_base
+@rm_vx_8          ........ ........ ........ ........ rm_vx_8=&rm_vx r=%mm_reg b=%mm_base
+@rm_vx_16         ........ ........ ........ ........ rm_vx_16=&rm_vx r=%mm_reg b=%mm_base
+@rm_vx_32         ........ ........ ........ ........ rm_vx_32=&rm_vx r=%mm_reg b=%mm_base
+@rm_vx_64         ........ ........ ........ ........ rm_vx_64=&rm_vx r=%mm_reg b=%mm_base
 
-@rm_xx_8          ........ ........ ........ ........ rm_xx_8=&rm_xx %mode r=%mm_reg b=%mm_base
-@rm_xx_16         ........ ........ ........ ........ rm_xx_16=&rm_xx %mode r=%mm_reg b=%mm_base
-@rm_xx_32         ........ ........ ........ ........ rm_xx_32=&rm_xx %mode r=%mm_reg b=%mm_base
-@rm_xx_64         ........ ........ ........ ........ rm_xx_64=&rm_xx %mode r=%mm_reg b=%mm_base
-@rm_xx_32_ro      ........ ........ ........ ........ rm_xx_32_ro=&rm_xx %mode r=%mm_reg b=%mm_base
-@rm_xx_64_ro      ........ ........ ........ ........ rm_xx_64_ro=&rm_xx %mode r=%mm_reg b=%mm_base
+@rm_xx_8          ........ ........ ........ ........ rm_xx_8=&rm_xx r=%mm_reg b=%mm_base
+@rm_xx_16         ........ ........ ........ ........ rm_xx_16=&rm_xx r=%mm_reg b=%mm_base
+@rm_xx_32         ........ ........ ........ ........ rm_xx_32=&rm_xx r=%mm_reg b=%mm_base
+@rm_xx_64         ........ ........ ........ ........ rm_xx_64=&rm_xx r=%mm_reg b=%mm_base
+@rm_xx_32_ro      ........ ........ ........ ........ rm_xx_32_ro=&rm_xx r=%mm_reg b=%mm_base
+@rm_xx_64_ro      ........ ........ ........ ........ rm_xx_64_ro=&rm_xx r=%mm_reg b=%mm_base
 
-@vm_vv            ........ ........ ........ ........ &rm_vv %mode r=%mm_v b=%mm_base
+@vm_vv            ........ ........ ........ ........ &rm_vv r=%mm_v b=%mm_base
 
-@mr_vv            ........ ........ ........ ........ &mr_vv %mode r=%mm_reg b=%mm_base
-@mr_xv            ........ ........ ........ ........ &mr_xv %mode r=%mm_reg b=%mm_base
+@mr_vv            ........ ........ ........ ........ &mr_vv r=%mm_reg b=%mm_base
+@mr_xv            ........ ........ ........ ........ &mr_xv r=%mm_reg b=%mm_base
 
-@mr_xx            ........ ........ ........ ........ mr_xx=&mr_xx %mode r=%mm_reg b=%mm_base
-@mr_xx_32         ........ ........ ........ ........ mr_xx_32=&mr_xx %mode r=%mm_reg b=%mm_base
-@mr_xx_64         ........ ........ ........ ........ mr_xx_64=&mr_xx %mode r=%mm_reg b=%mm_base
+@mr_xx            ........ ........ ........ ........ mr_xx=&mr_xx r=%mm_reg b=%mm_base
+@mr_xx_32         ........ ........ ........ ........ mr_xx_32=&mr_xx r=%mm_reg b=%mm_base
+@mr_xx_64         ........ ........ ........ ........ mr_xx_64=&mr_xx r=%mm_reg b=%mm_base
 
-@rvm_vvv          ........ ........ ........ ........ &rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
-@rvm_vvv_rw       ........ ........ ........ ........ rvm_vvv_rw=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
-@rvm_vvx          ........ ........ ........ ........ &rvm_vvx %mode r=%mm_reg v=%mm_v b=%mm_base
+@rvm_vvv          ........ ........ ........ ........ &rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@rvm_vvv_rw       ........ ........ ........ ........ rvm_vvv_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@rvm_vvx          ........ ........ ........ ........ &rvm_vvx r=%mm_reg v=%mm_v b=%mm_base
 
-@rvm_xxx          ........ ........ ........ ........ &rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
-@rvm_xxx_32       ........ ........ ........ ........ rvm_xxx_32=&rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
-@rvm_xxx_64       ........ ........ ........ ........ rvm_xxx_64=&rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxx          ........ ........ ........ ........ &rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxx_32       ........ ........ ........ ........ rvm_xxx_32=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxx_64       ........ ........ ........ ........ rvm_xxx_64=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
 
-@mvr_vvv          ........ ........ ........ ........ &mvr_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
-@mvr_xxx          ........ ........ ........ ........ &mvr_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
+@mvr_vvv          ........ ........ ........ ........ &mvr_vvv r=%mm_reg v=%mm_v b=%mm_base
+@mvr_xxx          ........ ........ ........ ........ &mvr_xxx r=%mm_reg v=%mm_v b=%mm_base
 
 ##############################################################################
 # Extension AVX
