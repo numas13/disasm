@@ -123,7 +123,9 @@
                   evex_mr_kk=&evex_mr_kk rw=2 r=%k_reg b=%gpr_base msz=1
 
 @rm_kk            ........ ........ ........ ........ \
-                  &evex_rm_kk rw=2 r=%k_reg b=%gpr_base msz=1
+                  &evex_rm_kk r=%k_reg b=%gpr_base msz=1 rw=2
+@rm_kk_ro         ........ ........ ........ ........ \
+                  &evex_rm_kk r=%k_reg b=%gpr_base msz=1 rw=1
 
 @mr_rx            ........ ........ ........ ........ \
                   evex_mr_rx=&evex_mr_rv rw=2 r=%mm_reg b=%mm_base msz=1
@@ -132,6 +134,7 @@
                   evex_rm_xr=&evex_rm_vr rw=2 r=%mm_reg b=%gpr_base msz=1
 
 @m_r              ........ ........ . .... ... ... ..... &mem b=%gpr_base rw=2 msz=1
+@m_r_ro           ........ ........ . .... ... ... ..... &mem b=%gpr_base rw=1 msz=1
 
 @vi               ........ ........ . .... ... ... ..... vi_r=1
 
@@ -514,8 +517,8 @@ vmovd             ........ 01111110 0 1111 001 ... 00001 @mr_rx msz=32 ? avx
 vmovq             ........ 01111110 1 1111 001 ... 00001 @mr_rx msz=64 ? avx
 vmovdqa           ........ 01111111 - 1111 .01 ... 00001 @mr_vv ? avx
 vmovdqu           ........ 01111111 - 1111 .10 ... 00001 @mr_vv ? avx
-vldmxcsr          0.010... 10101110 - 1111 000 ... 00001 @m_r rw=1 msz=32 ? avx
-vldmxcsr          10010... 10101110 - 1111 000 ... 00001 @m_r rw=1 msz=32 ? avx
+vldmxcsr          0.010... 10101110 - 1111 000 ... 00001 @m_r_ro msz=32 ? avx
+vldmxcsr          10010... 10101110 - 1111 000 ... 00001 @m_r_ro msz=32 ? avx
 vstmxcsr          0.011... 10101110 - 1111 000 ... 00001 @m_r msz=32 ? avx
 vstmxcsr          10011... 10101110 - 1111 000 ... 00001 @m_r msz=32 ? avx
 vpextrw           11...... 11000101 - 1111 001 ... 00001 @rm_rx uimm=8 rsz=32 ? avx
@@ -904,10 +907,10 @@ kortestw          11...... 10011000 0 1111 000 ... 00001 @rm_kk ? avx512f
 kortestb          11...... 10011000 0 1111 001 ... 00001 @rm_kk ? avx512dq
 kortestq          11...... 10011000 1 1111 000 ... 00001 @rm_kk ? avx512bw
 kortestd          11...... 10011000 1 1111 001 ... 00001 @rm_kk ? avx512bw
-ktestw            11...... 10011001 0 1111 000 ... 00001 @rm_kk rw=1 ? avx512dq
-ktestb            11...... 10011001 0 1111 001 ... 00001 @rm_kk rw=1 ? avx512dq
-ktestq            11...... 10011001 1 1111 000 ... 00001 @rm_kk rw=1 ? avx512bw
-ktestd            11...... 10011001 1 1111 001 ... 00001 @rm_kk rw=1 ? avx512bw
+ktestw            11...... 10011001 0 1111 000 ... 00001 @rm_kk_ro ? avx512dq
+ktestb            11...... 10011001 0 1111 001 ... 00001 @rm_kk_ro ? avx512dq
+ktestq            11...... 10011001 1 1111 000 ... 00001 @rm_kk_ro ? avx512bw
+ktestd            11...... 10011001 1 1111 001 ... 00001 @rm_kk_ro ? avx512bw
 kshiftrb          11...... 00110000 0 1111 001 ... 00011 @rm_kk uimm=8 ? avx512dq
 kshiftrw          11...... 00110000 1 1111 001 ... 00011 @rm_kk uimm=8 ? avx512f
 kshiftrd          11...... 00110001 0 1111 001 ... 00011 @rm_kk uimm=8 ? avx512bw

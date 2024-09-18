@@ -2152,6 +2152,20 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
+    fn set_push_seg(&mut self, out: &mut Insn, value: i32) -> Result {
+        debug_assert!((0..6).contains(&value));
+        let reg = Reg::new(reg_class::SEGMENT, value as u64).read();
+        out.push_reg(reg);
+        Ok(())
+    }
+
+    fn set_pop_seg(&mut self, out: &mut Insn, value: i32) -> Result {
+        debug_assert!((0..6).contains(&value));
+        let reg = Reg::new(reg_class::SEGMENT, value as u64).write();
+        out.push_reg(reg);
+        Ok(())
+    }
+
     fn set_args_reg(&mut self, out: &mut Insn, args: &args_reg) -> Result {
         let access = access_from_mask(args.rw);
         self.set_gpr_reg(out, args.reg, access, args.rsz)

@@ -29,11 +29,14 @@
 # Formats
 ##############################################################################
 
-@m_x              ........ ........ . .... ... ... ..... m_x=&mem_vec b=%base rw=3 msz=1
 @xmm0             ........ ........ . .... ... ... ..... xmm=&reg_vec reg=0 rw=1 rsz=128
-@mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_xr            ........ ........ . .... ... ... ..... &rm_xr rw=3 r=%reg b=%base msz=1
+
+@m_x_ro           ........ ........ . .... ... ... ..... m_x=&mem_vec b=%base msz=1 rw=1
+@mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=2
+@rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=2
+@rm_rr_rw         ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=3
+@rm_rr_ro         ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=1
+@rm_xr_rw         ........ ........ . .... ... ... ..... &rm_xr r=%reg b=%base msz=1 rw=3
 
 @rm_xx            ........ ........ . .... ... ... ..... rm_xx=&rm_xx r=%reg b=%base
 @rm_xx_rw         ........ ........ . .... ... ... ..... rm_xx_rw=&rm_xx r=%reg b=%base
@@ -48,10 +51,10 @@
 # 3-byte opcode map (0f 38 opcode)
 ##############################################################################
 
-crc32             ........ 11110000 - -1-- --- ... ----- @rm_rr rsz=3 msz=8
-crc32             ........ 11110001 - -1-- --- ... ----- @rm_rr rsz=3 msz=1
+crc32             ........ 11110000 - -1-- --- ... ----- @rm_rr_rw rsz=3 msz=8
+crc32             ........ 11110001 - -1-- --- ... ----- @rm_rr_rw rsz=3 msz=1
 
-invpcid           ........ 10000010 - --1- --- ... ----- no_ptr=1 @rm_rr rw=1 rsz=5 msz=8
+invpcid           ........ 10000010 - --1- --- ... ----- no_ptr=1 @rm_rr_ro rsz=5 msz=8
 
 ##############################################################################
 # Extension SSSE3
@@ -135,23 +138,23 @@ pcmpgtq           ........ 00110111 - 001- --- ... ----- @rm_xx_rw ? sse4_2
 # Extension ADX
 ##############################################################################
 
-adcx              ........ 11110110 0 001- --- ... ----- @rm_rr rsz=32 msz=32 suffix=1 ? adx
-adox              ........ 11110110 0 100- --- ... ----- @rm_rr rsz=32 msz=32 suffix=1 ? adx
-adcx              ........ 11110110 1 001- --- ... ----- @rm_rr rsz=64 msz=64 suffix=1 ? adx
-adox              ........ 11110110 1 100- --- ... ----- @rm_rr rsz=64 msz=64 suffix=1 ? adx
+adcx              ........ 11110110 0 001- --- ... ----- @rm_rr_rw rsz=32 msz=32 suffix=1 ? adx
+adox              ........ 11110110 0 100- --- ... ----- @rm_rr_rw rsz=32 msz=32 suffix=1 ? adx
+adcx              ........ 11110110 1 001- --- ... ----- @rm_rr_rw rsz=64 msz=64 suffix=1 ? adx
+adox              ........ 11110110 1 100- --- ... ----- @rm_rr_rw rsz=64 msz=64 suffix=1 ? adx
 
 ##############################################################################
 # Extension CET
 ##############################################################################
 
-wrussd            0....... 11110101 0 001- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=32 rsz=32 ? cet_ss
-wrussd            10...... 11110101 0 001- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=32 rsz=32 ? cet_ss
-wrussq            0....... 11110101 1 001- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=64 rsz=64 ? cet_ss
-wrussq            10...... 11110101 1 001- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=64 rsz=64 ? cet_ss
-wrssd             0....... 11110110 0 000- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=32 rsz=32 ? cet_ss
-wrssd             10...... 11110110 0 000- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=32 rsz=32 ? cet_ss
-wrssq             0....... 11110110 1 000- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=64 rsz=64 ? cet_ss
-wrssq             10...... 11110110 1 000- --- ... ----- no_ptr=1 @mr_rr rw=2 msz=64 rsz=64 ? cet_ss
+wrussd            0....... 11110101 0 001- --- ... ----- no_ptr=1 @mr_rr msz=32 rsz=32 ? cet_ss
+wrussd            10...... 11110101 0 001- --- ... ----- no_ptr=1 @mr_rr msz=32 rsz=32 ? cet_ss
+wrussq            0....... 11110101 1 001- --- ... ----- no_ptr=1 @mr_rr msz=64 rsz=64 ? cet_ss
+wrussq            10...... 11110101 1 001- --- ... ----- no_ptr=1 @mr_rr msz=64 rsz=64 ? cet_ss
+wrssd             0....... 11110110 0 000- --- ... ----- no_ptr=1 @mr_rr msz=32 rsz=32 ? cet_ss
+wrssd             10...... 11110110 0 000- --- ... ----- no_ptr=1 @mr_rr msz=32 rsz=32 ? cet_ss
+wrssq             0....... 11110110 1 000- --- ... ----- no_ptr=1 @mr_rr msz=64 rsz=64 ? cet_ss
+wrssq             10...... 11110110 1 000- --- ... ----- no_ptr=1 @mr_rr msz=64 rsz=64 ? cet_ss
 
 ##############################################################################
 # Extension AES
@@ -167,24 +170,24 @@ aesdeclast        ........ 11011111 - 001- --- ... ----- @rm_xx_rw ? aes
 # Extension AESKLE
 ##############################################################################
 
-aesencwide128kl   0.000... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesencwide128kl   10000... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesdecwide128kl   0.001... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesdecwide128kl   10001... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesencwide256kl   0.010... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesencwide256kl   10010... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesdecwide256kl   0.011... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesdecwide256kl   10011... 11011000 - 100- --- ... ----- no_ptr=1 @m_x rw=1 ? aeskle
-aesenc128kl       0....... 11011100 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesenc128kl       10...... 11011100 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesdec128kl       0....... 11011101 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesdec128kl       10...... 11011101 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesenc256kl       0....... 11011110 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesenc256kl       10...... 11011110 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesdec256kl       0....... 11011111 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-aesdec256kl       10...... 11011111 - 100- --- ... ----- no_ptr=1 @rm_xr ? aeskle
-encodekey128      11...... 11111010 - 100- --- ... ----- @rm_rr rw=2 rsz=32 msz=32 ? aeskle
-encodekey256      11...... 11111011 - 100- --- ... ----- @rm_rr rw=2 rsz=32 msz=32 ? aeskle
+aesencwide128kl   0.000... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesencwide128kl   10000... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesdecwide128kl   0.001... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesdecwide128kl   10001... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesencwide256kl   0.010... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesencwide256kl   10010... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesdecwide256kl   0.011... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesdecwide256kl   10011... 11011000 - 100- --- ... ----- no_ptr=1 @m_x_ro ? aeskle
+aesenc128kl       0....... 11011100 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesenc128kl       10...... 11011100 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesdec128kl       0....... 11011101 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesdec128kl       10...... 11011101 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesenc256kl       0....... 11011110 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesenc256kl       10...... 11011110 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesdec256kl       0....... 11011111 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+aesdec256kl       10...... 11011111 - 100- --- ... ----- no_ptr=1 @rm_xr_rw ? aeskle
+encodekey128      11...... 11111010 - 100- --- ... ----- @rm_rr rsz=32 msz=32 ? aeskle
+encodekey256      11...... 11111011 - 100- --- ... ----- @rm_rr rsz=32 msz=32 ? aeskle
 
 ##############################################################################
 # Extension SHA
@@ -201,10 +204,10 @@ sha256msg2        ........ 11001101 - 000- --- ... ----- @rm_xx_rw ? sha
 # Extension MOVBE
 ##############################################################################
 
-movbe             0....... 11110000 - 00-- --- ... ----- @rm_rr rw=2 suffix=1 ? movbe
-movbe             10...... 11110000 - 00-- --- ... ----- @rm_rr rw=2 suffix=1 ? movbe
-movbe             0....... 11110001 - 00-- --- ... ----- @mr_rr rw=2 suffix=1 ? movbe
-movbe             10...... 11110001 - 00-- --- ... ----- @mr_rr rw=2 suffix=1 ? movbe
+movbe             0....... 11110000 - 00-- --- ... ----- @rm_rr suffix=1 ? movbe
+movbe             10...... 11110000 - 00-- --- ... ----- @rm_rr suffix=1 ? movbe
+movbe             0....... 11110001 - 00-- --- ... ----- @mr_rr suffix=1 ? movbe
+movbe             10...... 11110001 - 00-- --- ... ----- @mr_rr suffix=1 ? movbe
 
 ##############################################################################
 # Extension GFNI
@@ -216,13 +219,13 @@ gf2p8mulb         ........ 11001111 - 001- --- ... ----- @rm_xx_rw ? gfni
 # Uncategorized
 ##############################################################################
 
-movdir64b         0....... 11111000 - 001- --- ... ----- no_ptr=1 @rm_rr rw=2 rsz=5 msz=8 # TODO: ? movdir64b
-movdir64b         10...... 11111000 - 001- --- ... ----- no_ptr=1 @rm_rr rw=2 rsz=5 msz=8 # TODO: ? movdir64b
+movdir64b         0....... 11111000 - 001- --- ... ----- no_ptr=1 @rm_rr rsz=5 msz=8 # TODO: ? movdir64b
+movdir64b         10...... 11111000 - 001- --- ... ----- no_ptr=1 @rm_rr rsz=5 msz=8 # TODO: ? movdir64b
 
-movdiri           0....... 11111001 - 000- --- ... ----- @mr_rr rw=2 suffix=1 # TODO: ? movdiri
-movdiri           10...... 11111001 - 000- --- ... ----- @mr_rr rw=2 suffix=1 # TODO: ? movdiri
+movdiri           0....... 11111001 - 000- --- ... ----- @mr_rr suffix=1 # TODO: ? movdiri
+movdiri           10...... 11111001 - 000- --- ... ----- @mr_rr suffix=1 # TODO: ? movdiri
 
-enqcmd            0....... 11111000 - 010- --- ... ----- no_ptr=1 @rm_rr rw=2 rsz=64 msz=512 # TODO: ? enqcmd
-enqcmd            10...... 11111000 - 010- --- ... ----- no_ptr=1 @rm_rr rw=2 rsz=64 msz=512 # TODO: ? enqcmd
-enqcmds           0....... 11111000 - 100- --- ... ----- no_ptr=1 @rm_rr rw=2 rsz=64 msz=512 # TODO: ? enqcmd
-enqcmds           10...... 11111000 - 100- --- ... ----- no_ptr=1 @rm_rr rw=2 rsz=64 msz=512 # TODO: ? enqcmd
+enqcmd            0....... 11111000 - 010- --- ... ----- no_ptr=1 @rm_rr rsz=64 msz=512 # TODO: ? enqcmd
+enqcmd            10...... 11111000 - 010- --- ... ----- no_ptr=1 @rm_rr rsz=64 msz=512 # TODO: ? enqcmd
+enqcmds           0....... 11111000 - 100- --- ... ----- no_ptr=1 @rm_rr rsz=64 msz=512 # TODO: ? enqcmd
+enqcmds           10...... 11111000 - 100- --- ... ----- no_ptr=1 @rm_rr rsz=64 msz=512 # TODO: ? enqcmd
