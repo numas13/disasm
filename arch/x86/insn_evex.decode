@@ -57,11 +57,11 @@
 
 &rvm_vvv          mode r v b !extern
 &rvm_vvy          mode r v b
-&rvm_vvx          mode r v b
-&rvm_xxx          mode r v b
+&rvm_vvx          mode r v b !extern
+&rvm_xxx          mode r v b !extern
 &rvm_kvv          mode r v b
 
-&mvr_xxx          mode r v b
+&mvr_xxx          mode r v b !extern
 
 ##############################################################################
 # Formats
@@ -222,12 +222,12 @@
 @rvm_vvv_bcst64_sae   ........ ........ ........ ........ ........ rvm_vvv_bcst64_sae=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 @rvm_vvv_rw           ........ ........ ........ ........ ........ rvm_vvv_rw=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 
+@rvm_vvx_128          ........ ........ ........ ........ ........ rvm_vvx_128=&rvm_vvx %mode r=%mm_reg v=%mm_v b=%mm_base
 @rvm_vvx_x2           ........ ........ ........ ........ ........ rvm_vvx_x2=&rvm_vvx %mode r=%mm_reg v=%mm_v b=%mm_base
 @rvm_vvx_x4           ........ ........ ........ ........ ........ rvm_vvx_x4=&rvm_vvx %mode r=%mm_reg v=%mm_v b=%mm_base
+
 @rvm_vvy_x4           ........ ........ ........ ........ ........ rvm_vvy_x4=&rvm_vvy %mode r=%mm_reg v=%mm_v b=%mm_base
 @rvm_vvy_x8           ........ ........ ........ ........ ........ rvm_vvy_x8=&rvm_vvy %mode r=%mm_reg v=%mm_v b=%mm_base
-
-@rvm_vvx_128          ........ ........ ........ ........ ........ rvm_vvx_128=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
 
 @rvm_xxx_16x1         ........ ........ ........ ........ ........ rvm_xxx_16x1=&rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
 @rvm_xxx_16x1_er      ........ ........ ........ ........ ........ rvm_xxx_16x1_er=&rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base

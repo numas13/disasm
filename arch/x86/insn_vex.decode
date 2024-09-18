@@ -46,6 +46,10 @@
 &gather           mode b r v msz isz
 
 &rvm_vvv          mode r v b
+&rvm_vvx          mode r v b
+&rvm_xxx          mode r v b
+&mvr_vvv          mode r v b
+&mvr_xxx          mode r v b
 
 ##############################################################################
 # Formats
@@ -66,15 +70,6 @@
                   evex_rm_rx=&evex_rm_rv rw=2 %mode r=%gpr_reg b=%mm_base msz=1 rsz=1
 @rm_ry            ........ ........ ........ ........ \
                   evex_rm_ry=&evex_rm_rv rw=2 %mode r=%gpr_reg b=%mm_base msz=1 rsz=1
-
-@rvm_xxx          ........ ........ ........ ........ \
-                  evex_rvm_xxx=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@rvm_yyy          ........ ........ ........ ........ \
-                  evex_rvm_yyy=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@mvr_xxx          ........ ........ ........ ........ \
-                  evex_mvr_xxx=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
-@mvr_yyy          ........ ........ ........ ........ \
-                  evex_mvr_yyy=&evex_rvm_vvv rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 bcst=0
 
 @rvm_xxr          ........ ........ ........ ........ \
                   evex_rvm_xxr=&evex_rvm_vvr rw=2 %mode r=%mm_reg v=%mm_v b=%mm_base msz=1
@@ -164,6 +159,17 @@
 @gather_vvv       ........ ........ ........ ........ \
                   gather_vvv=&gather %mode r=%mm_reg v=%mm_v b=%mm_base msz=1 isz=1
 
+@rvm_vvv          ........ ........ ........ ........ &rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@rvm_vvv_rw       ........ ........ ........ ........ rvm_vvv_rw=&rvm_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@rvm_vvx          ........ ........ ........ ........ &rvm_vvx %mode r=%mm_reg v=%mm_v b=%mm_base
+
+@rvm_xxx          ........ ........ ........ ........ &rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxx_32       ........ ........ ........ ........ rvm_xxx_32=&rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxx_64       ........ ........ ........ ........ rvm_xxx_64=&rvm_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
+
+@mvr_vvv          ........ ........ ........ ........ &mvr_vvv %mode r=%mm_reg v=%mm_v b=%mm_base
+@mvr_xxx          ........ ........ ........ ........ &mvr_xxx %mode r=%mm_reg v=%mm_v b=%mm_base
+
 ##############################################################################
 # Extension AVX
 ##############################################################################
@@ -189,7 +195,7 @@
   vmovss          ........ 00010001 - 1111 -10 ... 00001 @mr_xx msz=32 ? avx
 }
 {
-  vcmpss          ........ 11000010 - .... -10 ... 00001 @rvm_xxx msz=32 opc=8 ? avx
+  vcmpss          ........ 11000010 - .... -10 ... 00001 @rvm_xxx_32 opc=8 ? avx
   vcmpeqss        ........ 11000010 - .... -10 ... 00001 ? never
   vcmpltss        ........ 11000010 - .... -10 ... 00001 ? never
   vcmpless        ........ 11000010 - .... -10 ... 00001 ? never
@@ -224,7 +230,7 @@
   vcmptrue_usss   ........ 11000010 - .... -10 ... 00001 ? never
 }
 {
-  vcmpsd          ........ 11000010 - .... -11 ... 00001 @rvm_xxx msz=64 opc=8 ? avx
+  vcmpsd          ........ 11000010 - .... -11 ... 00001 @rvm_xxx_64 opc=8 ? avx
   vcmpeqsd        ........ 11000010 - .... -11 ... 00001 ? never
   vcmpltsd        ........ 11000010 - .... -11 ... 00001 ? never
   vcmplesd        ........ 11000010 - .... -11 ... 00001 ? never
@@ -259,8 +265,7 @@
   vcmptrue_ussd   ........ 11000010 - .... -11 ... 00001 ? never
 }
 {
-  vcmpps          ........ 11000010 - .... 000 ... 00001 @rvm_xxx opc=8 ? avx
-  vcmpps          ........ 11000010 - .... 100 ... 00001 @rvm_yyy opc=8 ? avx
+  vcmpps          ........ 11000010 - .... .00 ... 00001 @rvm_vvv opc=8 ? avx
   vcmpeqps        ........ 11000010 - .... .00 ... 00001 ? never
   vcmpltps        ........ 11000010 - .... .00 ... 00001 ? never
   vcmpleps        ........ 11000010 - .... .00 ... 00001 ? never
@@ -295,8 +300,7 @@
   vcmptrue_usps   ........ 11000010 - .... .00 ... 00001 ? never
 }
 {
-  vcmppd          ........ 11000010 - .... 001 ... 00001 @rvm_xxx opc=8 ? avx
-  vcmppd          ........ 11000010 - .... 101 ... 00001 @rvm_yyy opc=8 ? avx
+  vcmppd          ........ 11000010 - .... .01 ... 00001 @rvm_vvv opc=8 ? avx
   vcmpeqpd        ........ 11000010 - .... .01 ... 00001 ? never
   vcmpltpd        ........ 11000010 - .... .01 ... 00001 ? never
   vcmplepd        ........ 11000010 - .... .01 ... 00001 ? never
@@ -363,11 +367,11 @@ vmovups           ........ 00010001 - 1111 000 ... 00001 @mr_xx ? avx
 vmovupd           ........ 00010001 - 1111 001 ... 00001 @mr_xx ? avx
 vmovups           ........ 00010001 - 1111 100 ... 00001 @mr_yy ? avx
 vmovupd           ........ 00010001 - 1111 101 ... 00001 @mr_yy ? avx
-vmovhlps          11...... 00010010 - .... 000 ... 00001 @rvm_xxx ? avx
-vmovlps           0....... 00010010 - .... 000 ... 00001 @rvm_xxx msz=64 ? avx
-vmovlps           10...... 00010010 - .... 000 ... 00001 @rvm_xxx msz=64 ? avx
-vmovlpd           0....... 00010010 - .... 001 ... 00001 @rvm_xxx msz=64 ? avx
-vmovlpd           10...... 00010010 - .... 001 ... 00001 @rvm_xxx msz=64 ? avx
+vmovhlps          11...... 00010010 - .... 000 ... 00001 @rvm_vvv ? avx
+vmovlps           0....... 00010010 - .... 000 ... 00001 @rvm_xxx_64 ? avx
+vmovlps           10...... 00010010 - .... 000 ... 00001 @rvm_xxx_64 ? avx
+vmovlpd           0....... 00010010 - .... 001 ... 00001 @rvm_xxx_64 ? avx
+vmovlpd           10...... 00010010 - .... 001 ... 00001 @rvm_xxx_64 ? avx
 vmovsldup         ........ 00010010 - 1111 010 ... 00001 @rm_xx ? avx
 vmovddup          ........ 00010010 - 1111 011 ... 00001 @rm_xx msz=64 ? avx
 vmovsldup         ........ 00010010 - 1111 110 ... 00001 @rm_yy ? avx
@@ -376,19 +380,15 @@ vmovlps           0....... 00010011 - 1111 000 ... 00001 @mr_xx msz=64 ? avx
 vmovlps           10...... 00010011 - 1111 000 ... 00001 @mr_xx msz=64 ? avx
 vmovlpd           0....... 00010011 - 1111 001 ... 00001 @mr_xx msz=64 ? avx
 vmovlpd           10...... 00010011 - 1111 001 ... 00001 @mr_xx msz=64 ? avx
-vunpcklps         ........ 00010100 - .... 000 ... 00001 @rvm_xxx ? avx
-vunpcklpd         ........ 00010100 - .... 001 ... 00001 @rvm_xxx ? avx
-vunpcklps         ........ 00010100 - .... 100 ... 00001 @rvm_yyy ? avx
-vunpcklpd         ........ 00010100 - .... 101 ... 00001 @rvm_yyy ? avx
-vunpckhps         ........ 00010101 - .... 000 ... 00001 @rvm_xxx ? avx
-vunpckhpd         ........ 00010101 - .... 001 ... 00001 @rvm_xxx ? avx
-vunpckhps         ........ 00010101 - .... 100 ... 00001 @rvm_yyy ? avx
-vunpckhpd         ........ 00010101 - .... 101 ... 00001 @rvm_yyy ? avx
-vmovlhps          11...... 00010110 - .... 000 ... 00001 @rvm_xxx ? avx
-vmovhps           0....... 00010110 - .... 000 ... 00001 @rvm_xxx msz=64 ? avx
-vmovhps           10...... 00010110 - .... 000 ... 00001 @rvm_xxx msz=64 ? avx
-vmovhpd           0....... 00010110 - .... 001 ... 00001 @rvm_xxx msz=64 ? avx
-vmovhpd           10...... 00010110 - .... 001 ... 00001 @rvm_xxx msz=64 ? avx
+vunpcklps         ........ 00010100 - .... .00 ... 00001 @rvm_vvv ? avx
+vunpcklpd         ........ 00010100 - .... .01 ... 00001 @rvm_vvv ? avx
+vunpckhps         ........ 00010101 - .... .00 ... 00001 @rvm_vvv ? avx
+vunpckhpd         ........ 00010101 - .... .01 ... 00001 @rvm_vvv ? avx
+vmovlhps          11...... 00010110 - .... 000 ... 00001 @rvm_vvv ? avx
+vmovhps           0....... 00010110 - .... 000 ... 00001 @rvm_xxx_64 ? avx
+vmovhps           10...... 00010110 - .... 000 ... 00001 @rvm_xxx_64 ? avx
+vmovhpd           0....... 00010110 - .... 001 ... 00001 @rvm_xxx_64 ? avx
+vmovhpd           10...... 00010110 - .... 001 ... 00001 @rvm_xxx_64 ? avx
 vmovshdup         ........ 00010110 - 1111 010 ... 00001 @rm_xx ? avx
 vmovshdup         ........ 00010110 - 1111 110 ... 00001 @rm_yy ? avx
 vmovhps           0....... 00010111 - 1111 000 ... 00001 @mr_xx msz=64 ? avx
@@ -425,51 +425,36 @@ vmovmskps         11...... 01010000 - 1111 000 ... 00001 @rm_rx rsz=32 ? avx
 vmovmskpd         11...... 01010000 - 1111 001 ... 00001 @rm_rx rsz=32 ? avx
 vmovmskps         11...... 01010000 - 1111 100 ... 00001 @rm_ry rsz=32 ? avx
 vmovmskpd         11...... 01010000 - 1111 101 ... 00001 @rm_ry rsz=32 ? avx
-vsqrtss           ........ 01010001 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
-vsqrtsd           ........ 01010001 - .... -11 ... 00001 @rvm_xxx msz=64 ? avx
+vsqrtss           ........ 01010001 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vsqrtsd           ........ 01010001 - .... -11 ... 00001 @rvm_xxx_64 ? avx
 vsqrtps           ........ 01010001 - 1111 000 ... 00001 @rm_xx ? avx
 vsqrtpd           ........ 01010001 - 1111 001 ... 00001 @rm_xx ? avx
 vsqrtps           ........ 01010001 - 1111 100 ... 00001 @rm_yy ? avx
 vsqrtpd           ........ 01010001 - 1111 101 ... 00001 @rm_yy ? avx
-vrsqrtss          ........ 01010010 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
+vrsqrtss          ........ 01010010 - .... -10 ... 00001 @rvm_xxx_32 ? avx
 vrsqrtps          ........ 01010010 - 1111 000 ... 00001 @rm_xx ? avx
 vrsqrtps          ........ 01010010 - 1111 100 ... 00001 @rm_yy ? avx
-vrcpss            ........ 01010011 - .... 010 ... 00001 @rvm_xxx msz=32 ? avx
-vrcpss            ........ 01010011 - .... 110 ... 00001 @rvm_xxx msz=32 ? avx
+vrcpss            ........ 01010011 - .... -10 ... 00001 @rvm_xxx_32 ? avx
 vrcpps            ........ 01010011 - 1111 000 ... 00001 @rm_xx ? avx
 vrcpps            ........ 01010011 - 1111 100 ... 00001 @rm_yy ? avx
-vandps            ........ 01010100 - .... 000 ... 00001 @rvm_xxx ? avx
-vandpd            ........ 01010100 - .... 001 ... 00001 @rvm_xxx ? avx
-vandps            ........ 01010100 - .... 100 ... 00001 @rvm_yyy ? avx
-vandpd            ........ 01010100 - .... 101 ... 00001 @rvm_yyy ? avx
-vandnps           ........ 01010101 - .... 000 ... 00001 @rvm_xxx ? avx
-vandnpd           ........ 01010101 - .... 001 ... 00001 @rvm_xxx ? avx
-vandnps           ........ 01010101 - .... 100 ... 00001 @rvm_yyy ? avx
-vandnpd           ........ 01010101 - .... 101 ... 00001 @rvm_yyy ? avx
-vorps             ........ 01010110 - .... 000 ... 00001 @rvm_xxx ? avx
-vorpd             ........ 01010110 - .... 001 ... 00001 @rvm_xxx ? avx
-vorps             ........ 01010110 - .... 100 ... 00001 @rvm_yyy ? avx
-vorpd             ........ 01010110 - .... 101 ... 00001 @rvm_yyy ? avx
-vxorps            ........ 01010111 - .... 000 ... 00001 @rvm_xxx ? avx
-vxorpd            ........ 01010111 - .... 001 ... 00001 @rvm_xxx ? avx
-vxorps            ........ 01010111 - .... 100 ... 00001 @rvm_yyy ? avx
-vxorpd            ........ 01010111 - .... 101 ... 00001 @rvm_yyy ? avx
-vaddps            ........ 01011000 - .... 000 ... 00001 @rvm_xxx ? avx
-vaddpd            ........ 01011000 - .... 001 ... 00001 @rvm_xxx ? avx
-vaddss            ........ 01011000 - .... 010 ... 00001 @rvm_xxx msz=32 ? avx
-vaddsd            ........ 01011000 - .... 011 ... 00001 @rvm_xxx msz=64 ? avx
-vaddps            ........ 01011000 - .... 100 ... 00001 @rvm_yyy ? avx
-vaddpd            ........ 01011000 - .... 101 ... 00001 @rvm_yyy ? avx
-vaddss            ........ 01011000 - .... 110 ... 00001 @rvm_yyy msz=32 ? avx
-vaddsd            ........ 01011000 - .... 111 ... 00001 @rvm_yyy msz=64 ? avx
-vmulss            ........ 01011001 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
-vmulsd            ........ 01011001 - .... -11 ... 00001 @rvm_xxx msz=64 ? avx
-vmulps            ........ 01011001 - .... 000 ... 00001 @rvm_xxx ? avx
-vmulpd            ........ 01011001 - .... 001 ... 00001 @rvm_xxx ? avx
-vmulps            ........ 01011001 - .... 100 ... 00001 @rvm_yyy ? avx
-vmulpd            ........ 01011001 - .... 101 ... 00001 @rvm_yyy ? avx
-vcvtss2sd         ........ 01011010 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
-vcvtsd2ss         ........ 01011010 - .... -11 ... 00001 @rvm_xxx msz=64 ? avx
+vandps            ........ 01010100 - .... .00 ... 00001 @rvm_vvv ? avx
+vandpd            ........ 01010100 - .... .01 ... 00001 @rvm_vvv ? avx
+vandnps           ........ 01010101 - .... .00 ... 00001 @rvm_vvv ? avx
+vandnpd           ........ 01010101 - .... .01 ... 00001 @rvm_vvv ? avx
+vorps             ........ 01010110 - .... .00 ... 00001 @rvm_vvv ? avx
+vorpd             ........ 01010110 - .... .01 ... 00001 @rvm_vvv ? avx
+vxorps            ........ 01010111 - .... .00 ... 00001 @rvm_vvv ? avx
+vxorpd            ........ 01010111 - .... .01 ... 00001 @rvm_vvv ? avx
+vaddps            ........ 01011000 - .... .00 ... 00001 @rvm_vvv ? avx
+vaddpd            ........ 01011000 - .... .01 ... 00001 @rvm_vvv ? avx
+vaddss            ........ 01011000 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vaddsd            ........ 01011000 - .... -11 ... 00001 @rvm_xxx_64 ? avx
+vmulss            ........ 01011001 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vmulsd            ........ 01011001 - .... -11 ... 00001 @rvm_xxx_64 ? avx
+vmulps            ........ 01011001 - .... .00 ... 00001 @rvm_vvv ? avx
+vmulpd            ........ 01011001 - .... .01 ... 00001 @rvm_vvv ? avx
+vcvtss2sd         ........ 01011010 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vcvtsd2ss         ........ 01011010 - .... -11 ... 00001 @rvm_xxx_64 ? avx
 vcvtps2pd         ........ 01011010 - 1111 000 ... 00001 @rm_xx msz=64 ? avx
 vcvtpd2ps         ........ 01011010 - 1111 001 ... 00001 @rm_xx ? avx
 vcvtps2pd         ........ 01011010 - 1111 100 ... 00001 @rm_yx ? avx
@@ -480,44 +465,36 @@ vcvttps2dq        ........ 01011011 - 1111 010 ... 00001 @rm_xx ? avx
 vcvtdq2ps         ........ 01011011 - 1111 100 ... 00001 @rm_yy ? avx
 vcvtps2dq         ........ 01011011 - 1111 101 ... 00001 @rm_yy ? avx
 vcvttps2dq        ........ 01011011 - 1111 110 ... 00001 @rm_yy ? avx
-vsubps            ........ 01011100 - .... 000 ... 00001 @rvm_xxx ? avx
-vsubpd            ........ 01011100 - .... 001 ... 00001 @rvm_xxx ? avx
-vsubss            ........ 01011100 - .... 010 ... 00001 @rvm_xxx msz=32 ? avx
-vsubsd            ........ 01011100 - .... 011 ... 00001 @rvm_xxx msz=64 ? avx
-vsubps            ........ 01011100 - .... 100 ... 00001 @rvm_yyy ? avx
-vsubpd            ........ 01011100 - .... 101 ... 00001 @rvm_yyy ? avx
-vminss            ........ 01011101 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
-vminsd            ........ 01011101 - .... -11 ... 00001 @rvm_xxx msz=64 ? avx
-vminps            ........ 01011101 - .... 000 ... 00001 @rvm_xxx ? avx
-vminpd            ........ 01011101 - .... 001 ... 00001 @rvm_xxx ? avx
-vminps            ........ 01011101 - .... 100 ... 00001 @rvm_yyy ? avx
-vminpd            ........ 01011101 - .... 101 ... 00001 @rvm_yyy ? avx
-vdivss            ........ 01011110 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
-vdivsd            ........ 01011110 - .... -11 ... 00001 @rvm_xxx msz=64 ? avx
-vdivps            ........ 01011110 - .... 000 ... 00001 @rvm_xxx ? avx
-vdivpd            ........ 01011110 - .... 001 ... 00001 @rvm_xxx ? avx
-vdivps            ........ 01011110 - .... 100 ... 00001 @rvm_yyy ? avx
-vdivpd            ........ 01011110 - .... 101 ... 00001 @rvm_yyy ? avx
-vmaxss            ........ 01011111 - .... -10 ... 00001 @rvm_xxx msz=32 ? avx
-vmaxsd            ........ 01011111 - .... -11 ... 00001 @rvm_xxx msz=64 ? avx
-vmaxps            ........ 01011111 - .... 000 ... 00001 @rvm_xxx ? avx
-vmaxpd            ........ 01011111 - .... 001 ... 00001 @rvm_xxx ? avx
-vmaxps            ........ 01011111 - .... 100 ... 00001 @rvm_yyy ? avx
-vmaxpd            ........ 01011111 - .... 101 ... 00001 @rvm_yyy ? avx
-vpunpcklbw        ........ 01100000 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpcklwd        ........ 01100001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpckldq        ........ 01100010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpacksswb         ........ 01100011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpcmpgtb          ........ 01100100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpcmpgtw          ........ 01100101 - .... 001 ... 00001 @rvm_xxx ? avx
-vpcmpgtd          ........ 01100110 - .... 001 ... 00001 @rvm_xxx ? avx
-vpackuswb         ........ 01100111 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpckhbw        ........ 01101000 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpckhwd        ........ 01101001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpckhdq        ........ 01101010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpackssdw         ........ 01101011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpcklqdq       ........ 01101100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpunpckhqdq       ........ 01101101 - .... 001 ... 00001 @rvm_xxx ? avx
+vsubps            ........ 01011100 - .... .00 ... 00001 @rvm_vvv ? avx
+vsubpd            ........ 01011100 - .... .01 ... 00001 @rvm_vvv ? avx
+vsubss            ........ 01011100 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vsubsd            ........ 01011100 - .... -11 ... 00001 @rvm_xxx_64 ? avx
+vminss            ........ 01011101 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vminsd            ........ 01011101 - .... -11 ... 00001 @rvm_xxx_64 ? avx
+vminps            ........ 01011101 - .... .00 ... 00001 @rvm_vvv ? avx
+vminpd            ........ 01011101 - .... .01 ... 00001 @rvm_vvv ? avx
+vdivss            ........ 01011110 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vdivsd            ........ 01011110 - .... -11 ... 00001 @rvm_xxx_64 ? avx
+vdivps            ........ 01011110 - .... .00 ... 00001 @rvm_vvv ? avx
+vdivpd            ........ 01011110 - .... .01 ... 00001 @rvm_vvv ? avx
+vmaxss            ........ 01011111 - .... -10 ... 00001 @rvm_xxx_32 ? avx
+vmaxsd            ........ 01011111 - .... -11 ... 00001 @rvm_xxx_64 ? avx
+vmaxps            ........ 01011111 - .... .00 ... 00001 @rvm_vvv ? avx
+vmaxpd            ........ 01011111 - .... .01 ... 00001 @rvm_vvv ? avx
+vpunpcklbw        ........ 01100000 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpcklwd        ........ 01100001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpckldq        ........ 01100010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpacksswb         ........ 01100011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpcmpgtb          ........ 01100100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpcmpgtw          ........ 01100101 - .... 001 ... 00001 @rvm_vvv ? avx
+vpcmpgtd          ........ 01100110 - .... 001 ... 00001 @rvm_vvv ? avx
+vpackuswb         ........ 01100111 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpckhbw        ........ 01101000 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpckhwd        ........ 01101001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpckhdq        ........ 01101010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpackssdw         ........ 01101011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpcklqdq       ........ 01101100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpunpckhqdq       ........ 01101101 - .... 001 ... 00001 @rvm_vvv ? avx
 vmovd             ........ 01101110 0 1111 001 ... 00001 @rm_xr msz=32 ? avx
 vmovq             ........ 01101110 1 1111 001 ... 00001 @rm_xr msz=64 ? avx
 vmovdqa           ........ 01101111 - 1111 001 ... 00001 @rm_xx ? avx
@@ -537,20 +514,16 @@ vpslldq           11111... 01110011 - .... 001 ... 00001 @vm_xx uimm=8 ? avx
 vpsllq            ..110... 01110011 - .... 001 ... 00001 @vm_xx uimm=8 ? avx
 vpsrlq            ..010... 01110011 - .... 001 ... 00001 @vm_xx uimm=8 ? avx
 vpsrldq           11011... 01110011 - .... 001 ... 00001 @vm_xx uimm=8 ? avx
-vpcmpeqb          ........ 01110100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpcmpeqw          ........ 01110101 - .... 001 ... 00001 @rvm_xxx ? avx
-vpcmpeqd          ........ 01110110 - .... 001 ... 00001 @rvm_xxx ? avx
+vpcmpeqb          ........ 01110100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpcmpeqw          ........ 01110101 - .... 001 ... 00001 @rvm_vvv ? avx
+vpcmpeqd          ........ 01110110 - .... 001 ... 00001 @rvm_vvv ? avx
 # XXX: vzero* do not use ModRM and instruction reader will not read ModRM byte
 vzeroupper        -------- 01110111 - 1111 000 111 00001 ? avx
 vzeroall          -------- 01110111 - 1111 100 111 00001 ? avx
-vhaddpd           ........ 01111100 - .... 001 ... 00001 @rvm_xxx ? avx
-vhaddps           ........ 01111100 - .... 011 ... 00001 @rvm_xxx ? avx
-vhaddpd           ........ 01111100 - .... 101 ... 00001 @rvm_yyy ? avx
-vhaddps           ........ 01111100 - .... 111 ... 00001 @rvm_yyy ? avx
-vhsubpd           ........ 01111101 - .... 001 ... 00001 @rvm_xxx ? avx
-vhsubps           ........ 01111101 - .... 011 ... 00001 @rvm_xxx ? avx
-vhsubpd           ........ 01111101 - .... 101 ... 00001 @rvm_yyy ? avx
-vhsubps           ........ 01111101 - .... 111 ... 00001 @rvm_yyy ? avx
+vhaddpd           ........ 01111100 - .... .01 ... 00001 @rvm_vvv ? avx
+vhaddps           ........ 01111100 - .... .11 ... 00001 @rvm_vvv ? avx
+vhsubpd           ........ 01111101 - .... .01 ... 00001 @rvm_vvv ? avx
+vhsubps           ........ 01111101 - .... .11 ... 00001 @rvm_vvv ? avx
 vmovq             ........ 01111110 - 1111 010 ... 00001 @rm_xx msz=64 ? avx
 vmovd             ........ 01111110 0 1111 001 ... 00001 @mr_rx msz=32 ? avx
 vmovq             ........ 01111110 1 1111 001 ... 00001 @mr_rx msz=64 ? avx
@@ -563,35 +536,31 @@ vldmxcsr          10010... 10101110 - 1111 000 ... 00001 @m_r rw=1 msz=32 ? avx
 vstmxcsr          0.011... 10101110 - 1111 000 ... 00001 @m_r msz=32 ? avx
 vstmxcsr          10011... 10101110 - 1111 000 ... 00001 @m_r msz=32 ? avx
 vpextrw           11...... 11000101 - 1111 001 ... 00001 @rm_rx uimm=8 rsz=32 ? avx
-vshufps           ........ 11000110 - .... 000 ... 00001 @rvm_xxx uimm=8 ? avx
-vshufpd           ........ 11000110 - .... 001 ... 00001 @rvm_xxx uimm=8 ? avx
-vshufps           ........ 11000110 - .... 100 ... 00001 @rvm_yyy uimm=8 ? avx
-vshufpd           ........ 11000110 - .... 101 ... 00001 @rvm_yyy uimm=8 ? avx
-vaddsubpd         ........ 11010000 - .... 001 ... 00001 @rvm_xxx ? avx
-vaddsubps         ........ 11010000 - .... 011 ... 00001 @rvm_xxx ? avx
-vaddsubpd         ........ 11010000 - .... 101 ... 00001 @rvm_yyy ? avx
-vaddsubps         ........ 11010000 - .... 111 ... 00001 @rvm_yyy ? avx
-vpsrlw            ........ 11010001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsrld            ........ 11010010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsrlq            ........ 11010011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddq            ........ 11010100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmullw           ........ 11010101 - .... 001 ... 00001 @rvm_xxx ? avx
+vshufps           ........ 11000110 - .... .00 ... 00001 @rvm_vvv uimm=8 ? avx
+vshufpd           ........ 11000110 - .... .01 ... 00001 @rvm_vvv uimm=8 ? avx
+vaddsubpd         ........ 11010000 - .... .01 ... 00001 @rvm_vvv ? avx
+vaddsubps         ........ 11010000 - .... .11 ... 00001 @rvm_vvv ? avx
+vpsrlw            ........ 11010001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsrld            ........ 11010010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsrlq            ........ 11010011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddq            ........ 11010100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmullw           ........ 11010101 - .... 001 ... 00001 @rvm_vvv ? avx
 vmovq             ........ 11010110 - 1111 001 ... 00001 @mr_xx msz=64 ? avx
 vpmovmskb         11...... 11010111 - 1111 001 ... 00001 @rm_rx msz=32 rsz=32 ? avx
-vpsubusb          ........ 11011000 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsubusw          ........ 11011001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpminub           ........ 11011010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpand             ........ 11011011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddusb          ........ 11011100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddusw          ........ 11011101 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmaxub           ........ 11011110 - .... 001 ... 00001 @rvm_xxx ? avx
-vpandn            ........ 11011111 - .... 001 ... 00001 @rvm_xxx ? avx
-vpavgb            ........ 11100000 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsraw            ........ 11100001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsrad            ........ 11100010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpavgw            ........ 11100011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmulhuw          ........ 11100100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmulhw           ........ 11100101 - .... 001 ... 00001 @rvm_xxx ? avx
+vpsubusb          ........ 11011000 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsubusw          ........ 11011001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpminub           ........ 11011010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpand             ........ 11011011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddusb          ........ 11011100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddusw          ........ 11011101 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmaxub           ........ 11011110 - .... 001 ... 00001 @rvm_vvv ? avx
+vpandn            ........ 11011111 - .... 001 ... 00001 @rvm_vvv ? avx
+vpavgb            ........ 11100000 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsraw            ........ 11100001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsrad            ........ 11100010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpavgw            ........ 11100011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmulhuw          ........ 11100100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmulhw           ........ 11100101 - .... 001 ... 00001 @rvm_vvv ? avx
 vcvttpd2dq        ........ 11100110 - 1111 001 ... 00001 @rm_xx ? avx
 vcvtdq2pd         ........ 11100110 - 1111 010 ... 00001 @rm_xx msz=64 ? avx
 vcvtpd2dq         ........ 11100110 - 1111 011 ... 00001 @rm_xx ? avx
@@ -602,48 +571,46 @@ vmovntdq          0-...... 11100111 - 1111 001 ... 00001 @mr_xx ? avx
 vmovntdq          10...... 11100111 - 1111 001 ... 00001 @mr_xx ? avx
 vmovntdq          0-...... 11100111 - 1111 101 ... 00001 @mr_yy ? avx
 vmovntdq          10...... 11100111 - 1111 101 ... 00001 @mr_yy ? avx
-vpsubsb           ........ 11101000 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsubsw           ........ 11101001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpminsw           ........ 11101010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpor              ........ 11101011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddsb           ........ 11101100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddsw           ........ 11101101 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmaxsw           ........ 11101110 - .... 001 ... 00001 @rvm_xxx ? avx
-vpxor             ........ 11101111 - .... 001 ... 00001 @rvm_xxx ? avx
+vpsubsb           ........ 11101000 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsubsw           ........ 11101001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpminsw           ........ 11101010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpor              ........ 11101011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddsb           ........ 11101100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddsw           ........ 11101101 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmaxsw           ........ 11101110 - .... 001 ... 00001 @rvm_vvv ? avx
+vpxor             ........ 11101111 - .... 001 ... 00001 @rvm_vvv ? avx
 vlddqu            0....... 11110000 - 1111 011 ... 00001 no_ptr=1 @rm_xx ? avx
 vlddqu            10...... 11110000 - 1111 011 ... 00001 no_ptr=1 @rm_xx ? avx
 vlddqu            0....... 11110000 - 1111 111 ... 00001 no_ptr=1 @rm_yy ? avx
 vlddqu            10...... 11110000 - 1111 111 ... 00001 no_ptr=1 @rm_yy ? avx
-vpsllw            ........ 11110001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpslld            ........ 11110010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsllq            ........ 11110011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmuludq          ........ 11110100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpmaddwd          ........ 11110101 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsadbw           ........ 11110110 - .... 001 ... 00001 @rvm_xxx ? avx
+vpsllw            ........ 11110001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpslld            ........ 11110010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsllq            ........ 11110011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmuludq          ........ 11110100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpmaddwd          ........ 11110101 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsadbw           ........ 11110110 - .... 001 ... 00001 @rvm_vvv ? avx
 vmaskmovdqu       11...... 11110111 - 1111 001 ... 00001 @rm_xx ? avx
-vpsubb            ........ 11111000 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsubw            ........ 11111001 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsubd            ........ 11111010 - .... 001 ... 00001 @rvm_xxx ? avx
-vpsubq            ........ 11111011 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddb            ........ 11111100 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddw            ........ 11111101 - .... 001 ... 00001 @rvm_xxx ? avx
-vpaddd            ........ 11111110 - .... 001 ... 00001 @rvm_xxx ? avx
-vpshufb           ........ 00000000 - .... 001 ... 00010 @rvm_xxx ? avx
-vphaddw           ........ 00000001 - .... 001 ... 00010 @rvm_xxx ? avx
-vphaddd           ........ 00000010 - .... 001 ... 00010 @rvm_xxx ? avx
-vphaddsw          ........ 00000011 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmaddubsw        ........ 00000100 - .... 001 ... 00010 @rvm_xxx ? avx
-vphsubw           ........ 00000101 - .... 001 ... 00010 @rvm_xxx ? avx
-vphsubd           ........ 00000110 - .... 001 ... 00010 @rvm_xxx ? avx
-vphsubsw          ........ 00000111 - .... 001 ... 00010 @rvm_xxx ? avx
-vpsignb           ........ 00001000 - .... 001 ... 00010 @rvm_xxx ? avx
-vpsignw           ........ 00001001 - .... 001 ... 00010 @rvm_xxx ? avx
-vpsignd           ........ 00001010 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmulhrsw         ........ 00001011 - .... 001 ... 00010 @rvm_xxx ? avx
-vpermilps         ........ 00001100 0 .... 001 ... 00010 @rvm_xxx ? avx
-vpermilps         ........ 00001100 0 .... 101 ... 00010 @rvm_yyy ? avx
-vpermilpd         ........ 00001101 0 .... 001 ... 00010 @rvm_xxx ? avx
-vpermilpd         ........ 00001101 0 .... 101 ... 00010 @rvm_yyy ? avx
+vpsubb            ........ 11111000 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsubw            ........ 11111001 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsubd            ........ 11111010 - .... 001 ... 00001 @rvm_vvv ? avx
+vpsubq            ........ 11111011 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddb            ........ 11111100 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddw            ........ 11111101 - .... 001 ... 00001 @rvm_vvv ? avx
+vpaddd            ........ 11111110 - .... 001 ... 00001 @rvm_vvv ? avx
+vpshufb           ........ 00000000 - .... 001 ... 00010 @rvm_vvv ? avx
+vphaddw           ........ 00000001 - .... 001 ... 00010 @rvm_vvv ? avx
+vphaddd           ........ 00000010 - .... 001 ... 00010 @rvm_vvv ? avx
+vphaddsw          ........ 00000011 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmaddubsw        ........ 00000100 - .... 001 ... 00010 @rvm_vvv ? avx
+vphsubw           ........ 00000101 - .... 001 ... 00010 @rvm_vvv ? avx
+vphsubd           ........ 00000110 - .... 001 ... 00010 @rvm_vvv ? avx
+vphsubsw          ........ 00000111 - .... 001 ... 00010 @rvm_vvv ? avx
+vpsignb           ........ 00001000 - .... 001 ... 00010 @rvm_vvv ? avx
+vpsignw           ........ 00001001 - .... 001 ... 00010 @rvm_vvv ? avx
+vpsignd           ........ 00001010 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmulhrsw         ........ 00001011 - .... 001 ... 00010 @rvm_vvv ? avx
+vpermilps         ........ 00001100 0 .... .01 ... 00010 @rvm_vvv ? avx
+vpermilpd         ........ 00001101 0 .... .01 ... 00010 @rvm_vvv ? avx
 vtestps           ........ 00001110 0 1111 001 ... 00010 @rm_xx ? avx
 vtestps           ........ 00001110 0 1111 101 ... 00010 @rm_yy ? avx
 vtestpd           ........ 00001111 0 1111 001 ... 00010 @rm_xx ? avx
@@ -659,79 +626,65 @@ vpmovsxbq         ........ 00100010 - 1111 001 ... 00010 @rm_xx msz=16 ? avx
 vpmovsxwd         ........ 00100011 - 1111 001 ... 00010 @rm_xx msz=64 ? avx
 vpmovsxwq         ........ 00100100 - 1111 001 ... 00010 @rm_xx msz=32 ? avx
 vpmovsxdq         ........ 00100101 - 1111 001 ... 00010 @rm_xx msz=64 ? avx
-vpmuldq           ........ 00101000 - .... 001 ... 00010 @rvm_xxx ? avx
-vpcmpeqq          ........ 00101001 - .... 001 ... 00010 @rvm_xxx ? avx
+vpmuldq           ........ 00101000 - .... 001 ... 00010 @rvm_vvv ? avx
+vpcmpeqq          ........ 00101001 - .... 001 ... 00010 @rvm_vvv ? avx
 vmovntdqa         0-...... 00101010 - 1111 001 ... 00010 @rm_xx ? avx
 vmovntdqa         10...... 00101010 - 1111 001 ... 00010 @rm_xx ? avx
-vpackusdw         ........ 00101011 - .... 001 ... 00010 @rvm_xxx ? avx
-vmaskmovps        0....... 00101100 0 .... 001 ... 00010 @rvm_xxx ? avx
-vmaskmovps        10...... 00101100 0 .... 001 ... 00010 @rvm_xxx ? avx
-vmaskmovps        0....... 00101100 0 .... 101 ... 00010 @rvm_yyy ? avx
-vmaskmovps        10...... 00101100 0 .... 101 ... 00010 @rvm_yyy ? avx
-vmaskmovpd        0....... 00101101 0 .... 001 ... 00010 @rvm_xxx ? avx
-vmaskmovpd        10...... 00101101 0 .... 001 ... 00010 @rvm_xxx ? avx
-vmaskmovpd        0....... 00101101 0 .... 101 ... 00010 @rvm_yyy ? avx
-vmaskmovpd        10...... 00101101 0 .... 101 ... 00010 @rvm_yyy ? avx
-vmaskmovps        0....... 00101110 0 .... 001 ... 00010 @mvr_xxx ? avx
-vmaskmovps        10...... 00101110 0 .... 001 ... 00010 @mvr_xxx ? avx
-vmaskmovps        0....... 00101110 0 .... 101 ... 00010 @mvr_yyy ? avx
-vmaskmovps        10...... 00101110 0 .... 101 ... 00010 @mvr_yyy ? avx
-vmaskmovpd        0....... 00101111 0 .... 001 ... 00010 @mvr_xxx ? avx
-vmaskmovpd        10...... 00101111 0 .... 001 ... 00010 @mvr_xxx ? avx
-vmaskmovpd        0....... 00101111 0 .... 101 ... 00010 @mvr_yyy ? avx
-vmaskmovpd        10...... 00101111 0 .... 101 ... 00010 @mvr_yyy ? avx
+vpackusdw         ........ 00101011 - .... 001 ... 00010 @rvm_vvv ? avx
+vmaskmovps        0....... 00101100 0 .... .01 ... 00010 @rvm_vvv ? avx
+vmaskmovps        10...... 00101100 0 .... .01 ... 00010 @rvm_vvv ? avx
+vmaskmovpd        0....... 00101101 0 .... .01 ... 00010 @rvm_vvv ? avx
+vmaskmovpd        10...... 00101101 0 .... .01 ... 00010 @rvm_vvv ? avx
+vmaskmovps        0....... 00101110 0 .... .01 ... 00010 @mvr_vvv ? avx
+vmaskmovps        10...... 00101110 0 .... .01 ... 00010 @mvr_vvv ? avx
+vmaskmovpd        0....... 00101111 0 .... .01 ... 00010 @mvr_vvv ? avx
+vmaskmovpd        10...... 00101111 0 .... .01 ... 00010 @mvr_vvv ? avx
 vpmovzxbw         ........ 00110000 - 1111 001 ... 00010 @rm_xx msz=64 ? avx
 vpmovzxbd         ........ 00110001 - 1111 001 ... 00010 @rm_xx msz=32 ? avx
 vpmovzxbq         ........ 00110010 - 1111 001 ... 00010 @rm_xx msz=16 ? avx
 vpmovzxwd         ........ 00110011 - 1111 001 ... 00010 @rm_xx msz=64 ? avx
 vpmovzxwq         ........ 00110100 - 1111 001 ... 00010 @rm_xx msz=32 ? avx
 vpmovzxdq         ........ 00110101 - 1111 001 ... 00010 @rm_xx msz=64 ? avx
-vpcmpgtq          ........ 00110111 - .... 001 ... 00010 @rvm_xxx ? avx
-vpminsb           ........ 00111000 - .... 001 ... 00010 @rvm_xxx ? avx
-vpminsd           ........ 00111001 - .... 001 ... 00010 @rvm_xxx ? avx
-vpminuw           ........ 00111010 - .... 001 ... 00010 @rvm_xxx ? avx
-vpminud           ........ 00111011 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmaxsb           ........ 00111100 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmaxsd           ........ 00111101 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmaxuw           ........ 00111110 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmaxud           ........ 00111111 - .... 001 ... 00010 @rvm_xxx ? avx
-vpmulld           ........ 01000000 - .... 001 ... 00010 @rvm_xxx ? avx
+vpcmpgtq          ........ 00110111 - .... 001 ... 00010 @rvm_vvv ? avx
+vpminsb           ........ 00111000 - .... 001 ... 00010 @rvm_vvv ? avx
+vpminsd           ........ 00111001 - .... 001 ... 00010 @rvm_vvv ? avx
+vpminuw           ........ 00111010 - .... 001 ... 00010 @rvm_vvv ? avx
+vpminud           ........ 00111011 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmaxsb           ........ 00111100 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmaxsd           ........ 00111101 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmaxuw           ........ 00111110 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmaxud           ........ 00111111 - .... 001 ... 00010 @rvm_vvv ? avx
+vpmulld           ........ 01000000 - .... 001 ... 00010 @rvm_vvv ? avx
 vphminposuw       ........ 01000001 - 1111 001 ... 00010 @rm_xx ? avx
 vpermilps         ........ 00000100 0 1111 001 ... 00011 @rm_xx uimm=8 ? avx
 vpermilps         ........ 00000100 0 1111 101 ... 00011 @rm_yy uimm=8 ? avx
 vpermilpd         ........ 00000101 0 1111 001 ... 00011 @rm_xx uimm=8 ? avx
 vpermilpd         ........ 00000101 0 1111 101 ... 00011 @rm_yy uimm=8 ? avx
-vperm2f128        ........ 00000110 0 .... 101 ... 00011 @rvm_yyy uimm=8 ? avx
+vperm2f128        ........ 00000110 0 .... 101 ... 00011 @rvm_vvv uimm=8 ? avx
 vroundps          ........ 00001000 - 1111 001 ... 00011 @rm_xx uimm=8 ? avx
 vroundps          ........ 00001000 - 1111 101 ... 00011 @rm_yy uimm=8 ? avx
 vroundpd          ........ 00001001 - 1111 001 ... 00011 @rm_xx uimm=8 ? avx
 vroundpd          ........ 00001001 - 1111 101 ... 00011 @rm_yy uimm=8 ? avx
-vroundss          ........ 00001010 - .... -01 ... 00011 @rvm_xxx uimm=8 msz=32 ? avx
-vroundsd          ........ 00001011 - .... -01 ... 00011 @rvm_xxx uimm=8 msz=64 ? avx
-vblendps          ........ 00001100 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vblendps          ........ 00001100 - .... 101 ... 00011 @rvm_yyy uimm=8 ? avx
-vblendpd          ........ 00001101 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vblendpd          ........ 00001101 - .... 101 ... 00011 @rvm_yyy uimm=8 ? avx
+vroundss          ........ 00001010 - .... -01 ... 00011 @rvm_xxx_32 uimm=8 ? avx
+vroundsd          ........ 00001011 - .... -01 ... 00011 @rvm_xxx_64 uimm=8 ? avx
+vblendps          ........ 00001100 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
+vblendpd          ........ 00001101 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
 vpblendw          ........ 00001110 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vpalignr          ........ 00001111 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vpalignr          ........ 00001111 - .... 101 ... 00011 @rvm_yyy uimm=8 ? avx
+vpalignr          ........ 00001111 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
 vpextrd           ........ 00010110 0 1111 001 ... 00011 @mr_rx uimm=8 msz=32 ? avx
 vpextrq           ........ 00010110 1 1111 001 ... 00011 @mr_rx uimm=8 msz=64 ? avx
 vextractps        ........ 00010111 - 1111 001 ... 00011 @mr_rx uimm=8 msz=32 ? avx
 vinsertf128       ........ 00011000 0 .... 101 ... 00011 @rvm_yyx uimm=8 ? avx
 vextractf128      ........ 00011001 0 1111 101 ... 00011 @mr_xy uimm=8 ? avx
-vinsertps         ........ 00100001 - .... 001 ... 00011 @rvm_xxx uimm=8 msz=32 ? avx
-vpinsrd           ........ 00100010 0 .... 001 ... 00011 @rvm_xxr uimm=8 msz=32 ? avx
-vpinsrq           ........ 00100010 1 .... 001 ... 00011 @rvm_xxr uimm=8 msz=64 ? avx
-vdpps             ........ 01000000 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vdpps             ........ 01000000 - .... 101 ... 00011 @rvm_yyy uimm=8 ? avx
-vdppd             ........ 01000001 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vmpsadbw          ........ 01000010 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
-vblendvps         ........ 01001010 0 .... 001 ... 00011 @rvm_xxx @vi ? avx
-vblendvps         ........ 01001010 0 .... 101 ... 00011 @rvm_yyy @vi ? avx
-vblendvpd         ........ 01001011 0 .... 001 ... 00011 @rvm_xxx @vi ? avx
-vblendvpd         ........ 01001011 0 .... 101 ... 00011 @rvm_yyy @vi ? avx
-vpblendvb         ........ 01001100 - .... 001 ... 00011 @rvm_xxx @vi ? avx
+vinsertps         ........ 00100001 - .... 001 ... 00011 @rvm_xxx_32 uimm=8 ? avx
+vpinsrd           ........ 00100010 0 .... 001 ... 00011 @rvm_xxr msz=32 uimm=8 ? avx
+vpinsrq           ........ 00100010 1 .... 001 ... 00011 @rvm_xxr msz=64 uimm=8 ? avx
+vdpps             ........ 01000000 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
+vdppd             ........ 01000001 - .... 001 ... 00011 @rvm_vvv uimm=8 ? avx
+vmpsadbw          ........ 01000010 - .... 001 ... 00011 @rvm_vvv uimm=8 ? avx
+vblendvps         ........ 01001010 0 .... .01 ... 00011 @rvm_vvv @vi ? avx
+vblendvpd         ........ 01001011 0 .... .01 ... 00011 @rvm_vvv @vi ? avx
+vpblendvb         ........ 01001100 - .... 001 ... 00011 @rvm_vvv @vi ? avx
 vpcmpestrm        ........ 01100000 - 1111 001 ... 00011 @rm_xx uimm=8 rw=1 ? avx
 vpcmpestri        ........ 01100001 - 1111 001 ... 00011 @rm_xx uimm=8 rw=1 ? avx
 vpcmpistrm        ........ 01100010 - 1111 001 ... 00011 @rm_xx uimm=8 rw=1 ? avx
@@ -741,20 +694,20 @@ vpcmpistri        ........ 01100011 - 1111 001 ... 00011 @rm_xx uimm=8 rw=1 ? av
 # Extension AVX2
 ##############################################################################
 
-vpunpcklbw        ........ 01100000 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpcklwd        ........ 01100001 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpckldq        ........ 01100010 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpacksswb         ........ 01100011 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpcmpgtb          ........ 01100100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpcmpgtw          ........ 01100101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpcmpgtd          ........ 01100110 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpackuswb         ........ 01100111 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpckhbw        ........ 01101000 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpckhwd        ........ 01101001 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpckhdq        ........ 01101010 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpackssdw         ........ 01101011 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpcklqdq       ........ 01101100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpunpckhqdq       ........ 01101101 - .... 101 ... 00001 @rvm_yyy ? avx2
+vpunpcklbw        ........ 01100000 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpcklwd        ........ 01100001 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpckldq        ........ 01100010 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpacksswb         ........ 01100011 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpcmpgtb          ........ 01100100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpcmpgtw          ........ 01100101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpcmpgtd          ........ 01100110 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpackuswb         ........ 01100111 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpckhbw        ........ 01101000 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpckhwd        ........ 01101001 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpckhdq        ........ 01101010 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpackssdw         ........ 01101011 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpcklqdq       ........ 01101100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpunpckhqdq       ........ 01101101 - .... 101 ... 00001 @rvm_vvv ? avx2
 vpshufd           ........ 01110000 - 1111 101 ... 00001 @rm_yy uimm=8 ? avx2
 vpshufhw          ........ 01110000 - 1111 110 ... 00001 @rm_yy uimm=8 ? avx2
 vpshuflw          ........ 01110000 - 1111 111 ... 00001 @rm_yy uimm=8 ? avx2
@@ -768,63 +721,63 @@ vpslldq           11111... 01110011 - .... 101 ... 00001 @vm_yy uimm=8 ? avx2
 vpsllq            ..110... 01110011 - .... 101 ... 00001 @vm_yy uimm=8 ? avx2
 vpsrlq            ..010... 01110011 - .... 101 ... 00001 @vm_yy uimm=8 ? avx2
 vpsrldq           11011... 01110011 - .... 101 ... 00001 @vm_yy uimm=8 ? avx2
-vpcmpeqb          ........ 01110100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpcmpeqw          ........ 01110101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpcmpeqd          ........ 01110110 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsrlw            ........ 11010001 - .... 101 ... 00001 @rvm_yyx ? avx2
-vpsrld            ........ 11010010 - .... 101 ... 00001 @rvm_yyx ? avx2
-vpsrlq            ........ 11010011 - .... 101 ... 00001 @rvm_yyx ? avx2
-vpaddq            ........ 11010100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpmullw           ........ 11010101 - .... 101 ... 00001 @rvm_yyy ? avx2
+vpcmpeqb          ........ 01110100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpcmpeqw          ........ 01110101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpcmpeqd          ........ 01110110 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsrlw            ........ 11010001 - .... 101 ... 00001 @rvm_vvx ? avx2
+vpsrld            ........ 11010010 - .... 101 ... 00001 @rvm_vvx ? avx2
+vpsrlq            ........ 11010011 - .... 101 ... 00001 @rvm_vvx ? avx2
+vpaddq            ........ 11010100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpmullw           ........ 11010101 - .... 101 ... 00001 @rvm_vvv ? avx2
 vpmovmskb         11...... 11010111 - 1111 101 ... 00001 @rm_ry msz=32 rsz=32 ? avx2
-vpsubusb          ........ 11011000 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubusw          ........ 11011001 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpminub           ........ 11011010 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpand             ........ 11011011 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddusb          ........ 11011100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddusw          ........ 11011101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpmaxub           ........ 11011110 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpandn            ........ 11011111 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpavgb            ........ 11100000 - .... 101 ... 00001 @rvm_yyy ? avx2
+vpsubusb          ........ 11011000 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubusw          ........ 11011001 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpminub           ........ 11011010 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpand             ........ 11011011 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddusb          ........ 11011100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddusw          ........ 11011101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpmaxub           ........ 11011110 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpandn            ........ 11011111 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpavgb            ........ 11100000 - .... 101 ... 00001 @rvm_vvv ? avx2
 vpsraw            ........ 11100001 - .... 101 ... 00001 @rvm_yyx ? avx2
 vpsrad            ........ 11100010 - .... 101 ... 00001 @rvm_yyx ? avx2
-vpavgw            ........ 11100011 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpmulhuw          ........ 11100100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpmulhw           ........ 11100101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubsb           ........ 11101000 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubsw           ........ 11101001 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpminsw           ........ 11101010 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpor              ........ 11101011 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddsb           ........ 11101100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddsw           ........ 11101101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpmaxsw           ........ 11101110 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpxor             ........ 11101111 - .... 101 ... 00001 @rvm_yyy ? avx2
+vpavgw            ........ 11100011 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpmulhuw          ........ 11100100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpmulhw           ........ 11100101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubsb           ........ 11101000 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubsw           ........ 11101001 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpminsw           ........ 11101010 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpor              ........ 11101011 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddsb           ........ 11101100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddsw           ........ 11101101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpmaxsw           ........ 11101110 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpxor             ........ 11101111 - .... 101 ... 00001 @rvm_vvv ? avx2
 vpsllw            ........ 11110001 - .... 101 ... 00001 @rvm_yyx ? avx2
 vpslld            ........ 11110010 - .... 101 ... 00001 @rvm_yyx ? avx2
 vpsllq            ........ 11110011 - .... 101 ... 00001 @rvm_yyx ? avx2
-vpmuludq          ........ 11110100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpmaddwd          ........ 11110101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsadbw           ........ 11110110 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubb            ........ 11111000 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubw            ........ 11111001 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubd            ........ 11111010 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpsubq            ........ 11111011 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddb            ........ 11111100 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddw            ........ 11111101 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpaddd            ........ 11111110 - .... 101 ... 00001 @rvm_yyy ? avx2
-vpshufb           ........ 00000000 - .... 101 ... 00010 @rvm_yyy ? avx2
-vphaddw           ........ 00000001 - .... 101 ... 00010 @rvm_yyy ? avx2
-vphaddd           ........ 00000010 - .... 101 ... 00010 @rvm_yyy ? avx2
-vphaddsw          ........ 00000011 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaddubsw        ........ 00000100 - .... 101 ... 00010 @rvm_yyy ? avx2
-vphsubw           ........ 00000101 - .... 101 ... 00010 @rvm_yyy ? avx2
-vphsubd           ........ 00000110 - .... 101 ... 00010 @rvm_yyy ? avx2
-vphsubsw          ........ 00000111 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpsignb           ........ 00001000 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpsignw           ........ 00001001 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpsignd           ........ 00001010 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmulhrsw         ........ 00001011 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpermps           ........ 00010110 0 .... 101 ... 00010 @rvm_yyy ? avx2
+vpmuludq          ........ 11110100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpmaddwd          ........ 11110101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsadbw           ........ 11110110 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubb            ........ 11111000 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubw            ........ 11111001 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubd            ........ 11111010 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpsubq            ........ 11111011 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddb            ........ 11111100 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddw            ........ 11111101 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpaddd            ........ 11111110 - .... 101 ... 00001 @rvm_vvv ? avx2
+vpshufb           ........ 00000000 - .... 101 ... 00010 @rvm_vvv ? avx2
+vphaddw           ........ 00000001 - .... 101 ... 00010 @rvm_vvv ? avx2
+vphaddd           ........ 00000010 - .... 101 ... 00010 @rvm_vvv ? avx2
+vphaddsw          ........ 00000011 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmaddubsw        ........ 00000100 - .... 101 ... 00010 @rvm_vvv ? avx2
+vphsubw           ........ 00000101 - .... 101 ... 00010 @rvm_vvv ? avx2
+vphsubd           ........ 00000110 - .... 101 ... 00010 @rvm_vvv ? avx2
+vphsubsw          ........ 00000111 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpsignb           ........ 00001000 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpsignw           ........ 00001001 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpsignd           ........ 00001010 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmulhrsw         ........ 00001011 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpermps           ........ 00010110 0 .... 101 ... 00010 @rvm_vvv ? avx2
 vbroadcastf128    ........ 00011010 - 1111 101 ... 00010 @rm_yx ? avx2
 vpabsb            ........ 00011100 - 1111 101 ... 00010 @rm_yy ? avx2
 vpabsw            ........ 00011101 - 1111 101 ... 00010 @rm_yy ? avx2
@@ -835,38 +788,33 @@ vpmovsxbq         ........ 00100010 - 1111 101 ... 00010 @rm_yx msz=32 ? avx2
 vpmovsxwd         ........ 00100011 - 1111 101 ... 00010 @rm_yx ? avx2
 vpmovsxwq         ........ 00100100 - 1111 101 ... 00010 @rm_yx msz=64 ? avx2
 vpmovsxdq         ........ 00100101 - 1111 101 ... 00010 @rm_yx ? avx2
-vpmuldq           ........ 00101000 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpcmpeqq          ........ 00101001 - .... 101 ... 00010 @rvm_yyy ? avx2
+vpmuldq           ........ 00101000 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpcmpeqq          ........ 00101001 - .... 101 ... 00010 @rvm_vvv ? avx2
 vmovntdqa         0-...... 00101010 - 1111 101 ... 00010 @rm_yy ? avx2
 vmovntdqa         10...... 00101010 - 1111 101 ... 00010 @rm_yy ? avx2
-vpackusdw         ........ 00101011 - .... 101 ... 00010 @rvm_yyy ? avx2
+vpackusdw         ........ 00101011 - .... 101 ... 00010 @rvm_vvv ? avx2
 vpmovzxbw         ........ 00110000 - 1111 101 ... 00010 @rm_yx ? avx2
 vpmovzxbd         ........ 00110001 - 1111 101 ... 00010 @rm_yx msz=64 ? avx2
 vpmovzxbq         ........ 00110010 - 1111 101 ... 00010 @rm_yx msz=32 ? avx2
 vpmovzxwd         ........ 00110011 - 1111 101 ... 00010 @rm_yx ? avx2
 vpmovzxwq         ........ 00110100 - 1111 101 ... 00010 @rm_yx msz=64 ? avx2
 vpmovzxdq         ........ 00110101 - 1111 101 ... 00010 @rm_yx ? avx2
-vpermd            ........ 00110110 0 .... 101 ... 00010 @rvm_yyy ? avx2
-vpcmpgtq          ........ 00110111 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpminsb           ........ 00111000 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpminsd           ........ 00111001 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpminuw           ........ 00111010 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpminud           ........ 00111011 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaxsb           ........ 00111100 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaxsd           ........ 00111101 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaxuw           ........ 00111110 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaxud           ........ 00111111 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpmulld           ........ 01000000 - .... 101 ... 00010 @rvm_yyy ? avx2
-vpsrlvd           ........ 01000101 0 .... 001 ... 00010 @rvm_xxx ? avx2
-vpsrlvd           ........ 01000101 0 .... 101 ... 00010 @rvm_yyy ? avx2
-vpsrlvq           ........ 01000101 1 .... 001 ... 00010 @rvm_xxx ? avx2
-vpsrlvq           ........ 01000101 1 .... 101 ... 00010 @rvm_yyy ? avx2
-vpsravd           ........ 01000110 0 .... 001 ... 00010 @rvm_xxx ? avx2
-vpsravd           ........ 01000110 0 .... 101 ... 00010 @rvm_yyy ? avx2
-vpsllvd           ........ 01000111 0 .... 001 ... 00010 @rvm_xxx ? avx2
-vpsllvd           ........ 01000111 0 .... 101 ... 00010 @rvm_yyy ? avx2
-vpsllvq           ........ 01000111 1 .... 001 ... 00010 @rvm_xxx ? avx2
-vpsllvq           ........ 01000111 1 .... 101 ... 00010 @rvm_yyy ? avx2
+vpermd            ........ 00110110 0 .... 101 ... 00010 @rvm_vvv ? avx2
+vpcmpgtq          ........ 00110111 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpminsb           ........ 00111000 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpminsd           ........ 00111001 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpminuw           ........ 00111010 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpminud           ........ 00111011 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmaxsb           ........ 00111100 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmaxsd           ........ 00111101 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmaxuw           ........ 00111110 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmaxud           ........ 00111111 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpmulld           ........ 01000000 - .... 101 ... 00010 @rvm_vvv ? avx2
+vpsrlvd           ........ 01000101 0 .... .01 ... 00010 @rvm_vvv ? avx2
+vpsrlvq           ........ 01000101 1 .... .01 ... 00010 @rvm_vvv ? avx2
+vpsravd           ........ 01000110 0 .... .01 ... 00010 @rvm_vvv ? avx2
+vpsllvd           ........ 01000111 0 .... .01 ... 00010 @rvm_vvv ? avx2
+vpsllvq           ........ 01000111 1 .... .01 ... 00010 @rvm_vvv ? avx2
 vpbroadcastd      ........ 01011000 0 1111 001 ... 00010 @rm_xx msz=32 ? avx2
 vpbroadcastd      ........ 01011000 0 1111 101 ... 00010 @rm_yx msz=32 ? avx2
 vpbroadcastq      ........ 01011001 0 1111 001 ... 00010 @rm_xx msz=64 ? avx2
@@ -877,22 +825,14 @@ vpbroadcastb      ........ 01111000 0 1111 001 ... 00010 @rm_xx msz=8  ? avx2
 vpbroadcastb      ........ 01111000 0 1111 101 ... 00010 @rm_yx msz=8  ? avx2
 vpbroadcastw      ........ 01111001 0 1111 001 ... 00010 @rm_xx msz=16 ? avx2
 vpbroadcastw      ........ 01111001 0 1111 101 ... 00010 @rm_yx msz=16 ? avx2
-vpmaskmovd        0....... 10001100 0 .... 001 ... 00010 @rvm_xxx ? avx2
-vpmaskmovd        10...... 10001100 0 .... 001 ... 00010 @rvm_xxx ? avx2
-vpmaskmovd        0....... 10001100 0 .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaskmovd        10...... 10001100 0 .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaskmovq        0....... 10001100 1 .... 001 ... 00010 @rvm_xxx ? avx2
-vpmaskmovq        10...... 10001100 1 .... 001 ... 00010 @rvm_xxx ? avx2
-vpmaskmovq        0....... 10001100 1 .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaskmovq        10...... 10001100 1 .... 101 ... 00010 @rvm_yyy ? avx2
-vpmaskmovd        0....... 10001110 0 .... 001 ... 00010 @mvr_xxx ? avx2
-vpmaskmovd        10...... 10001110 0 .... 001 ... 00010 @mvr_xxx ? avx2
-vpmaskmovd        0....... 10001110 0 .... 101 ... 00010 @mvr_yyy ? avx2
-vpmaskmovd        10...... 10001110 0 .... 101 ... 00010 @mvr_yyy ? avx2
-vpmaskmovq        0....... 10001110 1 .... 001 ... 00010 @mvr_xxx ? avx2
-vpmaskmovq        10...... 10001110 1 .... 001 ... 00010 @mvr_xxx ? avx2
-vpmaskmovq        0....... 10001110 1 .... 101 ... 00010 @mvr_yyy ? avx2
-vpmaskmovq        10...... 10001110 1 .... 101 ... 00010 @mvr_yyy ? avx2
+vpmaskmovd        0....... 10001100 0 .... .01 ... 00010 @rvm_vvv ? avx2
+vpmaskmovd        10...... 10001100 0 .... .01 ... 00010 @rvm_vvv ? avx2
+vpmaskmovq        0....... 10001100 1 .... .01 ... 00010 @rvm_vvv ? avx2
+vpmaskmovq        10...... 10001100 1 .... .01 ... 00010 @rvm_vvv ? avx2
+vpmaskmovd        0....... 10001110 0 .... .01 ... 00010 @mvr_vvv ? avx2
+vpmaskmovd        10...... 10001110 0 .... .01 ... 00010 @mvr_vvv ? avx2
+vpmaskmovq        0....... 10001110 1 .... .01 ... 00010 @mvr_vvv ? avx2
+vpmaskmovq        10...... 10001110 1 .... .01 ... 00010 @mvr_vvv ? avx2
 vpgatherdd        0....... 10010000 0 .... .01 ... 00010 @gather_vvv msz=32 ? avx2
 vpgatherdd        10...1.. 10010000 0 .... .01 ... 00010 @gather_vvv msz=32 ? avx2
 vpgatherdq        0....1.. 10010000 1 .... .01 ... 00010 @gather_vvv msz=64 isz=128 ? avx2
@@ -911,14 +851,13 @@ vgatherqpd        0....1.. 10010011 1 .... .01 ... 00010 @gather_vvv msz=64 ? av
 vgatherqpd        10...1.. 10010011 1 .... .01 ... 00010 @gather_vvv msz=64 ? avx2
 vpermq            ........ 00000000 1 1111 101 ... 00011 @rm_yy uimm=8 ? avx2
 vpermpd           ........ 00000001 1 1111 101 ... 00011 @rm_yy uimm=8 ? avx2
-vpblendd          ........ 00000010 0 .... 001 ... 00011 @rvm_xxx uimm=8 ? avx2
-vpblendd          ........ 00000010 0 .... 101 ... 00011 @rvm_yyy uimm=8 ? avx2
-vpblendw          ........ 00001110 - .... 101 ... 00011 @rvm_yyy uimm=8 ? avx2
-vinserti128       ........ 00111000 0 .... 101 ... 00011 @rvm_yyx uimm=8 ? avx2
+vpblendd          ........ 00000010 0 .... .01 ... 00011 @rvm_vvv uimm=8 ? avx2
+vpblendw          ........ 00001110 - .... 101 ... 00011 @rvm_vvv uimm=8 ? avx2
+vinserti128       ........ 00111000 0 .... 101 ... 00011 @rvm_vvx uimm=8 ? avx2
 vextracti128      ........ 00111001 0 1111 101 ... 00011 @mr_xy uimm=8 ? avx2
-vmpsadbw          ........ 01000010 - .... 101 ... 00011 @rvm_yyy uimm=8 ? avx2
-vperm2i128        ........ 01000110 0 .... 101 ... 00011 @rvm_yyy uimm=8 ? avx2
-vpblendvb         ........ 01001100 - .... 101 ... 00011 @rvm_yyy @vi ? avx2
+vmpsadbw          ........ 01000010 - .... 101 ... 00011 @rvm_vvv uimm=8 ? avx2
+vperm2i128        ........ 01000110 0 .... 101 ... 00011 @rvm_vvv uimm=8 ? avx2
+vpblendvb         ........ 01001100 - .... 101 ... 00011 @rvm_vvv @vi ? avx2
 
 ##############################################################################
 # Extension F16C
@@ -933,14 +872,10 @@ vcvtps2ph         ........ 00011101 0 1111 101 ... 00011 @mr_xy uimm=8        ? 
 # Extension AVX-VNNI
 ##############################################################################
 
-vpdpbusd          ........ 01010000 0 .... 001 ... 00010 @rvm_xxx rw=3 ? avx_vnni
-vpdpbusds         ........ 01010001 0 .... 001 ... 00010 @rvm_xxx rw=3 ? avx_vnni
-vpdpwssd          ........ 01010010 0 .... 001 ... 00010 @rvm_xxx rw=3 ? avx_vnni
-vpdpwssds         ........ 01010011 0 .... 001 ... 00010 @rvm_xxx rw=3 ? avx_vnni
-vpdpbusd          ........ 01010000 0 .... 101 ... 00010 @rvm_yyy rw=3 ? avx_vnni
-vpdpbusds         ........ 01010001 0 .... 101 ... 00010 @rvm_yyy rw=3 ? avx_vnni
-vpdpwssd          ........ 01010010 0 .... 101 ... 00010 @rvm_yyy rw=3 ? avx_vnni
-vpdpwssds         ........ 01010011 0 .... 101 ... 00010 @rvm_yyy rw=3 ? avx_vnni
+vpdpbusd          ........ 01010000 0 .... .01 ... 00010 @rvm_vvv_rw ? avx_vnni
+vpdpbusds         ........ 01010001 0 .... .01 ... 00010 @rvm_vvv_rw ? avx_vnni
+vpdpwssd          ........ 01010010 0 .... .01 ... 00010 @rvm_vvv_rw ? avx_vnni
+vpdpwssds         ........ 01010011 0 .... .01 ... 00010 @rvm_vvv_rw ? avx_vnni
 
 ##############################################################################
 # Extension AVX-512*
@@ -1039,15 +974,15 @@ rorx              ........ 11110000 . 1111 011 ... 00011 @rm_rr uimm=8 suffix=1 
 ##############################################################################
 
 vaesimc           ........ 11011011 - 1111 001 ... 00010 @rm_xx ? aes_or_vaes avx
-vaesenc           ........ 11011100 - .... 001 ... 00010 @rvm_xxx ? aes avx
-vaesenclast       ........ 11011101 - .... 001 ... 00010 @rvm_xxx ? aes avx
-vaesdec           ........ 11011110 - .... 001 ... 00010 @rvm_xxx ? aes avx
-vaesdeclast       ........ 11011111 - .... 001 ... 00010 @rvm_xxx ? aes avx
+vaesenc           ........ 11011100 - .... 001 ... 00010 @rvm_vvv ? aes avx
+vaesenclast       ........ 11011101 - .... 001 ... 00010 @rvm_vvv ? aes avx
+vaesdec           ........ 11011110 - .... 001 ... 00010 @rvm_vvv ? aes avx
+vaesdeclast       ........ 11011111 - .... 001 ... 00010 @rvm_vvv ? aes avx
 
-vaesenc           ........ 11011100 - .... 101 ... 00010 @rvm_yyy ? vaes
-vaesenclast       ........ 11011101 - .... 101 ... 00010 @rvm_yyy ? vaes
-vaesdec           ........ 11011110 - .... 101 ... 00010 @rvm_yyy ? vaes
-vaesdeclast       ........ 11011111 - .... 101 ... 00010 @rvm_yyy ? vaes
+vaesenc           ........ 11011100 - .... 101 ... 00010 @rvm_vvv ? vaes
+vaesenclast       ........ 11011101 - .... 101 ... 00010 @rvm_vvv ? vaes
+vaesdec           ........ 11011110 - .... 101 ... 00010 @rvm_vvv ? vaes
+vaesdeclast       ........ 11011111 - .... 101 ... 00010 @rvm_vvv ? vaes
 
 vaeskeygenassist  ........ 11011111 - 1111 001 ... 00011 @rm_xx uimm=8 ? aes_or_vaes avx
 
@@ -1166,9 +1101,8 @@ vfnmsubsd         ........ 01111111 1 .... 001 ... 00011 @fmaddsd_4b ? fma4
 # Extension VPCLMULQDQ
 ##############################################################################
 
-vpclmulqdq        ........ 01000100 - .... 001 ... 00011 @rvm_xxx opc=8 ? vpclmulqdq avx
 {
-  vpclmulqdq      ........ 01000100 - .... 101 ... 00011 @rvm_yyy opc=8 ? vpclmulqdq avx
+  vpclmulqdq      ........ 01000100 - .... .01 ... 00011 @rvm_vvv opc=8 ? vpclmulqdq avx
   vpclmullqlqdq   ........ 01000100 - .... 101 ... 00011 ? never
   vpclmulhqlqdq   ........ 01000100 - .... 101 ... 00011 ? never
   vpclmullqhqdq   ........ 01000100 - .... 101 ... 00011 ? never
@@ -1179,12 +1113,9 @@ vpclmulqdq        ........ 01000100 - .... 001 ... 00011 @rvm_xxx opc=8 ? vpclmu
 # Extension GFNI
 ##############################################################################
 
-vgf2p8mulb        ........ 11001111 0 ---- 001 ... 00010 @rvm_xxx ? avx gfni
-vgf2p8mulb        ........ 11001111 0 ---- 101 ... 00010 @rvm_yyy ? avx gfni
-vgf2p8affineqb    ........ 11001110 1 ---- 001 ... 00011 @rvm_xxx uimm=8 ? avx gfni
-vgf2p8affineqb    ........ 11001110 1 ---- 101 ... 00011 @rvm_yyy uimm=8 ? avx gfni
-vgf2p8affineinvqb ........ 11001111 1 ---- 001 ... 00011 @rvm_xxx uimm=8 ? avx gfni
-vgf2p8affineinvqb ........ 11001111 1 ---- 101 ... 00011 @rvm_yyy uimm=8 ? avx gfni
+vgf2p8mulb        ........ 11001111 0 ---- .01 ... 00010 @rvm_vvv ? avx gfni
+vgf2p8affineqb    ........ 11001110 1 ---- .01 ... 00011 @rvm_vvv uimm=8 ? avx gfni
+vgf2p8affineinvqb ........ 11001111 1 ---- .01 ... 00011 @rvm_vvv uimm=8 ? avx gfni
 
 ##############################################################################
 # Uncategorized
