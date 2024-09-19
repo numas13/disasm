@@ -276,12 +276,20 @@ const ST_NAME: [&str; 8] = [
 ];
 
 pub struct Printer {
+    amd64: bool,
     att: bool,
 }
 
 impl Printer {
     pub fn new(_: &disasm_core::Options, opts_arch: &super::Options) -> Self {
-        Self { att: opts_arch.att }
+        Self {
+            amd64: opts_arch.ext.amd64,
+            att: opts_arch.att,
+        }
+    }
+
+    fn is_amd64(&self) -> bool {
+        self.amd64
     }
 
     fn is_att(&self) -> bool {
@@ -496,7 +504,7 @@ impl Printer {
 
 impl<E: PrinterExt> ArchPrinter<E> for Printer {
     fn mnemonic(&self, insn: &Insn) -> Option<(&'static str, &'static str)> {
-        super::mnemonic(insn)
+        super::mnemonic(insn, self.is_amd64(), self.is_att())
     }
 
     fn register_name(&self, reg: Reg) -> Cow<'static, str> {
@@ -549,7 +557,8 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
             len += s.len();
         }
 
-        let (mnemonic, _) = super::mnemonic(insn).unwrap_or(("<invalid>", ""));
+        let (mnemonic, _) =
+            super::mnemonic(insn, self.is_amd64(), self.is_att()).unwrap_or(("<invalid>", ""));
         ext.print_mnemonic(fmt, mnemonic)?;
         len += mnemonic.len();
 
@@ -562,6 +571,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                 insn::SUFFIX_FP_S => "s",
                 insn::SUFFIX_FP_L => "l",
                 insn::SUFFIX_FP_LL => "ll",
+                insn::SUFFIX_FP_T => "t",
                 _ => unreachable!(),
             };
             ext.print_mnemonic(fmt, suffix)?;

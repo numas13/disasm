@@ -1438,7 +1438,13 @@ impl<'a> Inner<'a> {
         self.set_suffix(out, sz)
     }
 
-    fn impl_args_mr_base(&mut self, out: &mut Insn, args: &args_mr, mem_access: Access, reg_access: Access) -> Result {
+    fn impl_args_mr_base(
+        &mut self,
+        out: &mut Insn,
+        args: &args_mr,
+        mem_access: Access,
+        reg_access: Access,
+    ) -> Result {
         let sz = self.operand_size_bwlq().bits() as i32;
         self.set_gpr_mem(out, args.b, 0, mem_access, sz)?;
         self.set_gpr_reg(out, args.r, reg_access, sz)?;
@@ -2167,6 +2173,7 @@ impl SetValue for Inner<'_> {
             value as usize
         };
         let suffix = match size {
+            2 => insn::SUFFIX_FP_T,
             32 => insn::SUFFIX_FP_S,
             64 => insn::SUFFIX_FP_L,
             80 => insn::SUFFIX_FP_LL,
@@ -3695,7 +3702,25 @@ fn sign_extend(value: u64, from: usize, to: usize) -> u64 {
 }
 
 #[cfg(feature = "mnemonic")]
-fn mnemonic(insn: &Insn) -> Option<(&'static str, &'static str)> {
-    let m = self::opcode::mnemonic(insn.opcode())?;
-    Some((m, ""))
+fn mnemonic(insn: &Insn, amd64: bool, att: bool) -> Option<(&'static str, &'static str)> {
+    let s = if att {
+        match insn.opcode() {
+            opcode::CBW => "cbtw",
+            opcode::CWDE => "cwtl",
+            opcode::CDQE => "cltq",
+            opcode::CWD => "cwtd",
+            opcode::CDQ => "cltd",
+            opcode::CQO => "cqto",
+            opcode::MOVSXD => "movslq",
+            opcode::PUSHF if amd64 => "pushfq",
+            opcode::POPF if amd64 => "popfq",
+            opcode::PUSHA => "pushad",
+            opcode::POPA => "popad",
+            opcode::RETF => "lretl",
+            _ => self::opcode::mnemonic(insn.opcode())?,
+        }
+    } else {
+        self::opcode::mnemonic(insn.opcode())?
+    };
+    Some((s, ""))
 }

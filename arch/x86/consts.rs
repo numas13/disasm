@@ -18,6 +18,7 @@ pub mod insn {
     pub const SUFFIX_FP_S: u32 = 4;
     pub const SUFFIX_FP_L: u32 = 5;
     pub const SUFFIX_FP_LL: u32 = 6;
+    pub const SUFFIX_FP_T: u32 = 7;
 
     pub const REP_NONE: u32 = 0;
     pub const REP: u32 = 1;
