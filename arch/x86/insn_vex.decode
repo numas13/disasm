@@ -203,146 +203,10 @@
   vmovss          11...... 00010001 - .... -10 ... 00001 @mvr_xxx ? avx
   vmovss          ........ 00010001 - 1111 -10 ... 00001 @mr_xx_32 ? avx
 }
-{
-  vcmpss          ........ 11000010 - .... -10 ... 00001 @rvm_xxx_32 opc=8 ? avx
-  vcmpeqss        ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpltss        ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpless        ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpunordss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpneqss       ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpnltss       ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpnless       ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpordss       ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpeq_uqss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpngess       ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpngtss       ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpfalsess     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpneq_oqss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpgess        ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpgtss        ........ 11000010 - .... -10 ... 00001 ? never
-  vcmptruess      ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpeq_osss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmplt_oqss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmple_oqss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpunord_sss   ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpneq_usss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpnlt_uqss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpnle_uqss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpord_sss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpeq_usss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpnge_uqss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpngt_uqss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpfalse_osss  ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpneq_osss    ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpge_oqss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmpgt_oqss     ........ 11000010 - .... -10 ... 00001 ? never
-  vcmptrue_usss   ........ 11000010 - .... -10 ... 00001 ? never
-}
-{
-  vcmpsd          ........ 11000010 - .... -11 ... 00001 @rvm_xxx_64 opc=8 ? avx
-  vcmpeqsd        ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpltsd        ........ 11000010 - .... -11 ... 00001 ? never
-  vcmplesd        ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpunordsd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpneqsd       ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpnltsd       ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpnlesd       ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpordsd       ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpeq_uqsd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpngesd       ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpngtsd       ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpfalsesd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpneq_oqsd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpgesd        ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpgtsd        ........ 11000010 - .... -11 ... 00001 ? never
-  vcmptruesd      ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpeq_ossd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmplt_oqsd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmple_oqsd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpunord_ssd   ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpneq_ussd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpnlt_uqsd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpnle_uqsd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpord_ssd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpeq_ussd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpnge_uqsd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpngt_uqsd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpfalse_ossd  ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpneq_ossd    ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpge_oqsd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmpgt_oqsd     ........ 11000010 - .... -11 ... 00001 ? never
-  vcmptrue_ussd   ........ 11000010 - .... -11 ... 00001 ? never
-}
-{
-  vcmpps          ........ 11000010 - .... .00 ... 00001 @rvm_vvv opc=8 ? avx
-  vcmpeqps        ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpltps        ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpleps        ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpunordps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpneqps       ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpnltps       ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpnleps       ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpordps       ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpeq_uqps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpngeps       ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpngtps       ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpfalseps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpneq_oqps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpgeps        ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpgtps        ........ 11000010 - .... .00 ... 00001 ? never
-  vcmptrueps      ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpeq_osps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmplt_oqps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmple_oqps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpunord_sps   ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpneq_usps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpnlt_uqps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpnle_uqps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpord_sps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpeq_usps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpnge_uqps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpngt_uqps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpfalse_osps  ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpneq_osps    ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpge_oqps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmpgt_oqps     ........ 11000010 - .... .00 ... 00001 ? never
-  vcmptrue_usps   ........ 11000010 - .... .00 ... 00001 ? never
-}
-{
-  vcmppd          ........ 11000010 - .... .01 ... 00001 @rvm_vvv opc=8 ? avx
-  vcmpeqpd        ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpltpd        ........ 11000010 - .... .01 ... 00001 ? never
-  vcmplepd        ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpunordpd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpneqpd       ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpnltpd       ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpnlepd       ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpordpd       ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpeq_uqpd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpngepd       ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpngtpd       ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpfalsepd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpneq_oqpd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpgepd        ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpgtpd        ........ 11000010 - .... .01 ... 00001 ? never
-  vcmptruepd      ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpeq_ospd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmplt_oqpd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmple_oqpd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpunord_spd   ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpneq_uspd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpnlt_uqpd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpnle_uqpd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpord_spd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpeq_uspd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpnge_uqpd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpngt_uqpd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpfalse_ospd  ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpneq_ospd    ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpge_oqpd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmpgt_oqpd     ........ 11000010 - .... .01 ... 00001 ? never
-  vcmptrue_uspd   ........ 11000010 - .... .01 ... 00001 ? never
-}
+vcmpss            ........ 11000010 - .... -10 ... 00001 @rvm_xxx_32 opc=8 ? avx
+vcmpsd            ........ 11000010 - .... -11 ... 00001 @rvm_xxx_64 opc=8 ? avx
+vcmpps            ........ 11000010 - .... .00 ... 00001 @rvm_vvv opc=8 ? avx
+vcmppd            ........ 11000010 - .... .01 ... 00001 @rvm_vvv opc=8 ? avx
 {
   vbroadcastss    11...... 00011000 - 1111 001 ... 00010 @rm_xx_32 ? avx2
   vbroadcastss    ........ 00011000 - 1111 001 ... 00010 @rm_xx_32 ? avx
@@ -1075,13 +939,7 @@ vfnmsubsd         ........ 01111111 1 .... 001 ... 00011 @fmaddsd_4b ? fma4
 # Extension VPCLMULQDQ
 ##############################################################################
 
-{
-  vpclmulqdq      ........ 01000100 - .... .01 ... 00011 @rvm_vvv opc=8 ? vpclmulqdq avx
-  vpclmullqlqdq   ........ 01000100 - .... 101 ... 00011 ? never
-  vpclmulhqlqdq   ........ 01000100 - .... 101 ... 00011 ? never
-  vpclmullqhqdq   ........ 01000100 - .... 101 ... 00011 ? never
-  vpclmulhqhqdq   ........ 01000100 - .... 101 ... 00011 ? never
-}
+vpclmulqdq        ........ 01000100 - .... .01 ... 00011 @rvm_vvv opc=8 ? vpclmulqdq avx
 
 ##############################################################################
 # Extension GFNI

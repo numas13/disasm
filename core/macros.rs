@@ -100,3 +100,23 @@ macro_rules! impl_field {
     );
 }
 pub use impl_field;
+
+#[macro_export]
+macro_rules! define_opcodes {
+    ($($name:ident = $mnemonic:literal),* $(,)?) => (
+        #[repr(u32)]
+        enum Opcodes {
+            $($name),*
+        }
+
+        $(pub const $name: Opcode = Opcode(Opcodes::$name as u32);)*
+
+        pub(crate) fn defined_mnemonic(opcode: Opcode) -> Option<&'static str> {
+            Some(match opcode {
+                $($name => $mnemonic,)*
+                _ => return None,
+            })
+        }
+    );
+}
+pub use define_opcodes;

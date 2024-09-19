@@ -110,8 +110,4 @@ gf2p8affineinvqb  ........ 11001111 - 001- --- ... ----- @rm_xx_rw uimm=8 ? gfni
 # Uncategorized
 ##############################################################################
 
-pclmulqdq         ........ 01000100 - 001- 0-- ... ----- @rm_xx_rw opc=8 ? pclmulqdq
-pclmullqlqdq      00000000 01000100 - 001- 1-- ... ----- ? never
-pclmulhqlqdq      00000001 01000100 - 001- 1-- ... ----- ? never
-pclmullqhqdq      00010000 01000100 - 001- 1-- ... ----- ? never
-pclmulhqhqdq      00010001 01000100 - 001- 1-- ... ----- ? never
+pclmulqdq         ........ 01000100 - 001- --- ... ----- @rm_xx_rw opc=8 ? pclmulqdq

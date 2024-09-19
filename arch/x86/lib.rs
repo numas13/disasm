@@ -3536,11 +3536,6 @@ impl X86Decode0f for Inner<'_> {
         self.bytes.advance((count - INSN_FIXED_SIZE) / 8)
     }
 
-    #[inline(always)]
-    fn cond_never(&self) -> bool {
-        false
-    }
-
     fn cond_att(&self) -> bool {
         self.opts_arch.att
     }
@@ -3612,11 +3607,6 @@ impl X86Decode0f3a for Inner<'_> {
         Error::Failed(0)
     }
 
-    #[inline(always)]
-    fn cond_never(&self) -> bool {
-        false
-    }
-
     impl_cond_ext! {
         cond_sse3 = sse3,
         cond_sse4_1 = sse4_1,
@@ -3631,11 +3621,6 @@ impl X86Decode0f3a for Inner<'_> {
 impl X86DecodeVex for Inner<'_> {
     fn fail(&self) -> Self::Error {
         Error::Failed(0)
-    }
-
-    #[inline(always)]
-    fn cond_never(&self) -> bool {
-        false
     }
 
     impl_cond_ext! {
@@ -3680,11 +3665,6 @@ impl X86DecodeVex for Inner<'_> {
 impl X86DecodeEvex for Inner<'_> {
     fn fail(&self) -> Self::Error {
         Error::Failed(0)
-    }
-
-    #[inline(always)]
-    fn cond_never(&self) -> bool {
-        false
     }
 
     #[inline(always)]
@@ -3772,8 +3752,9 @@ fn sign_extend(value: u64, from: usize, to: usize) -> u64 {
 
 #[cfg(feature = "mnemonic")]
 fn mnemonic(insn: &Insn, amd64: bool, att: bool) -> Option<(&'static str, &'static str)> {
+    let opcode = insn.opcode();
     let s = if att {
-        match insn.opcode() {
+        match opcode {
             opcode::CBW => "cbtw",
             opcode::CWDE => "cwtl",
             opcode::CDQE => "cltq",
@@ -3789,7 +3770,7 @@ fn mnemonic(insn: &Insn, amd64: bool, att: bool) -> Option<(&'static str, &'stat
             _ => self::opcode::mnemonic(insn.opcode())?,
         }
     } else {
-        self::opcode::mnemonic(insn.opcode())?
+        self::opcode::defined_mnemonic(opcode).or_else(|| self::opcode::mnemonic(opcode))?
     };
     Some((s, ""))
 }
