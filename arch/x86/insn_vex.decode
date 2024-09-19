@@ -21,25 +21,25 @@
 # Argument sets
 ##############################################################################
 
-&mem              rw b msz !extern
+&mem              b rw msz !extern
 
-&rm_rr            rw b r msz rsz !extern
+&rm_rr            r b rw msz rsz !extern
 
-&rvm_rrr          rw b r v msz rsz vsz
-&rmv_rrr          rw b r v msz rsz vsz
+&rvm_rrr          r b v rw msz rsz vsz
+&rmv_rrr          r b v rw msz rsz vsz
 
-&evex_mr_rv       rw b r msz !extern
-&evex_mr_kk       rw b r msz
-&evex_rm_kk       rw b r msz
-&evex_rm_rk       rw b r msz rsz
-&evex_rm_kr       rw b r msz
-&evex_rm_rv       rw b r msz rsz !extern
-&evex_rm_vr       rw b r msz !extern
-&evex_rm_vv       rw b r msz bcst !extern
+&evex_mr_rv       r b rw msz !extern
+&evex_mr_kk       r b rw msz
+&evex_rm_kk       r b rw msz
+&evex_rm_rk       r b rw msz rsz
+&evex_rm_kr       r b rw msz
+&evex_rm_rv       r b rw msz rsz !extern
+&evex_rm_vr       r b rw msz !extern
+&evex_rm_vv       r b rw msz bcst !extern
 
-&evex_rvm_vvv     rw b r v msz bcst !extern
-&evex_rvm_vvr     rw b r v msz !extern
-&evex_rvm_kkk     rw b r v msz
+&evex_rvm_vvv     r b v rw msz bcst !extern
+&evex_rvm_vvr     r b v rw msz !extern
+&evex_rvm_kkk     r b v rw msz
 
 &gather           b r v msz isz
 

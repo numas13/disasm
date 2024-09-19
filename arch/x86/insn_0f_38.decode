@@ -13,14 +13,14 @@
 # Argument sets
 ##############################################################################
 
-&mem_vec    rw b msz !extern
+&mem_vec    b rw msz !extern
 
-&rm_rr      rw b r msz rsz !extern
-&rm_xr      rw r b msz !extern
+&rm_rr      r b rw msz rsz !extern
+&rm_xr      r b rw msz !extern
 
-&mr_rr      rw b r msz rsz !extern
+&mr_rr      r b rw msz rsz !extern
 
-&reg_vec    rw reg rsz !extern
+&reg_vec    reg rw rsz !extern
 
 &rm_xx            r b !extern
 &rm_mm            r b !extern

@@ -13,8 +13,8 @@
 # Argument sets
 ##############################################################################
 
-&rm_xr      rw r b msz !extern
-&mr_rx      rw r b msz !extern
+&rm_xr      r b rw msz !extern
+&mr_rx      r b rw msz !extern
 
 &rm_xx            r b !extern
 &rm_mm            r b !extern

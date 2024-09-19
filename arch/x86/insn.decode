@@ -15,12 +15,10 @@
 # Argument sets
 ##############################################################################
 
-&segment    rw seg
-
-&mem        rw b msz
-&rm_rr      rw b r msz rsz
-&mr_rr      rw b r msz rsz
-&reg        rw reg rsz
+&mem        b rw msz
+&rm_rr      r b rw msz rsz
+&mr_rr      r b rw msz rsz
+&reg        reg rw rsz
 
 # read/write segment to base/mem
 &mov_seg    base seg
@@ -28,8 +26,8 @@
 &r                r
 &m                b
 
-&rm               b r
-&mr               b r
+&rm               r b
+&mr               r b
 
 ##############################################################################
 # Formats

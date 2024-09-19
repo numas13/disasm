@@ -17,14 +17,14 @@
 # Argument sets
 ##############################################################################
 
-&evex_rm_rv       rw r b msz rsz
-&evex_mr_rv       rw r b msz
-&evex_rm_vr       rw r b msz
-&evex_rm_vv       rw r b msz bcst
-&evex_rm_vk       rw r b msz
+&evex_rm_rv       r b rw msz rsz
+&evex_mr_rv       r b rw msz
+&evex_rm_vr       r b rw msz
+&evex_rm_vv       r b rw msz bcst
+&evex_rm_vk       r b rw msz
 
-&evex_rvm_vvv     rw r v b msz bcst
-&evex_rvm_vvr     rw r v b msz
+&evex_rvm_vvv     r v b rw msz bcst
+&evex_rvm_vvr     r v b rw msz
 
 &evex_gather      r b msz
 &evex_scatter     r b msz
@@ -52,13 +52,13 @@
 &mr_xv            r b !extern
 &mr_xx            r b !extern
 
-&rvm_vvv          r v b !extern
-&rvm_vvy          r v b
-&rvm_vvx          r v b !extern
-&rvm_xxx          r v b !extern
-&rvm_kvv          r v b
+&rvm_vvv          r b v !extern
+&rvm_vvy          r b v
+&rvm_vvx          r b v !extern
+&rvm_xxx          r b v !extern
+&rvm_kvv          r b v
 
-&mvr_xxx          r v b !extern
+&mvr_xxx          r b v !extern
 
 ##############################################################################
 # Formats

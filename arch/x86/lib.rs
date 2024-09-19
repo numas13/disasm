@@ -1425,14 +1425,21 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn impl_args_m(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+    fn impl_args_m_bwlq(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
         let sz = self.operand_size_bwlq().bits() as i32;
         self.set_gpr_mem(out, args.b, 0, access, sz)?;
         self.set_suffix(out, sz)
     }
 
-    fn impl_args_rm(&mut self, out: &mut Insn, args: &args_rm, access: Access) -> Result {
+    fn impl_args_rm_bwlq(&mut self, out: &mut Insn, args: &args_rm, access: Access) -> Result {
         let sz = self.operand_size_bwlq().bits() as i32;
+        self.set_gpr_reg(out, args.r, access, sz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn impl_args_rm_wlq(&mut self, out: &mut Insn, args: &args_rm, access: Access) -> Result {
+        let sz = self.operand_size.bits() as i32;
         self.set_gpr_reg(out, args.r, access, sz)?;
         self.set_gpr_mem(out, args.b, 0, Access::Read, sz)?;
         self.set_suffix(out, sz)
@@ -1463,7 +1470,7 @@ impl<'a> Inner<'a> {
         self.set_suffix(out, sz)
     }
 
-    fn impl_args_ri(&mut self, out: &mut Insn, args: &args_r, access: Access) -> Result {
+    fn impl_args_ri_bwlq(&mut self, out: &mut Insn, args: &args_r, access: Access) -> Result {
         let size = self.operand_size_bwlq();
         let sz = size.bits() as i32;
         self.set_gpr_reg(out, args.r, access, sz)?;
@@ -1471,7 +1478,7 @@ impl<'a> Inner<'a> {
         self.set_suffix(out, sz)
     }
 
-    fn impl_args_mi(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
+    fn impl_args_mi_bwlq(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
         let size = self.operand_size_bwlq();
         let sz = size.bits() as i32;
         self.set_gpr_mem(out, args.b, 0, access, sz)?;
@@ -2250,18 +2257,18 @@ impl SetValue for Inner<'_> {
 
     forward! {
         args_r {
-            fn set_args_ri_ro = impl_args_ri(Access::Read),
-            fn set_args_ri_rw = impl_args_ri(Access::ReadWrite),
+            fn set_args_ri_ro = impl_args_ri_bwlq(Access::Read),
+            fn set_args_ri_rw = impl_args_ri_bwlq(Access::ReadWrite),
         }
         args_m {
-            fn set_args_m = impl_args_m(Access::Write),
-            fn set_args_m_rw = impl_args_m(Access::ReadWrite),
+            fn set_args_m = impl_args_m_bwlq(Access::Write),
+            fn set_args_m_rw = impl_args_m_bwlq(Access::ReadWrite),
             fn set_args_mr_cl_rw = impl_args_mr_cl(Access::ReadWrite),
         }
         args_m {
-            fn set_args_mi = impl_args_mi(Access::Write),
-            fn set_args_mi_ro = impl_args_mi(Access::Read),
-            fn set_args_mi_rw = impl_args_mi(Access::ReadWrite),
+            fn set_args_mi = impl_args_mi_bwlq(Access::Write),
+            fn set_args_mi_ro = impl_args_mi_bwlq(Access::Read),
+            fn set_args_mi_rw = impl_args_mi_bwlq(Access::ReadWrite),
         }
         args_m {
             fn set_args_mi_u8_rw = impl_args_mi_u8(Access::ReadWrite),
@@ -2274,9 +2281,10 @@ impl SetValue for Inner<'_> {
             fn set_args_mi_one_rw = impl_args_mi_one(Access::ReadWrite),
         }
         args_rm {
-            fn set_args_rm = impl_args_rm(Access::Write),
-            fn set_args_rm_ro = impl_args_rm(Access::Read),
-            fn set_args_rm_rw = impl_args_rm(Access::ReadWrite),
+            fn set_args_rm = impl_args_rm_bwlq(Access::Write),
+            fn set_args_rm_ro = impl_args_rm_bwlq(Access::Read),
+            fn set_args_rm_rw = impl_args_rm_bwlq(Access::ReadWrite),
+            fn set_args_rm_cmov = impl_args_rm_wlq(Access::Write),
         }
         args_mr {
             fn set_args_mr = impl_args_mr(Access::Write),
@@ -2284,13 +2292,6 @@ impl SetValue for Inner<'_> {
             fn set_args_mr_rw = impl_args_mr(Access::ReadWrite),
             fn set_args_mr_xchg = impl_args_mr_base(Access::ReadWrite, Access::ReadWrite),
         }
-    }
-
-    fn set_args_segment(&mut self, out: &mut Insn, args: &args_segment) -> Result {
-        assert!((0..6).contains(&args.seg));
-        let reg = Reg::new(reg_class::SEGMENT, args.seg as u64);
-        out.push_reg(reg.access(access_from_mask(args.rw)));
-        Ok(())
     }
 
     fn set_push_seg(&mut self, out: &mut Insn, value: i32) -> Result {
