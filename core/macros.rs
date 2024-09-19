@@ -104,6 +104,7 @@ pub use impl_field;
 #[macro_export]
 macro_rules! define_opcodes {
     ($($name:ident = $mnemonic:literal),* $(,)?) => (
+        #[allow(non_camel_case_types)]
         #[repr(u32)]
         enum Opcodes {
             $($name),*

@@ -3753,8 +3753,6 @@ fn sign_extend(value: u64, from: usize, to: usize) -> u64 {
 #[cfg(feature = "mnemonic")]
 fn mnemonic(insn: &Insn, amd64: bool, att: bool) -> Option<(&'static str, &'static str)> {
     let opcode = insn.opcode();
-    let mnemonic =
-        || self::opcode::defined_mnemonic(opcode).or_else(|| self::opcode::mnemonic(opcode));
     let s = if att {
         match opcode {
             opcode::CBW => "cbtw",
@@ -3769,10 +3767,10 @@ fn mnemonic(insn: &Insn, amd64: bool, att: bool) -> Option<(&'static str, &'stat
             opcode::PUSHA => "pushad",
             opcode::POPA => "popad",
             opcode::RETF => "lretl",
-            _ => mnemonic()?,
+            _ => self::opcode::mnemonic(opcode)?,
         }
     } else {
-        mnemonic()?
+        self::opcode::mnemonic(opcode)?
     };
     Some((s, ""))
 }

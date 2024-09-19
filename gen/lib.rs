@@ -475,7 +475,7 @@ impl Arch {
         writeln!(out, "#[cfg(feature = \"mnemonic\")]")?;
         writeln!(
             out,
-            "pub(crate) fn mnemonic(opcode: Opcode) -> Option<&'static str> {{"
+            "pub(crate) fn generated_mnemonic(opcode: Opcode) -> Option<&'static str> {{"
         )?;
         writeln!(out, "    Some(match opcode {{")?;
         for i in opcodes {

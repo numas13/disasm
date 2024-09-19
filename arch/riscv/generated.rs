@@ -14,6 +14,11 @@ pub mod opcode {
     pub(super) const BASE_OPCODE: u32 = 4096;
 
     include!(concat!(env!("OUT_DIR"), "/generated_opcodes.rs"));
+
+    #[inline(always)]
+    pub(crate) fn mnemonic(opcode: Opcode) -> Option<&'static str> {
+        generated_mnemonic(opcode)
+    }
 }
 
 include!(concat!(env!("OUT_DIR"), "/generated_set.rs"));
