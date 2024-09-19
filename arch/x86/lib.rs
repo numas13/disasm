@@ -2259,6 +2259,7 @@ impl SetValue for Inner<'_> {
             fn set_args_mr_cl_rw = impl_args_mr_cl(Access::ReadWrite),
         }
         args_m {
+            fn set_args_mi = impl_args_mi(Access::Write),
             fn set_args_mi_ro = impl_args_mi(Access::Read),
             fn set_args_mi_rw = impl_args_mi(Access::ReadWrite),
         }
@@ -2273,10 +2274,12 @@ impl SetValue for Inner<'_> {
             fn set_args_mi_one_rw = impl_args_mi_one(Access::ReadWrite),
         }
         args_rm {
+            fn set_args_rm = impl_args_rm(Access::Write),
             fn set_args_rm_ro = impl_args_rm(Access::Read),
             fn set_args_rm_rw = impl_args_rm(Access::ReadWrite),
         }
         args_mr {
+            fn set_args_mr = impl_args_mr(Access::Write),
             fn set_args_mr_ro = impl_args_mr(Access::Read),
             fn set_args_mr_rw = impl_args_mr(Access::ReadWrite),
             fn set_args_mr_xchg = impl_args_mr_base(Access::ReadWrite, Access::ReadWrite),
@@ -2906,8 +2909,10 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_movs(&mut self, out: &mut Insn, msz: i32) -> Result {
+    fn set_movs(&mut self, out: &mut Insn, _: i32) -> Result {
+        let msz = self.operand_size_bwlq().bits() as i32;
         self.mode = 0;
+        self.set_rep(out, 1)?;
         self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Write, msz)?;
         self.segment = insn::SEGMENT_DS;
@@ -2916,8 +2921,10 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_cmps(&mut self, out: &mut Insn, msz: i32) -> Result {
+    fn set_cmps(&mut self, out: &mut Insn, _: i32) -> Result {
+        let msz = self.operand_size_bwlq().bits() as i32;
         self.mode = 0;
+        self.set_rep(out, 2)?;
         self.segment = insn::SEGMENT_DS;
         self.set_gpr_mem(out, 6, msz, Access::Read, msz)?;
         self.segment = insn::SEGMENT_ES;
@@ -2926,8 +2933,10 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_stos(&mut self, out: &mut Insn, msz: i32) -> Result {
+    fn set_stos(&mut self, out: &mut Insn, _: i32) -> Result {
+        let msz = self.operand_size_bwlq().bits() as i32;
         self.mode = 0;
+        self.set_rep(out, 1)?;
         self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Write, msz)?;
         self.set_gpr_reg(out, 0, Access::Read, msz)?;
@@ -2935,8 +2944,10 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_lods(&mut self, out: &mut Insn, msz: i32) -> Result {
+    fn set_lods(&mut self, out: &mut Insn, _: i32) -> Result {
+        let msz = self.operand_size_bwlq().bits() as i32;
         self.mode = 0;
+        self.set_rep(out, 1)?;
         self.set_gpr_reg(out, 0, Access::Write, msz)?;
         self.segment = insn::SEGMENT_DS;
         self.set_gpr_mem(out, 6, msz, Access::Read, msz)?;
@@ -2944,8 +2955,10 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_scas(&mut self, out: &mut Insn, msz: i32) -> Result {
+    fn set_scas(&mut self, out: &mut Insn, _: i32) -> Result {
+        let msz = self.operand_size_bwlq().bits() as i32;
         self.mode = 0;
+        self.set_rep(out, 2)?;
         self.set_gpr_reg(out, 0, Access::Read, msz)?;
         self.segment = insn::SEGMENT_ES;
         self.set_gpr_mem(out, 7, msz, Access::Read, msz)?;
