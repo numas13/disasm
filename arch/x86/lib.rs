@@ -1438,11 +1438,15 @@ impl<'a> Inner<'a> {
         self.set_suffix(out, sz)
     }
 
-    fn impl_args_mr(&mut self, out: &mut Insn, args: &args_mr, access: Access) -> Result {
+    fn impl_args_mr_base(&mut self, out: &mut Insn, args: &args_mr, mem_access: Access, reg_access: Access) -> Result {
         let sz = self.operand_size_bwlq().bits() as i32;
-        self.set_gpr_mem(out, args.b, 0, access, sz)?;
-        self.set_gpr_reg(out, args.r, Access::Read, sz)?;
+        self.set_gpr_mem(out, args.b, 0, mem_access, sz)?;
+        self.set_gpr_reg(out, args.r, reg_access, sz)?;
         self.set_suffix(out, sz)
+    }
+
+    fn impl_args_mr(&mut self, out: &mut Insn, args: &args_mr, access: Access) -> Result {
+        self.impl_args_mr_base(out, args, access, Access::Read)
     }
 
     fn impl_args_mr_cl(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
@@ -2268,6 +2272,7 @@ impl SetValue for Inner<'_> {
         args_mr {
             fn set_args_mr_ro = impl_args_mr(Access::Read),
             fn set_args_mr_rw = impl_args_mr(Access::ReadWrite),
+            fn set_args_mr_xchg = impl_args_mr_base(Access::ReadWrite, Access::ReadWrite),
         }
     }
 
