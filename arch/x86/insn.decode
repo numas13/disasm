@@ -39,13 +39,6 @@
 #            |mm rrr bbb |         opcode | W         vvvv L pp | RXB    mmmmm | vex
 # mm rrr bbb |    opcode | z L'L b V' aaa | W         vvvv 1 pp | RXB R' 0 mmm | evex
 
-# modrm      | opcode |                    |       map |
-# -----------|--------|--------------------|-----------|
-# mm rrr bbb | opcode | w f3 f2 66 rex --- | rxb ----- | # no escape
-# mm rrr bbb | opcode | w f3 f2 66 rex --- | rxb ----- | # 0f
-# mm rrr bbb | opcode | w f3 f2 66 rex --- | rxb ----- | # 0f 38
-# mm rrr bbb | opcode | w f3 f2 66 rex --- | rxb ----- | # 0f 3a
-
 @push_es                   ........ . .... ... ... ..... push_seg=0
 @push_cs                   ........ . .... ... ... ..... push_seg=1
 @push_ss                   ........ . .... ... ... ..... push_seg=2
