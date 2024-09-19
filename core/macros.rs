@@ -112,6 +112,7 @@ macro_rules! define_opcodes {
 
         $(pub const $name: Opcode = Opcode(Opcodes::$name as u32);)*
 
+        #[cfg(feature = "mnemonic")]
         pub(crate) fn defined_mnemonic(opcode: Opcode) -> Option<&'static str> {
             Some(match opcode {
                 $($name => $mnemonic,)*

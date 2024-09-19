@@ -298,6 +298,7 @@ pub mod opcode {
 
     include!(concat!(env!("OUT_DIR"), "/generated_opcodes.rs"));
 
+    #[cfg(feature = "mnemonic")]
     #[inline(always)]
     pub(crate) fn mnemonic(opcode: Opcode) -> Option<&'static str> {
         defined_mnemonic(opcode).or_else(|| generated_mnemonic(opcode))
