@@ -28,7 +28,6 @@
 
 &mr_rr      r b rw msz rsz !extern
 &mr_rm      r b rw msz
-&mr_rx      r b rw msz
 
 &reg        reg rw rsz !extern
 &reg_vec    reg rw rsz
@@ -43,6 +42,7 @@
 &rm_mx            r b
 &rm_xm            r b
 
+&mr_rx            r b
 &mr_xx            r b
 &mr_mm            r b
 
@@ -74,7 +74,6 @@
 @mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=2
 @mr_rr_ro         ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=1
 @mr_rr_rw         ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=3
-@mr_rx            ........ ........ . .... ... ... ..... &mr_rx r=%reg b=%base msz=1 rw=2
 @rm_mr            ........ ........ . .... ... ... ..... &rm_mr r=%reg b=%base msz=1 rw=2
 @rm_rm            ........ ........ . .... ... ... ..... &rm_rm b=%base r=%reg msz=1 rsz=1 rw=2
 @rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=2
@@ -100,6 +99,9 @@
 @mr_rw            ........ ........ . .... ... ... ..... mr_rw=&mr b=%base r=%reg
 @mr_u8            ........ ........ . .... ... ... ..... mr_u8=&mr b=%base r=%reg
 @mr_cl            ........ ........ . .... ... ... ..... mr_cl=&mr b=%base r=%reg
+
+@mr_rx_32         ........ ........ . .... ... ... ..... mr_rx_32=&mr_rx r=%reg b=%base
+@mr_rx_64         ........ ........ . .... ... ... ..... mr_rx_64=&mr_rx r=%reg b=%base
 
 @fld_env          ........ ........ . .... ... ... ..... fld_env=&m b=%base
 @fst_env          ........ ........ . .... ... ... ..... fst_env=&m b=%base
@@ -656,8 +658,8 @@ psrlq             ..010... 01110011 - 001- --- ... ----- @m_x_rw uimm=8 ? sse2
 pcmpeqb           ........ 01110100 - 001- --- ... ----- @rm_xx_rw ? sse2
 pcmpeqw           ........ 01110101 - 001- --- ... ----- @rm_xx_rw ? sse2
 pcmpeqd           ........ 01110110 - 001- --- ... ----- @rm_xx_rw ? sse2
-movd              ........ 01111110 0 001- --- ... ----- @mr_rx msz=32 ? sse2
-movq              ........ 01111110 1 001- --- ... ----- @mr_rx msz=64 ? sse2
+movd              ........ 01111110 0 001- --- ... ----- @mr_rx_32 ? sse2
+movq              ........ 01111110 1 001- --- ... ----- @mr_rx_64 ? sse2
 movdqa            ........ 01111111 - 001- --- ... ----- @mr_xx ? sse2
 pextrw            11...... 11000101 - 001- --- ... ----- @rm_rx rsz=32 uimm=8 ? sse2
 shufpd            ........ 11000110 - 001- --- ... ----- @rm_xx_rw uimm=8 ? sse2

@@ -25,34 +25,38 @@
 
 &rm_rr            r b rw msz rsz !extern
 
-&rvm_rrr          r b v rw msz rsz vsz
-&rmv_rrr          r b v rw msz rsz vsz
+&rvm_rrr          r b v msz rsz
+&rmv_rrr          r b v msz rsz
 
-&evex_mr_rv       r b rw msz !extern
-&evex_mr_kk       r b rw msz
-&evex_rm_kk       r b rw msz
 &evex_rm_rk       r b rw msz rsz
 &evex_rm_kr       r b rw msz
 &evex_rm_rv       r b rw msz rsz !extern
 &evex_rm_vr       r b rw msz !extern
 
 &evex_rvm_vvr     r b v rw msz !extern
-&evex_rvm_kkk     r b v rw msz
 
 &gather           b r v msz isz
+
+&m                b !extern
 
 &rm_vv            r b
 &rm_vx            r b
 &rm_xv            r b
 &rm_xx            r b !extern
+&rm_rk            r b
+&rm_kk            r b
 
+&mr_rx            r b !extern
 &mr_vv            r b
 &mr_xv            r b
 &mr_xx            r b !extern
+&mr_kk            r b
 
 &rvm_vvv          r v b
 &rvm_vvx          r v b
 &rvm_xxx          r v b
+&rvm_xxr          r v b
+&rvm_kkk          r v b
 &mvr_vvv          r v b
 &mvr_xxx          r v b
 
@@ -61,23 +65,20 @@
 ##############################################################################
 
 @rm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 r=%gpr_reg b=%gpr_base msz=1 rsz=1
+                  &rm_rr rw=2 r=%gpr_reg b=%gpr_base msz=1 rsz=1 suffix=1
 @vm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 r=%mm_v b=%gpr_base msz=1 rsz=1
+                  &rm_rr rw=2 r=%mm_v b=%gpr_base msz=1 rsz=1 suffix=1
 
 @rvm_rrr          ........ ........ ........ ........ \
-                  &rvm_rrr rw=2 r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
+                  &rvm_rrr r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 msz=1
 
 @rmv_rrr          ........ ........ ........ ........ \
-                  &rmv_rrr rw=2 r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 vsz=1 msz=1
+                  &rmv_rrr r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 msz=1
 
 @rm_rx            ........ ........ ........ ........ \
                   evex_rm_rx=&evex_rm_rv rw=2 r=%gpr_reg b=%mm_base msz=1 rsz=1
 @rm_ry            ........ ........ ........ ........ \
                   evex_rm_ry=&evex_rm_rv rw=2 r=%gpr_reg b=%mm_base msz=1 rsz=1
-
-@rvm_xxr          ........ ........ ........ ........ \
-                  evex_rvm_xxr=&evex_rvm_vvr rw=2 r=%mm_reg v=%mm_v b=%mm_base msz=1
 
 @fmaddss          ........ ........ ........ ........ \
                   fmaddss=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
@@ -108,34 +109,26 @@
 @fmaddpd_4b        ........ ........ ........ ........ \
                   fmaddpd_4b=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
-@rvm_kkk          ........ ........ ........ ........ \
-                  &evex_rvm_kkk rw=2 r=%k_reg v=%k_v b=%gpr_base msz=1
-
-@rm_rk            ........ ........ ........ ........ \
-                  evex_rm_rk=&evex_rm_rk rw=2 r=%gpr_reg b=%gpr_base msz=1 rsz=1
-
 @rm_kr            ........ ........ ........ ........ \
                   evex_rm_kr=&evex_rm_kr rw=2 r=%k_reg b=%gpr_base msz=1
-
-@mr_kk            ........ ........ ........ ........ \
-                  evex_mr_kk=&evex_mr_kk rw=2 r=%k_reg b=%gpr_base msz=1
-
-@rm_kk            ........ ........ ........ ........ \
-                  &evex_rm_kk r=%k_reg b=%gpr_base msz=1 rw=2
-@rm_kk_ro         ........ ........ ........ ........ \
-                  &evex_rm_kk r=%k_reg b=%gpr_base msz=1 rw=1
-
-@mr_rx            ........ ........ ........ ........ \
-                  evex_mr_rx=&evex_mr_rv rw=2 r=%mm_reg b=%mm_base msz=1
 
 @rm_xr            ........ ........ ........ ........ \
                   evex_rm_xr=&evex_rm_vr rw=2 r=%mm_reg b=%gpr_base msz=1
 
-@m_r              ........ ........ . .... ... ... ..... &mem b=%gpr_base rw=2 msz=1
-@m_r_ro           ........ ........ . .... ... ... ..... &mem b=%gpr_base rw=1 msz=1
+@m32              ........ ........ . .... ... ... ..... m32=&m b=%gpr_base
+@m32_ro           ........ ........ . .... ... ... ..... m32_ro=&m b=%gpr_base
+
+@mr_rx_8          ........ ........ . .... ... ... ..... mr_rx_8=&mr_rx b=%gpr_base r=%mm_reg
+@mr_rx_16         ........ ........ . .... ... ... ..... mr_rx_16=&mr_rx b=%gpr_base r=%mm_reg
+@mr_rx_32         ........ ........ . .... ... ... ..... mr_rx_32=&mr_rx b=%gpr_base r=%mm_reg
+@mr_rx_64         ........ ........ . .... ... ... ..... mr_rx_64=&mr_rx b=%gpr_base r=%mm_reg
 
 @vi               ........ ........ . .... ... ... ..... vi_r=1
 
+@rvm_xxr_8        ........ ........ ........ ........ rvm_xxr_8=&rvm_xxr r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxr_16       ........ ........ ........ ........ rvm_xxr_16=&rvm_xxr r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxr_32       ........ ........ ........ ........ rvm_xxr_32=&rvm_xxr r=%mm_reg v=%mm_v b=%mm_base
+@rvm_xxr_64       ........ ........ ........ ........ rvm_xxr_64=&rvm_xxr r=%mm_reg v=%mm_v b=%mm_base
 
 @gather_xvx       ........ ........ ........ ........ \
                   gather_xvx=&gather r=%mm_reg v=%mm_v b=%mm_base msz=1 isz=1
@@ -179,13 +172,30 @@
 @mvr_vvv          ........ ........ ........ ........ &mvr_vvv r=%mm_reg v=%mm_v b=%mm_base
 @mvr_xxx          ........ ........ ........ ........ &mvr_xxx r=%mm_reg v=%mm_v b=%mm_base
 
+@rm_rk_32         ........ ........ ........ ........ rm_rk_32=&rm_rk r=%gpr_reg b=%gpr_base
+@rm_rk_64         ........ ........ ........ ........ rm_rk_64=&rm_rk r=%gpr_reg b=%gpr_base
+
+@rm_kk            ........ ........ ........ ........ &rm_kk r=%k_reg b=%gpr_base
+@rm_kk_ro         ........ ........ ........ ........ rm_kk_ro=&rm_kk r=%k_reg b=%gpr_base
+@rm_kk_8          ........ ........ ........ ........ rm_kk_8=&rm_kk r=%k_reg b=%gpr_base
+@rm_kk_16         ........ ........ ........ ........ rm_kk_16=&rm_kk r=%k_reg b=%gpr_base
+@rm_kk_32         ........ ........ ........ ........ rm_kk_32=&rm_kk r=%k_reg b=%gpr_base
+@rm_kk_64         ........ ........ ........ ........ rm_kk_64=&rm_kk r=%k_reg b=%gpr_base
+
+@mr_kk_8          ........ ........ ........ ........ mr_kk_8=&mr_kk r=%k_reg b=%gpr_base
+@mr_kk_16         ........ ........ ........ ........ mr_kk_16=&mr_kk r=%k_reg b=%gpr_base
+@mr_kk_32         ........ ........ ........ ........ mr_kk_32=&mr_kk r=%k_reg b=%gpr_base
+@mr_kk_64         ........ ........ ........ ........ mr_kk_64=&mr_kk r=%k_reg b=%gpr_base
+
+@rvm_kkk          ........ ........ ........ ........ &rvm_kkk r=%k_reg v=%k_v b=%gpr_base
+
 ##############################################################################
 # Extension AVX
 ##############################################################################
 
 {
-  vpinsrw         11...... 11000100 0 .... 001 ... 00001 @rvm_xxr msz=32 uimm=8 ? avx
-  vpinsrw         ........ 11000100 0 .... 001 ... 00001 @rvm_xxr msz=16 uimm=8 ? avx
+  vpinsrw         11...... 11000100 0 .... 001 ... 00001 @rvm_xxr_32 uimm=8 ? avx
+  vpinsrw         ........ 11000100 0 .... 001 ... 00001 @rvm_xxr_16 uimm=8 ? avx
 }
 {
   vmovsd          11...... 00010000 - .... -11 ... 00001 @rvm_xxx ? avx
@@ -220,16 +230,16 @@ vcmppd            ........ 11000010 - .... .01 ... 00001 @rvm_vvv opc=8 ? avx
   vbroadcastsd    ........ 00011001 - 1111 101 ... 00010 @rm_vx_64 ? avx
 }
 {
-  vpinsrb         11...... 00100000 - .... 001 ... 00011 @rvm_xxr uimm=8 msz=32 ? avx
-  vpinsrb         ........ 00100000 - .... 001 ... 00011 @rvm_xxr uimm=8 msz=8  ? avx
+  vpinsrb         11...... 00100000 - .... 001 ... 00011 @rvm_xxr_32 uimm=8 ? avx
+  vpinsrb         ........ 00100000 - .... 001 ... 00011 @rvm_xxr_8 uimm=8  ? avx
 }
 {
-  vpextrb         11...... 00010100 - 1111 001 ... 00011 @mr_rx uimm=8 msz=32 ? avx
-  vpextrb         ........ 00010100 - 1111 001 ... 00011 @mr_rx uimm=8 msz=8  ? avx
+  vpextrb         11...... 00010100 - 1111 001 ... 00011 @mr_rx_32 uimm=8 ? avx
+  vpextrb         ........ 00010100 - 1111 001 ... 00011 @mr_rx_8 uimm=8 ? avx
 }
 {
-  vpextrw         11...... 00010101 - 1111 001 ... 00011 @mr_rx uimm=8 msz=32 ? avx
-  vpextrw         ........ 00010101 - 1111 001 ... 00011 @mr_rx uimm=8 msz=16 ? avx
+  vpextrw         11...... 00010101 - 1111 001 ... 00011 @mr_rx_32 uimm=8 ? avx
+  vpextrw         ........ 00010101 - 1111 001 ... 00011 @mr_rx_16 uimm=8 ? avx
 }
 
 vmovups           ........ 00010000 - 1111 .00 ... 00001 @rm_vv ? avx
@@ -266,8 +276,10 @@ vmovaps           ........ 00101000 - 1111 .00 ... 00001 @rm_vv ? avx
 vmovapd           ........ 00101000 - 1111 .01 ... 00001 @rm_vv ? avx
 vmovaps           ........ 00101001 - 1111 .00 ... 00001 @mr_vv ? avx
 vmovapd           ........ 00101001 - 1111 .01 ... 00001 @mr_vv ? avx
-vcvtsi2ss         ........ 00101010 - .... -10 ... 00001 @rvm_xxr msz=3 suffix=3 ? avx
-vcvtsi2sd         ........ 00101010 - .... -11 ... 00001 @rvm_xxr msz=3 suffix=3 ? avx
+vcvtsi2ss         ........ 00101010 0 .... -10 ... 00001 @rvm_xxr_32 suffix=32 ? avx
+vcvtsi2ss         ........ 00101010 1 .... -10 ... 00001 @rvm_xxr_64 suffix=64 ? avx
+vcvtsi2sd         ........ 00101010 0 .... -11 ... 00001 @rvm_xxr_32 suffix=32 ? avx
+vcvtsi2sd         ........ 00101010 1 .... -11 ... 00001 @rvm_xxr_64 suffix=64 ? avx
 vmovntps          0-...... 00101011 - 1111 .00 ... 00001 @mr_vv ? avx
 vmovntps          11...... 00101011 - 1111 .00 ... 00001 @mr_vv ? avx
 vmovntpd          0....... 00101011 - 1111 .01 ... 00001 @mr_vv ? avx
@@ -375,14 +387,14 @@ vhaddps           ........ 01111100 - .... .11 ... 00001 @rvm_vvv ? avx
 vhsubpd           ........ 01111101 - .... .01 ... 00001 @rvm_vvv ? avx
 vhsubps           ........ 01111101 - .... .11 ... 00001 @rvm_vvv ? avx
 vmovq             ........ 01111110 - 1111 010 ... 00001 @rm_xx_64 ? avx
-vmovd             ........ 01111110 0 1111 001 ... 00001 @mr_rx msz=32 ? avx
-vmovq             ........ 01111110 1 1111 001 ... 00001 @mr_rx msz=64 ? avx
+vmovd             ........ 01111110 0 1111 001 ... 00001 @mr_rx_32 ? avx
+vmovq             ........ 01111110 1 1111 001 ... 00001 @mr_rx_64 ? avx
 vmovdqa           ........ 01111111 - 1111 .01 ... 00001 @mr_vv ? avx
 vmovdqu           ........ 01111111 - 1111 .10 ... 00001 @mr_vv ? avx
-vldmxcsr          0.010... 10101110 - 1111 000 ... 00001 @m_r_ro msz=32 ? avx
-vldmxcsr          10010... 10101110 - 1111 000 ... 00001 @m_r_ro msz=32 ? avx
-vstmxcsr          0.011... 10101110 - 1111 000 ... 00001 @m_r msz=32 ? avx
-vstmxcsr          10011... 10101110 - 1111 000 ... 00001 @m_r msz=32 ? avx
+vldmxcsr          0.010... 10101110 - 1111 000 ... 00001 @m32_ro ? avx
+vldmxcsr          10010... 10101110 - 1111 000 ... 00001 @m32_ro ? avx
+vstmxcsr          0.011... 10101110 - 1111 000 ... 00001 @m32 ? avx
+vstmxcsr          10011... 10101110 - 1111 000 ... 00001 @m32 ? avx
 vpextrw           11...... 11000101 - 1111 001 ... 00001 @rm_rx uimm=8 rsz=32 ? avx
 vshufps           ........ 11000110 - .... .00 ... 00001 @rvm_vvv uimm=8 ? avx
 vshufpd           ........ 11000110 - .... .01 ... 00001 @rvm_vvv uimm=8 ? avx
@@ -508,14 +520,14 @@ vblendps          ........ 00001100 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
 vblendpd          ........ 00001101 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
 vpblendw          ........ 00001110 - .... 001 ... 00011 @rvm_xxx uimm=8 ? avx
 vpalignr          ........ 00001111 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
-vpextrd           ........ 00010110 0 1111 001 ... 00011 @mr_rx uimm=8 msz=32 ? avx
-vpextrq           ........ 00010110 1 1111 001 ... 00011 @mr_rx uimm=8 msz=64 ? avx
-vextractps        ........ 00010111 - 1111 001 ... 00011 @mr_rx uimm=8 msz=32 ? avx
+vpextrd           ........ 00010110 0 1111 001 ... 00011 @mr_rx_32 uimm=8 ? avx
+vpextrq           ........ 00010110 1 1111 001 ... 00011 @mr_rx_64 uimm=8 ? avx
+vextractps        ........ 00010111 - 1111 001 ... 00011 @mr_rx_32 uimm=8 ? avx
 vinsertf128       ........ 00011000 0 .... 101 ... 00011 @rvm_vvx uimm=8 ? avx
 vextractf128      ........ 00011001 0 1111 101 ... 00011 @mr_xv uimm=8 ? avx
 vinsertps         ........ 00100001 - .... 001 ... 00011 @rvm_xxx_32 uimm=8 ? avx
-vpinsrd           ........ 00100010 0 .... 001 ... 00011 @rvm_xxr msz=32 uimm=8 ? avx
-vpinsrq           ........ 00100010 1 .... 001 ... 00011 @rvm_xxr msz=64 uimm=8 ? avx
+vpinsrd           ........ 00100010 0 .... 001 ... 00011 @rvm_xxr_32 uimm=8 ? avx
+vpinsrq           ........ 00100010 1 .... 001 ... 00011 @rvm_xxr_64 uimm=8 ? avx
 vdpps             ........ 01000000 - .... .01 ... 00011 @rvm_vvv uimm=8 ? avx
 vdppd             ........ 01000001 - .... 001 ... 00011 @rvm_vvv uimm=8 ? avx
 vmpsadbw          ........ 01000010 - .... 001 ... 00011 @rvm_vvv uimm=8 ? avx
@@ -749,22 +761,22 @@ kaddd             11...... 01001010 1 .... 101 ... 00001 @rvm_kkk ? avx512bw
 kunpckwd          11...... 01001011 0 .... 100 ... 00001 @rvm_kkk ? avx512bw
 kunpckbw          11...... 01001011 0 .... 101 ... 00001 @rvm_kkk ? avx512f
 kunpckdq          11...... 01001011 1 .... 100 ... 00001 @rvm_kkk ? avx512bw
-kmovw             ........ 10010000 0 1111 000 ... 00001 @rm_kk msz=16 ? avx512f
-kmovb             ........ 10010000 0 1111 001 ... 00001 @rm_kk msz=8  ? avx512dq
-kmovq             ........ 10010000 1 1111 000 ... 00001 @rm_kk msz=64 ? avx512bw
-kmovd             ........ 10010000 1 1111 001 ... 00001 @rm_kk msz=32 ? avx512bw
-kmovw             ........ 10010001 0 1111 000 ... 00001 @mr_kk msz=16 ? avx512f
-kmovb             ........ 10010001 0 1111 001 ... 00001 @mr_kk msz=8  ? avx512dq
-kmovq             ........ 10010001 1 1111 000 ... 00001 @mr_kk msz=64 ? avx512bw
-kmovd             ........ 10010001 1 1111 001 ... 00001 @mr_kk msz=32 ? avx512bw
+kmovw             ........ 10010000 0 1111 000 ... 00001 @rm_kk_16 ? avx512f
+kmovb             ........ 10010000 0 1111 001 ... 00001 @rm_kk_8  ? avx512dq
+kmovq             ........ 10010000 1 1111 000 ... 00001 @rm_kk_64 ? avx512bw
+kmovd             ........ 10010000 1 1111 001 ... 00001 @rm_kk_32 ? avx512bw
+kmovw             ........ 10010001 0 1111 000 ... 00001 @mr_kk_16 ? avx512f
+kmovb             ........ 10010001 0 1111 001 ... 00001 @mr_kk_8  ? avx512dq
+kmovq             ........ 10010001 1 1111 000 ... 00001 @mr_kk_64 ? avx512bw
+kmovd             ........ 10010001 1 1111 001 ... 00001 @mr_kk_32 ? avx512bw
 kmovw             11...... 10010010 0 1111 000 ... 00001 @rm_kr msz=32 ? avx512f
 kmovb             11...... 10010010 0 1111 001 ... 00001 @rm_kr msz=32 ? avx512dq
 kmovd             11...... 10010010 0 1111 011 ... 00001 @rm_kr msz=32 ? avx512bw
 kmovq             11...... 10010010 1 1111 011 ... 00001 @rm_kr msz=64 ? avx512bw
-kmovw             11...... 10010011 0 1111 000 ... 00001 @rm_rk rsz=32 ? avx512f
-kmovb             11...... 10010011 0 1111 001 ... 00001 @rm_rk rsz=32 ? avx512dq
-kmovd             11...... 10010011 0 1111 011 ... 00001 @rm_rk rsz=32 ? avx512bw
-kmovq             11...... 10010011 1 1111 011 ... 00001 @rm_rk rsz=64 ? avx512bw
+kmovw             11...... 10010011 0 1111 000 ... 00001 @rm_rk_32 ? avx512f
+kmovb             11...... 10010011 0 1111 001 ... 00001 @rm_rk_32 ? avx512dq
+kmovd             11...... 10010011 0 1111 011 ... 00001 @rm_rk_32 ? avx512bw
+kmovq             11...... 10010011 1 1111 011 ... 00001 @rm_rk_64 ? avx512bw
 kortestw          11...... 10011000 0 1111 000 ... 00001 @rm_kk ? avx512f
 kortestb          11...... 10011000 0 1111 001 ... 00001 @rm_kk ? avx512dq
 kortestq          11...... 10011000 1 1111 000 ... 00001 @rm_kk ? avx512bw
@@ -786,25 +798,25 @@ kshiftlq          11...... 00110011 1 1111 001 ... 00011 @rm_kk uimm=8 ? avx512b
 # BMI1
 ##############################################################################
 
-andn              ........ 11110010 - .... 000 ... 00010 @rvm_rrr suffix=1 ? bmi
-blsr              ..001... 11110011 - .... 000 ... 00010 @vm_rr suffix=1 ? bmi
-blsmsk            ..010... 11110011 - .... 000 ... 00010 @vm_rr suffix=1 ? bmi
-blsi              ..011... 11110011 - .... 000 ... 00010 @vm_rr suffix=1 ? bmi
-bextr             ........ 11110111 - .... 000 ... 00010 @rmv_rrr suffix=1 ? bmi
+andn              ........ 11110010 - .... 000 ... 00010 @rvm_rrr ? bmi
+blsr              ..001... 11110011 - .... 000 ... 00010 @vm_rr ? bmi
+blsmsk            ..010... 11110011 - .... 000 ... 00010 @vm_rr ? bmi
+blsi              ..011... 11110011 - .... 000 ... 00010 @vm_rr ? bmi
+bextr             ........ 11110111 - .... 000 ... 00010 @rmv_rrr ? bmi
 
 ##############################################################################
 # BMI2
 ##############################################################################
 
-bzhi              ........ 11110101 . .... 000 ... 00010 @rmv_rrr suffix=1 ? bmi2
-pext              ........ 11110101 . .... 010 ... 00010 @rvm_rrr suffix=1 ? bmi2
-pdep              ........ 11110101 . .... 011 ... 00010 @rvm_rrr suffix=1 ? bmi2
-mulx              ........ 11110110 . .... 011 ... 00010 @rvm_rrr suffix=1 ? bmi2
-shlx              ........ 11110111 . .... 001 ... 00010 @rmv_rrr suffix=1 ? bmi2
-sarx              ........ 11110111 . .... 010 ... 00010 @rmv_rrr suffix=1 ? bmi2
-shrx              ........ 11110111 . .... 011 ... 00010 @rmv_rrr suffix=1 ? bmi2
+bzhi              ........ 11110101 . .... 000 ... 00010 @rmv_rrr ? bmi2
+pext              ........ 11110101 . .... 010 ... 00010 @rvm_rrr ? bmi2
+pdep              ........ 11110101 . .... 011 ... 00010 @rvm_rrr ? bmi2
+mulx              ........ 11110110 . .... 011 ... 00010 @rvm_rrr ? bmi2
+shlx              ........ 11110111 . .... 001 ... 00010 @rmv_rrr ? bmi2
+sarx              ........ 11110111 . .... 010 ... 00010 @rmv_rrr ? bmi2
+shrx              ........ 11110111 . .... 011 ... 00010 @rmv_rrr ? bmi2
 
-rorx              ........ 11110000 . 1111 011 ... 00011 @rm_rr uimm=8 suffix=1 ? bmi2
+rorx              ........ 11110000 . 1111 011 ... 00011 @rm_rr uimm=8 ? bmi2
 
 ##############################################################################
 # Extension AES
