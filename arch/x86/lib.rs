@@ -3031,22 +3031,42 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_st_m(&mut self, out: &mut Insn, _: i32) -> Result {
+    fn set_sti_r(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: read/write
+        out.push_sti(value as u64);
+        Ok(())
+    }
+
+    fn set_sti_w(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: read/write
+        out.push_sti(value as u64);
+        Ok(())
+    }
+
+    fn set_sti_st_rm(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: read/write
+        out.push_sti(value as u64);
         out.push_st();
         Ok(())
     }
 
-    fn set_si_r(&mut self, out: &mut Insn, value: i32) -> Result {
+    fn set_sti_st_mm(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: read/write
+        out.push_sti(value as u64);
+        out.push_st();
+        Ok(())
+    }
+
+    fn set_st_sti_mr(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: read/write
+        out.push_st();
         out.push_sti(value as u64);
         Ok(())
     }
 
-    fn set_si_w(&mut self, out: &mut Insn, value: i32) -> Result {
-        out.push_sti(value as u64);
-        Ok(())
-    }
-
-    fn set_si_m(&mut self, out: &mut Insn, value: i32) -> Result {
+    fn set_st_sti_mm(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: read/write
+        out.push_st();
         out.push_sti(value as u64);
         Ok(())
     }
