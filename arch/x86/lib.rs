@@ -515,6 +515,16 @@ impl<'a> Inner<'a> {
         }
     }
 
+    fn operand_size_bwl(&self) -> Size {
+        if self.raw & 0x10000 == 0 {
+            Size::Byte
+        } else if self.prefix_66 > 0 {
+            Size::Word
+        } else {
+            Size::Long
+        }
+    }
+
     #[inline(always)]
     fn set_66(&mut self) {
         self.raw |= 0x1000;
@@ -2249,8 +2259,36 @@ impl SetValue for Inner<'_> {
     }
 
     fn set_moffs_wr(&mut self, out: &mut Insn, _: i32) -> Result {
-        let sz = self.operand_size_bwlq().bits() as i32;
+        let sz = self.operand_size_bwl().bits() as i32;
         self.set_moffset(out, sz, Access::Write)?;
+        self.set_gpr_reg(out, 0, Access::Read, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn set_in_u8(&mut self, out: &mut Insn, _: i32) -> Result {
+        let sz = self.operand_size_bwl().bits() as i32;
+        self.set_gpr_reg(out, 0, Access::Write, sz)?;
+        self.set_uimm(out, 8)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn set_in_rr(&mut self, out: &mut Insn, _: i32) -> Result {
+        let sz = self.operand_size_bwl().bits() as i32;
+        self.set_gpr_reg(out, 0, Access::Write, sz)?;
+        self.set_gpr_reg(out, 2, Access::Read, 16)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn set_out_u8(&mut self, out: &mut Insn, _: i32) -> Result {
+        let sz = self.operand_size_bwl().bits() as i32;
+        self.set_uimm(out, 8)?;
+        self.set_gpr_reg(out, 0, Access::Read, sz)?;
+        self.set_suffix(out, sz)
+    }
+
+    fn set_out_rr(&mut self, out: &mut Insn, _: i32) -> Result {
+        let sz = self.operand_size_bwl().bits() as i32;
+        self.set_gpr_reg(out, 2, Access::Read, 16)?;
         self.set_gpr_reg(out, 0, Access::Read, sz)?;
         self.set_suffix(out, sz)
     }
@@ -2874,16 +2912,6 @@ impl SetValue for Inner<'_> {
         self.set_gpr_reg(out, args.r, rw, args.rsz)?;
         self.set_k_mem(out, args.b, Access::Read, args.msz)?;
         Ok(())
-    }
-
-    fn set_in_size(&mut self, out: &mut Insn, size: i32) -> Result {
-        self.set_gpr_reg(out, 0, Access::Write, size)?;
-        self.set_gpr_reg(out, 2, Access::Read, 16)
-    }
-
-    fn set_out_size(&mut self, out: &mut Insn, size: i32) -> Result {
-        self.set_gpr_reg(out, 2, Access::Read, 16)?;
-        self.set_gpr_reg(out, 0, Access::Read, size)
     }
 
     fn set_ins_size(&mut self, out: &mut Insn, size: i32) -> Result {
