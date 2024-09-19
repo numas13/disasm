@@ -1016,6 +1016,24 @@ impl<'a> Inner<'a> {
         })
     }
 
+    fn set_fp_suffix(&mut self, out: &mut Insn, value: i32) -> Result {
+        // TODO: remove early exit
+        if !self.is_att() {
+            return Ok(());
+        }
+        let suffix = match value {
+            2 => insn::SUFFIX_FP_T,
+            32 => insn::SUFFIX_FP_S,
+            64 => insn::SUFFIX_FP_L,
+            80 => insn::SUFFIX_FP_LL,
+            _ => unreachable!("unexpected fp suffix value={value}"),
+        };
+        out.flags_mut()
+            .field_set(insn::FIELD_SUFFIX, suffix)
+            .set(insn::SUFFIX);
+        Ok(())
+    }
+
     fn set_imm(&mut self, out: &mut Insn, size: Size) -> Result {
         match size {
             Size::Quad => self.set_simm(out, 32),
@@ -1435,6 +1453,10 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
+    fn impl_args_m(&mut self, out: &mut Insn, args: &args_m, access: Access, msz: i32) -> Result {
+        self.set_gpr_mem(out, args.b, 0, access, msz)
+    }
+
     fn impl_args_m_bwlq(&mut self, out: &mut Insn, args: &args_m, access: Access) -> Result {
         let sz = self.operand_size_bwlq().bits() as i32;
         self.set_gpr_mem(out, args.b, 0, access, sz)?;
@@ -1518,6 +1540,16 @@ impl<'a> Inner<'a> {
         self.set_gpr_mem(out, args.b, 0, access, sz)?;
         out.push_imm(1);
         self.set_suffix(out, sz)
+    }
+
+    fn impl_args_fld(&mut self, out: &mut Insn, args: &args_m, msz: i32, sz: i32) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Read, msz)?;
+        self.set_fp_suffix(out, sz)
+    }
+
+    fn impl_args_fst(&mut self, out: &mut Insn, args: &args_m, msz: i32, sz: i32) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Write, msz)?;
+        self.set_fp_suffix(out, sz)
     }
 
     fn impl_args_rm_vv(
@@ -2180,28 +2212,6 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_fp_suffix(&mut self, out: &mut Insn, value: i32) -> Result {
-        if !self.is_att() {
-            return Ok(());
-        }
-        let size = if value == 1 {
-            self.operand_size.bits()
-        } else {
-            value as usize
-        };
-        let suffix = match size {
-            2 => insn::SUFFIX_FP_T,
-            32 => insn::SUFFIX_FP_S,
-            64 => insn::SUFFIX_FP_L,
-            80 => insn::SUFFIX_FP_LL,
-            _ => unreachable!("unexpected fp suffix for size {size} (value={value})"),
-        };
-        out.flags_mut()
-            .field_set(insn::FIELD_SUFFIX, suffix)
-            .set(insn::SUFFIX);
-        Ok(())
-    }
-
     fn set_no_ptr(&mut self, _: &mut Insn, value: i32) -> Result {
         self.no_ptr = value != 0;
         Ok(())
@@ -2306,6 +2316,10 @@ impl SetValue for Inner<'_> {
             fn set_args_ri_rw = impl_args_ri_bwlq(Access::ReadWrite),
         }
         args_m {
+            fn set_args_m16 = impl_args_m(Access::Write, 16),
+            fn set_args_m16_ro = impl_args_m(Access::Read, 16),
+        }
+        args_m {
             fn set_args_m = impl_args_m_bwlq(Access::Write),
             fn set_args_m_rw = impl_args_m_bwlq(Access::ReadWrite),
             fn set_args_mr_cl_rw = impl_args_mr_cl(Access::ReadWrite),
@@ -2351,6 +2365,51 @@ impl SetValue for Inner<'_> {
         let reg = Reg::new(reg_class::SEGMENT, value as u64).write();
         out.push_reg(reg);
         Ok(())
+    }
+
+    fn set_args_fld_env(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.no_ptr = true;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, 8)
+    }
+
+    fn set_args_fst_env(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.no_ptr = true;
+        self.set_gpr_mem(out, args.b, 0, Access::Write, 8)
+    }
+
+    fn set_args_fbld(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Read, -1)
+    }
+
+    fn set_args_fbst(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Write, -1)
+    }
+
+    fn set_args_fldt(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Read, -1)?;
+        self.set_fp_suffix(out, 2)
+    }
+
+    fn set_args_fstt(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Write, -1)?;
+        self.set_fp_suffix(out, 2)
+    }
+
+    forward! {
+        args_m {
+            fn set_args_flds = impl_args_fld(32, 32),
+            fn set_args_fldl = impl_args_fld(64, 64),
+            fn set_args_flds16 = impl_args_fld(16, 32),
+            fn set_args_fldl32 = impl_args_fld(32, 64),
+            fn set_args_fldll64 = impl_args_fld(64, 80),
+        }
+        args_m {
+            fn set_args_fsts = impl_args_fst(32, 32),
+            fn set_args_fstl = impl_args_fst(64, 64),
+            fn set_args_fsts16 = impl_args_fst(16, 32),
+            fn set_args_fstl32 = impl_args_fst(32, 64),
+            fn set_args_fstll64 = impl_args_fst(64, 80),
+        }
     }
 
     fn set_args_reg(&mut self, out: &mut Insn, args: &args_reg) -> Result {
