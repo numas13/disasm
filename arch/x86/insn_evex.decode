@@ -21,7 +21,6 @@
 &evex_mr_rv       r b rw msz
 &evex_rm_vr       r b rw msz
 &evex_rm_vv       r b rw msz bcst
-&evex_rm_vk       r b rw msz
 
 &evex_rvm_vvv     r v b rw msz bcst
 &evex_rvm_vvr     r v b rw msz

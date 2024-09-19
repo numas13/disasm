@@ -35,9 +35,7 @@
 &evex_rm_kr       r b rw msz
 &evex_rm_rv       r b rw msz rsz !extern
 &evex_rm_vr       r b rw msz !extern
-&evex_rm_vv       r b rw msz bcst !extern
 
-&evex_rvm_vvv     r b v rw msz bcst !extern
 &evex_rvm_vvr     r b v rw msz !extern
 &evex_rvm_kkk     r b v rw msz
 
