@@ -2293,6 +2293,13 @@ impl SetValue for Inner<'_> {
         self.set_suffix(out, sz)
     }
 
+    fn set_args_rm_bound(&mut self, out: &mut Insn, args: &args_rm) -> Result {
+        let sz = if self.prefix_66 > 0 { 16 } else { 32 };
+        self.set_gpr_reg(out, args.r, Access::Read, sz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, sz * 2)?;
+        self.set_suffix(out, sz)
+    }
+
     forward! {
         args_r {
             fn set_args_ri_ro = impl_args_ri_bwlq(Access::Read),
