@@ -2075,7 +2075,7 @@ impl<'a> Inner<'a> {
         msz: i32,
         mem: MemAccess,
     ) -> Result {
-        let er = self.get_er_sae_zmm();
+        let er = self.get_er_sae();
         self.impl_args_rvm_xxx_mem(out, args, access, msz, mem)?;
         out.push_operand_if_some(er);
         Ok(())
@@ -2089,7 +2089,7 @@ impl<'a> Inner<'a> {
         msz: i32,
         mem: MemAccess,
     ) -> Result {
-        let er = self.get_sae_zmm();
+        let er = self.get_sae();
         self.impl_args_rvm_xxx_mem(out, args, access, msz, mem)?;
         out.push_operand_if_some(er);
         Ok(())
@@ -2099,43 +2099,6 @@ impl<'a> Inner<'a> {
         self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
         self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
         self.set_gpr_mem(out, args.b, Access::Read, msz)
-    }
-
-    fn impl_args_fmadds(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
-        self.set_vec_reg(out, args.r, Size::Xmm, Access::ReadWrite)?;
-        self.set_vec_reg(out, args.v, Size::Xmm, Access::Read)?;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, msz)
-    }
-
-    fn impl_args_fmadds_er(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
-        self.mem_access = MemAccess::Tuple1;
-        let er = self.get_er_sae();
-        self.impl_args_fmadds(out, args, msz)?;
-        out.push_operand_if_some(er);
-        Ok(())
-    }
-
-    fn impl_args_fmaddp(&mut self, out: &mut Insn, args: &args_rvm_vvv) -> Result {
-        self.set_vec_reg(out, args.r, self.vec_size, Access::ReadWrite)?;
-        self.set_vec_reg(out, args.v, self.vec_size, Access::Read)?;
-        self.set_vec_mem(out, args.b, self.vec_size, Access::Read, 1)
-    }
-
-    fn impl_args_fmaddp_bcst(&mut self, out: &mut Insn, args: &args_rvm_vvv, bcst: i32) -> Result {
-        self.set_bcst(bcst);
-        self.impl_args_fmaddp(out, args)
-    }
-
-    fn impl_args_fmaddp_bcst_er(
-        &mut self,
-        out: &mut Insn,
-        args: &args_rvm_vvv,
-        bcst: i32,
-    ) -> Result {
-        let er = self.get_er_sae_zmm();
-        self.impl_args_fmaddp_bcst(out, args, bcst)?;
-        out.push_operand_if_some(er);
-        Ok(())
     }
 
     fn impl_args_fmadds_4a(&mut self, out: &mut Insn, args: &args_rvm_vvv, msz: i32) -> Result {
@@ -2925,6 +2888,10 @@ impl SetValue for Inner<'_> {
             fn set_args_rvm_vvv_bcst16_sae = impl_args_rvm_vvv_bcst_sae(Access::Write, 16),
             fn set_args_rvm_vvv_bcst32_sae = impl_args_rvm_vvv_bcst_sae(Access::Write, 32),
             fn set_args_rvm_vvv_bcst64_sae = impl_args_rvm_vvv_bcst_sae(Access::Write, 64),
+
+            fn set_args_rvm_vvv_bcst16_er_rw = impl_args_rvm_vvv_bcst_er(Access::ReadWrite, 16),
+            fn set_args_rvm_vvv_bcst32_er_rw = impl_args_rvm_vvv_bcst_er(Access::ReadWrite, 32),
+            fn set_args_rvm_vvv_bcst64_er_rw = impl_args_rvm_vvv_bcst_er(Access::ReadWrite, 64),
         }
     }
 
@@ -2950,10 +2917,17 @@ impl SetValue for Inner<'_> {
             fn set_args_rvm_xxx_32 = impl_args_rvm_xxx(Access::Write, 32),
             fn set_args_rvm_xxx_64 = impl_args_rvm_xxx(Access::Write, 64),
 
+            fn set_args_rvm_xxx_32_rw = impl_args_rvm_xxx(Access::ReadWrite, 32),
+            fn set_args_rvm_xxx_64_rw = impl_args_rvm_xxx(Access::ReadWrite, 64),
+
             fn set_args_rvm_xxx_x1 = impl_args_rvm_xxx_mem(Access::Write, 1, MemAccess::Tuple1),
             fn set_args_rvm_xxx_16x1 = impl_args_rvm_xxx_mem(Access::Write, 16, MemAccess::Tuple1),
             fn set_args_rvm_xxx_32x1 = impl_args_rvm_xxx_mem(Access::Write, 32, MemAccess::Tuple1),
             fn set_args_rvm_xxx_64x1 = impl_args_rvm_xxx_mem(Access::Write, 64, MemAccess::Tuple1),
+
+            fn set_args_rvm_xxx_16x1_er_rw = impl_args_rvm_xxx_mem_er(Access::ReadWrite, 16, MemAccess::Tuple1),
+            fn set_args_rvm_xxx_32x1_er_rw = impl_args_rvm_xxx_mem_er(Access::ReadWrite, 32, MemAccess::Tuple1),
+            fn set_args_rvm_xxx_64x1_er_rw = impl_args_rvm_xxx_mem_er(Access::ReadWrite, 64, MemAccess::Tuple1),
 
             fn set_args_rvm_xxx_16x1_er = impl_args_rvm_xxx_mem_er(Access::Write, 16, MemAccess::Tuple1),
             fn set_args_rvm_xxx_32x1_er = impl_args_rvm_xxx_mem_er(Access::Write, 32, MemAccess::Tuple1),
@@ -2971,31 +2945,6 @@ impl SetValue for Inner<'_> {
             fn set_args_rvm_xxr_16 = impl_args_rvm_xxr(16),
             fn set_args_rvm_xxr_32 = impl_args_rvm_xxr(32),
             fn set_args_rvm_xxr_64 = impl_args_rvm_xxr(64),
-        }
-    }
-
-    forward! {
-        args_rvm_vvv {
-            fn set_args_fmaddss = impl_args_fmadds(32),
-            fn set_args_fmaddsd = impl_args_fmadds(64),
-
-            fn set_args_fmaddps = impl_args_fmaddp(),
-            fn set_args_fmaddpd = impl_args_fmaddp(),
-        }
-    }
-
-    forward! {
-        args_rvm_vvv {
-            fn set_args_fmaddsh_er = impl_args_fmadds_er(16),
-            fn set_args_fmaddss_er = impl_args_fmadds_er(32),
-            fn set_args_fmaddsd_er = impl_args_fmadds_er(64),
-            fn set_args_fmaddcsh_er = impl_args_fmadds_er(32),
-
-            fn set_args_pmaddp_bcst = impl_args_fmaddp_bcst(64),
-            fn set_args_fmaddph_bcst_er = impl_args_fmaddp_bcst_er(16),
-            fn set_args_fmaddps_bcst_er = impl_args_fmaddp_bcst_er(32),
-            fn set_args_fmaddpd_bcst_er = impl_args_fmaddp_bcst_er(64),
-            fn set_args_fmaddcph_bcst_er = impl_args_fmaddp_bcst_er(32),
         }
     }
 

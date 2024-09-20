@@ -75,15 +75,10 @@
 @rm_ry            ........ ........ ........ ........ \
                   evex_rm_ry=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
 
-@fmaddss          ........ ........ ........ ........ \
-                  fmaddss=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddsd          ........ ........ ........ ........ \
-                  fmaddsd=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-
-@fmaddps          ........ ........ ........ ........ \
-                  fmaddps=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddpd          ........ ........ ........ ........ \
-                  fmaddpd=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddss          ........ ........ ........ ........ rvm_xxx_32_rw=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsd          ........ ........ ........ ........ rvm_xxx_64_rw=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@fmaddps          ........ ........ ........ ........ rvm_vvv_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddpd          ........ ........ ........ ........ rvm_vvv_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @fmaddss_4a        ........ ........ ........ ........ \
                   fmaddss_4a=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base

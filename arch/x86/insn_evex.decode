@@ -72,17 +72,17 @@
 # | mm rrr bbb | opcode | z L'L b V' aaa | W vvvv 1 pp | RXB R' 0 mmm |
 # |------------|--------|----------------|-------------|--------------|
 
-@fmaddcsh_er      ........ ........ ........ ........ ........ fmaddcsh_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddsh_er       ........ ........ ........ ........ ........ fmaddsh_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddss_er       ........ ........ ........ ........ ........ fmaddss_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddsd_er       ........ ........ ........ ........ ........ fmaddsd_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddcsh_er      ........ ........ ........ ........ ........ rvm_xxx_32x1_er_rw=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsh_er       ........ ........ ........ ........ ........ rvm_xxx_16x1_er_rw=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@fmaddss_er       ........ ........ ........ ........ ........ rvm_xxx_32x1_er_rw=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
+@fmaddsd_er       ........ ........ ........ ........ ........ rvm_xxx_64x1_er_rw=&rvm_xxx r=%mm_reg v=%mm_v b=%mm_base
 
-@pmaddp_bcst      ........ ........ ........ ........ ........ pmaddp_bcst=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@pmaddp_bcst      ........ ........ ........ ........ ........ rvm_vvv_bcst64_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
-@fmaddcph_bcst_er ........ ........ ........ ........ ........ fmaddcph_bcst_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddph_bcst_er  ........ ........ ........ ........ ........ fmaddph_bcst_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddps_bcst_er  ........ ........ ........ ........ ........ fmaddps_bcst_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
-@fmaddpd_bcst_er  ........ ........ ........ ........ ........ fmaddpd_bcst_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddcph_bcst_er ........ ........ ........ ........ ........ rvm_vvv_bcst32_er_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddph_bcst_er  ........ ........ ........ ........ ........ rvm_vvv_bcst16_er_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddps_bcst_er  ........ ........ ........ ........ ........ rvm_vvv_bcst32_er_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
+@fmaddpd_bcst_er  ........ ........ ........ ........ ........ rvm_vvv_bcst64_er_rw=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @rm_rx            ........ ........ ........ ........ ........ \
                   evex_rm_rx=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
