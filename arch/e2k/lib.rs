@@ -674,6 +674,7 @@ pub struct Decoder {
     unpacked: UnpackedBundle,
     aaincr: Option<i32>,
     ct_decoded: bool,
+    alop: u64,
 }
 
 impl Decoder {
@@ -685,6 +686,7 @@ impl Decoder {
             aaincr: None,
             address: 0,
             ct_decoded: false,
+            alop: 0,
         }
     }
 }
@@ -973,12 +975,12 @@ impl Decoder {
             insn.set_slot(slot);
             insn.flags_mut().set_if(insn::SM, als.sm());
 
-            let mut raw = als.raw() as u64;
-            raw |= (self.unpacked.ales[i].unwrap_or_default().raw() as u64) << 32;
-            raw |= slot::alc_channel_encode(i) << 48;
-            raw |= (mas as u64) << 51;
+            self.alop = als.raw() as u64;
+            self.alop |= (self.unpacked.ales[i].unwrap_or_default().raw() as u64) << 32;
+            self.alop |= slot::alc_channel_encode(i) << 48;
+            self.alop |= (mas as u64) << 51;
 
-            if E2KDecodeAlop::decode(self, raw, insn).is_err() {
+            if E2KDecodeAlop::decode(self, self.alop, insn).is_err() {
                 insn.set_opcode(opcode::ALS);
                 insn.push_uimm(als.raw() as u64);
                 if let Some(ales) = self.unpacked.ales[i] {
@@ -1206,7 +1208,24 @@ impl Decoder {
         out.push_literal(src as u64, 0);
     }
 
-    fn set_src1(&mut self, out: &mut Insn, src1: i32) {
+    fn set_mas(&mut self, out: &mut Insn) {
+        out.push_mas(self.extract_mas(self.alop) as u8);
+    }
+
+    fn set_dst(&mut self, out: &mut Insn) {
+        out.push_dst(self.extract_dst(self.alop));
+    }
+
+    fn set_dst_movtd(&mut self, out: &mut Insn) {
+        out.push_dst_movtd(self.extract_dst(self.alop));
+    }
+
+    fn set_dst_preg(&mut self, out: &mut Insn) {
+        out.push_dst_preg(self.extract_dst_preg(self.alop));
+    }
+
+    fn set_src1(&mut self, out: &mut Insn) {
+        let src1 = self.extract_src1(self.alop);
         if (0xc0..0xe0).contains(&src1) {
             out.push_uimm_short(src1 as u8 - 0xc0);
         } else {
@@ -1214,7 +1233,8 @@ impl Decoder {
         }
     }
 
-    fn set_src2(&mut self, out: &mut Insn, src2: i32) {
+    fn set_src2(&mut self, out: &mut Insn) {
+        let src2 = self.extract_src2(self.alop);
         if (0xc0..0xd0).contains(&src2) {
             out.push_uimm_short(src2 as u8 - 0xc0);
         } else if (0xd0..0xe0).contains(&src2) {
@@ -1224,11 +1244,13 @@ impl Decoder {
         }
     }
 
-    fn set_src3(&mut self, out: &mut Insn, src3: i32) {
+    fn set_src3(&mut self, out: &mut Insn) {
+        let src3 = self.extract_src3(self.alop);
         out.push_reg(Reg::new(RegClass::INT, src3 as u64).read());
     }
 
-    fn set_lt3(&mut self, out: &mut Insn, lt3: i32) {
+    fn set_lt3(&mut self, out: &mut Insn) {
+        let lt3 = self.extract_src3(self.alop);
         if (0xd0..0xe0).contains(&lt3) {
             self.set_lit(out, lt3);
         } else {
@@ -1236,7 +1258,8 @@ impl Decoder {
         }
     }
 
-    fn set_src4(&mut self, out: &mut Insn, src4: i32) {
+    fn set_src4(&mut self, out: &mut Insn) {
+        let src4 = self.extract_src4(self.alop);
         if (0xc0..0xe0).contains(&src4) {
             // TODO:
             out.push_uimm((src4 - 0xc0) as u64);
@@ -1245,35 +1268,47 @@ impl Decoder {
         }
     }
 
-    fn set_dst_sreg(&mut self, out: &mut Insn, dst: i32) {
+    fn set_dst_sreg(&mut self, out: &mut Insn) {
+        let dst = self.extract_dst(self.alop);
         out.push_reg(Reg::new(reg_class::SREG, dst as u64).write());
     }
 
-    fn set_src1_sreg(&mut self, out: &mut Insn, src2: i32) {
-        out.push_reg(Reg::new(reg_class::SREG, src2 as u64).read());
+    fn set_src1_sreg(&mut self, out: &mut Insn) {
+        let src1 = self.extract_src1(self.alop);
+        out.push_reg(Reg::new(reg_class::SREG, src1 as u64).read());
     }
 
-    fn set_wbs(&mut self, out: &mut Insn, wbs: i32) {
+    fn set_wbs(&mut self, out: &mut Insn) {
+        let wbs = self.extract_wbs(self.alop);
         out.push_uimm_short(wbs as u64);
     }
 
-    fn set_uimm(&mut self, out: &mut Insn, imm: u64) {
-        out.push_uimm(imm);
+    fn set_src3_uimm(&mut self, out: &mut Insn) {
+        let src3 = self.extract_src3(self.alop);
+        out.push_uimm(src3 as u64);
+    }
+
+    fn set_log_table(&mut self, out: &mut Insn) {
+        let table = self.extract_table(self.alop);
+        out.push_uimm(table as u64);
     }
 
     fn set_reg(&mut self, out: &mut Insn, cls: RegClass, index: i32, access: Access) {
         out.push_reg(Reg::new(cls, index as u64).access(access));
     }
 
-    fn set_aad(&mut self, out: &mut Insn, index: i32, access: Access) {
+    fn set_aad(&mut self, out: &mut Insn, access: Access) {
+        let index = self.extract_aad(self.alop);
         self.set_reg(out, reg_class::AAD, index, access);
     }
 
-    fn set_aasti(&mut self, out: &mut Insn, index: i32, access: Access) {
+    fn set_aasti(&mut self, out: &mut Insn, access: Access) {
+        let index = self.extract_aaindex(self.alop);
         self.set_reg(out, reg_class::AASTI, index, access);
     }
 
-    fn set_aaind(&mut self, out: &mut Insn, index: i32, access: Access) {
+    fn set_aaind(&mut self, out: &mut Insn, access: Access) {
+        let index = self.extract_aaindex(self.alop);
         self.set_reg(out, reg_class::AAIND, index, access);
     }
 
@@ -1281,20 +1316,16 @@ impl Decoder {
         self.set_reg(out, reg_class::AAINCR, index, access);
     }
 
-    fn set_aau(
-        &mut self,
-        out: &mut Insn,
-        aau: i32,
-        aad: i32,
-        aaindex: i32,
-        aaincr: i32,
-        access: Access,
-    ) {
+    fn set_aau(&mut self, out: &mut Insn, access: Access) {
+        let aau = self.extract_aau(self.alop);
         match aau {
-            AAUR_MODE_AAD => self.set_aad(out, aad, access),
-            AAUR_MODE_AASTI => self.set_aasti(out, aaindex, access),
-            AAUR_MODE_AAIND => self.set_aaind(out, aaindex, access),
-            AAUR_MODE_AAINCR => self.set_aaincr(out, aaincr, access),
+            AAUR_MODE_AAD => self.set_aad(out, access),
+            AAUR_MODE_AASTI => self.set_aasti(out, access),
+            AAUR_MODE_AAIND => self.set_aaind(out, access),
+            AAUR_MODE_AAINCR => {
+                let index = self.extract_aaincr(self.alop);
+                self.set_aaincr(out, index, access);
+            }
             _ => unreachable!(),
         }
     }
@@ -1349,237 +1380,225 @@ impl Decoder {
 impl SetValue for Decoder {
     type Error = Error;
 
-    fn set_args_alf1(&mut self, out: &mut Insn, args: &args_alf1) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
+    fn set_alf1(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf1_mas(&mut self, out: &mut Insn, args: &args_alf1_mas) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        out.push_mas(args.mas as u8);
+    fn set_alf1_mas(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_mas(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf1_merge(&mut self, out: &mut Insn, args: &args_alf1_merge) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
+    fn set_alf1_merge(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
         self.set_mrgc(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf2(&mut self, out: &mut Insn, args: &args_alf2) {
-        out.push_dst(args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf2(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf2_movtd(&mut self, out: &mut Insn, args: &args_alf2_movtd) {
-        out.push_dst_movtd(args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf2_movtd(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst_movtd(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf3_mas(&mut self, out: &mut Insn, args: &args_alf3_mas) {
-        self.set_src4(out, args.src4);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        out.push_mas(args.mas as u8);
+    fn set_alf3_mas(&mut self, out: &mut Insn, _: i32) {
+        self.set_src4(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_mas(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf4(&mut self, out: &mut Insn, args: &args_alf4) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
+    fn set_alf4(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf7(&mut self, out: &mut Insn, args: &args_alf7) {
-        out.push_dst_preg(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
+    fn set_alf7(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst_preg(out);
+        self.set_src1(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf8(&mut self, out: &mut Insn, args: &args_alf8) {
-        out.push_dst_preg(args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf8(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst_preg(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf10_mas(&mut self, out: &mut Insn, args: &args_alf10_mas) {
-        self.set_src4(out, args.src4);
-        self.set_aad(out, args.aad, Access::Read);
-        self.set_aasti(out, args.aaindex, Access::Read);
-        if args.aalit != 0 {
-            self.set_lit(out, 0xd8 + args.aalit - 1);
+    fn set_alf10_mas(&mut self, out: &mut Insn, _: i32) {
+        self.set_src4(out);
+        self.set_aad(out, Access::Read);
+        self.set_aasti(out, Access::Read);
+        let aalit = self.extract_aalit(self.alop);
+        if aalit != 0 {
+            self.set_lit(out, 0xd8 + aalit - 1);
         }
         self.set_pred(out);
-        if args.aainc != 0 {
-            self.aaincr = Some(args.aaincr);
+        let aaincr = self.extract_aaincr(self.alop);
+        if aaincr != 0 {
+            self.aaincr = Some(aaincr);
         }
     }
 
-    fn set_args_alf11(&mut self, out: &mut Insn, args: &args_alf11) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
+    fn set_alf11(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf11_mas(&mut self, out: &mut Insn, args: &args_alf11_mas) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        out.push_mas(args.mas as u8);
+    fn set_alf11_mas(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_mas(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf11_merge(&mut self, out: &mut Insn, args: &args_alf11_merge) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
+    fn set_alf11_merge(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
         self.set_mrgc(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf11_lit8(&mut self, out: &mut Insn, args: &args_alf11_lit8) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        self.set_uimm(out, args.imm as u64);
+    fn set_alf11_lit8(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_src3_uimm(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf12(&mut self, out: &mut Insn, args: &args_alf12) {
-        out.push_dst(args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf12(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf12_pshufh(&mut self, out: &mut Insn, args: &args_alf12_pshufh) {
-        out.push_dst(args.dst);
-        self.set_src2(out, args.src2);
-        self.set_uimm(out, args.imm as u64);
+    fn set_alf12_pshufh(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src2(out);
+        self.set_src3_uimm(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf12_ibranchd(&mut self, out: &mut Insn, args: &args_alf12_ibranchd) {
-        out.push_dst(args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf12_ibranchd(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src2(out);
         self.set_ct_cond(out);
     }
 
-    fn set_args_alf12_icalld(&mut self, out: &mut Insn, args: &args_alf12_icalld) {
-        out.push_dst(args.dst);
-        self.set_wbs(out, args.wbs);
-        self.set_src2(out, args.src2);
+    fn set_alf12_icalld(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_wbs(out);
+        self.set_src2(out);
         self.set_ct_cond(out);
     }
 
-    fn set_args_alf13_mas(&mut self, out: &mut Insn, args: &args_alf13_mas) {
-        self.set_src4(out, args.src4);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        out.push_mas(args.mas as u8);
+    fn set_alf13_mas(&mut self, out: &mut Insn, _: i32) {
+        self.set_src4(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_mas(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf15(&mut self, out: &mut Insn, args: &args_alf15) {
-        self.set_dst_sreg(out, args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf15(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst_sreg(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf16(&mut self, out: &mut Insn, args: &args_alf16) {
-        out.push_dst(args.dst);
-        self.set_src1_sreg(out, args.src1);
+    fn set_alf16(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1_sreg(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf17(&mut self, out: &mut Insn, args: &args_alf17) {
-        out.push_dst_preg(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
+    fn set_alf17(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst_preg(out);
+        self.set_src1(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf21(&mut self, out: &mut Insn, args: &args_alf21) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        self.set_src3(out, args.src3);
+    fn set_alf21(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_src3(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf21_merge(&mut self, out: &mut Insn, args: &args_alf21_merge) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        self.set_src3(out, args.src3);
+    fn set_alf21_merge(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_src3(out);
         self.set_mrgc(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf21_lt3(&mut self, out: &mut Insn, args: &args_alf21_lt3) {
-        out.push_dst(args.dst);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        self.set_lt3(out, args.src3);
+    fn set_alf21_lt3(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_lt3(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf21_log(&mut self, out: &mut Insn, args: &args_alf21_log) {
-        out.push_dst(args.dst);
-        self.set_uimm(out, args.table as u64);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        self.set_src3(out, args.src3);
+    fn set_alf21_log(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_log_table(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_src3(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf21_log_lt3(&mut self, out: &mut Insn, args: &args_alf21_log_lt3) {
-        out.push_dst(args.dst);
-        self.set_uimm(out, args.table as u64);
-        self.set_src1(out, args.src1);
-        self.set_src2(out, args.src2);
-        self.set_lt3(out, args.src3);
+    fn set_alf21_log_lt3(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_log_table(out);
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_lt3(out);
         self.set_pred(out);
     }
 
-    fn set_args_alf22(&mut self, out: &mut Insn, args: &args_alf22) {
-        out.push_dst(args.dst);
-        self.set_src2(out, args.src2);
+    fn set_alf22(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_src2(out);
         self.set_pred(out);
     }
 
-    fn set_args_aaurr(&mut self, out: &mut Insn, args: &args_aaurr) {
-        out.push_dst(args.dst);
-        self.set_aau(
-            out,
-            args.aau,
-            args.aad,
-            args.aaindex,
-            args.aaincr,
-            Access::Read,
-        );
+    fn set_aaurr(&mut self, out: &mut Insn, _: i32) {
+        self.set_dst(out);
+        self.set_aau(out, Access::Read);
         self.set_pred(out);
     }
 
-    fn set_args_aaurw(&mut self, out: &mut Insn, args: &args_aaurw) {
-        self.set_aau(
-            out,
-            args.aau,
-            args.aad,
-            args.aaindex,
-            args.aaincr,
-            Access::Write,
-        );
-        self.set_src4(out, args.src4);
+    fn set_aaurw(&mut self, out: &mut Insn, _: i32) {
+        self.set_aau(out, Access::Write);
+        self.set_src4(out);
         self.set_pred(out);
     }
 }

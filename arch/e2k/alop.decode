@@ -29,71 +29,71 @@
 # Argument sets
 ######################################################################
 
-&alf1                dst src1 src2
-&alf1_merge          dst src1 src2
-&alf1_mas            dst src1 src2 mas
-&alf2                dst src2
-&alf2_movtd          dst src2
-&alf3_mas            src4 src1 src2 mas
-&alf4                dst src1
-&alf7                dst src1 src2
-&alf8                dst src2
-&alf10_mas           src4 aad aaindex aaincr aas aainc aalit mas
-&alf11               dst src1 src2
-&alf11_lit8          dst src1 src2 imm
-&alf11_merge         dst src1 src2
-&alf11_mas           dst src1 src2 mas
-&alf12               dst src2
-&alf12_ibranchd      dst src2
-&alf12_icalld        dst wbs src2
-&alf12_pshufh        dst src2 imm
-&alf13_mas           src4 src1 src2 mas
-&alf15               dst src2
-&alf16               dst src1
-&alf17               dst src1 src2
-&alf21               dst src1 src2 src3
-&alf21_lt3           dst src1 src2 src3
-&alf21_merge         dst src1 src2 src3
-&alf21_log           dst table src1 src2 src3
-&alf21_log_lt3       dst table src1 src2 src3
-&alf22               dst src2
-&aaurr               dst aau aad aaindex aaincr
-&aaurw               aau aad aaindex aaincr src4
+# &alf1                dst src1 src2
+# &alf1_merge          dst src1 src2
+# &alf1_mas            dst src1 src2 mas
+# &alf2                dst src2
+# &alf2_movtd          dst src2
+# &alf3_mas            src4 src1 src2 mas
+# &alf4                dst src1
+# &alf7                dst src1 src2
+# &alf8                dst src2
+# &alf10_mas           src4 aad aaindex aaincr aas aainc aalit mas
+# &alf11               dst src1 src2
+# &alf11_lit8          dst src1 src2 imm
+# &alf11_merge         dst src1 src2
+# &alf11_mas           dst src1 src2 mas
+# &alf12               dst src2
+# &alf12_ibranchd      dst src2
+# &alf12_icalld        dst wbs src2
+# &alf12_pshufh        dst src2 imm
+# &alf13_mas           src4 src1 src2 mas
+# &alf15               dst src2
+# &alf16               dst src1
+# &alf17               dst src1 src2
+# &alf21               dst src1 src2 src3
+# &alf21_lt3           dst src1 src2 src3
+# &alf21_merge         dst src1 src2 src3
+# &alf21_log           dst table src1 src2 src3
+# &alf21_log_lt3       dst table src1 src2 src3
+# &alf22               dst src2
+# &aaurr               dst aau aad aaindex aaincr
+# &aaurw               aau aad aaindex aaincr src4
 
 ######################################################################
 # Formats
 ######################################################################
 
-@alf1                ------- ... ........-------- ................................ &alf1             %dst %src1 %src2
-@alf1_merge          ------- ... ........-------- ................................ &alf1_merge       %dst %src1 %src2
-@alf1_mas            ....... ... ........-------- ................................ &alf1_mas         %dst %src1 %src2 %mas
-@alf2                ------- ... ........-------- ................................ &alf2             %dst %src2
-@alf2_movtd          ------- ... ........-------- ................................ &alf2_movtd       %dst %src2
-@alf3_mas            ....... ... ........-------- ................................ &alf3_mas         %src4 %src1 %src2 %mas
-@alf4                ------- ... ........-------- ................................ &alf4             %dst %src1
-@alf7                ------- ... ........-------- ................................ &alf7             dst=%dst_preg %src1 %src2
-@alf8                ------- ... ........-------- ................................ &alf8             dst=%dst_preg %src2
-@alf10_mas           ....... ... ................ ................................ &alf10_mas        %src4 %aad %aaindex %aaincr %aas %aainc %aalit %mas
-@alf11               ------- ... ................ ................................ &alf11            %dst %src1 %src2
-@alf11_lit8          ------- ... ................ ................................ &alf11_lit8       %dst %src1 %src2 imm=%src3
-@alf11_merge         ------- ... ................ ................................ &alf11_merge      %dst %src1 %src2
-@alf11_mas           ....... ... ................ ................................ &alf11_mas        %dst %src1 %src2 %mas
-@alf12               ------- ... ................ ................................ &alf12            %dst %src2
-@alf12_ibranchd      ------- ... ................ ................................ &alf12_ibranchd   %dst %src2
-@alf12_icalld        ------- ... ................ ................................ &alf12_icalld     %dst %wbs %src2
-@alf12_pshufh        ------- ... ................ ................................ &alf12_pshufh     %dst %src2 imm=%src3
-@alf13_mas           ....... ... ................ ................................ &alf13_mas        %src4 %src1 %src2 %mas
-@alf15               ------- ... ................ ................................ &alf15            %dst %src2
-@alf16               ------- ... ................ ................................ &alf16            %dst %src1
-@alf17               ------- ... ................ ................................ &alf17            dst=%dst_preg %src1 %src2
-@alf21               ------- ... ................ ................................ &alf21            %dst %src1 %src2 %src3
-@alf21_lt3           ------- ... ................ ................................ &alf21_lt3        %dst %src1 %src2 %src3
-@alf21_merge         ------- ... ................ ................................ &alf21_merge      %dst %src1 %src2 %src3
-@alf21_log           ------- ... ................ ................................ &alf21_log        %dst %table %src1 %src2 %src3
-@alf21_log_lt3       ------- ... ................ ................................ &alf21_log_lt3    %dst %table %src1 %src2 %src3
-@alf22               ------- ... ................ ................................ &alf22            %dst %src2
-@aaurr               ------- ... ................ ................................ &aaurr            %dst %aau %aad %aaindex %aaincr
-@aaurw               ------- ... ................ ................................ &aaurw            %aau %aad %aaindex %aaincr %src4
+@alf1                ------- ... ........-------- ................................ alf1=0             # %dst %src1 %src2
+@alf1_merge          ------- ... ........-------- ................................ alf1_merge=0       # %dst %src1 %src2
+@alf1_mas            ....... ... ........-------- ................................ alf1_mas=0         # %dst %src1 %src2 %mas
+@alf2                ------- ... ........-------- ................................ alf2=0             # %dst %src2
+@alf2_movtd          ------- ... ........-------- ................................ alf2_movtd=0       # %dst %src2
+@alf3_mas            ....... ... ........-------- ................................ alf3_mas=0         # %src4 %src1 %src2 %mas
+@alf4                ------- ... ........-------- ................................ alf4=0             # %dst %src1
+@alf7                ------- ... ........-------- ................................ alf7=0             # dst=%dst_preg %src1 %src2
+@alf8                ------- ... ........-------- ................................ alf8=0             # dst=%dst_preg %src2
+@alf10_mas           ....... ... ................ ................................ alf10_mas=0        # %src4 %aad %aaindex %aaincr %aas %aainc %aalit %mas
+@alf11               ------- ... ................ ................................ alf11=0            # %dst %src1 %src2
+@alf11_lit8          ------- ... ................ ................................ alf11_lit8=0       # %dst %src1 %src2 imm=%src3
+@alf11_merge         ------- ... ................ ................................ alf11_merge=0      # %dst %src1 %src2
+@alf11_mas           ....... ... ................ ................................ alf11_mas=0        # %dst %src1 %src2 %mas
+@alf12               ------- ... ................ ................................ alf12=0            # %dst %src2
+@alf12_ibranchd      ------- ... ................ ................................ alf12_ibranchd=0   # %dst %src2
+@alf12_icalld        ------- ... ................ ................................ alf12_icalld=0     # %dst %wbs %src2
+@alf12_pshufh        ------- ... ................ ................................ alf12_pshufh=0     # %dst %src2 imm=%src3
+@alf13_mas           ....... ... ................ ................................ alf13_mas=0        # %src4 %src1 %src2 %mas
+@alf15               ------- ... ................ ................................ alf15=0            # %dst %src2
+@alf16               ------- ... ................ ................................ alf16=0            # %dst %src1
+@alf17               ------- ... ................ ................................ alf17=0            # dst=%dst_preg %src1 %src2
+@alf21               ------- ... ................ ................................ alf21=0            # %dst %src1 %src2 %src3
+@alf21_lt3           ------- ... ................ ................................ alf21_lt3=0        # %dst %src1 %src2 %src3
+@alf21_merge         ------- ... ................ ................................ alf21_merge=0      # %dst %src1 %src2 %src3
+@alf21_log           ------- ... ................ ................................ alf21_log=0        # %dst %table %src1 %src2 %src3
+@alf21_log_lt3       ------- ... ................ ................................ alf21_log_lt3=0    # %dst %table %src1 %src2 %src3
+@alf22               ------- ... ................ ................................ alf22=0            # %dst %src2
+@aaurr               ------- ... ................ ................................ aaurr=0            # %dst %aau %aad %aaindex %aaincr
+@aaurw               ------- ... ................ ................................ aaurw=0            # %aau %aad %aaindex %aaincr %src4
 
 ######################################################################
 # Patterns
