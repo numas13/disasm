@@ -13,14 +13,12 @@
 # Argument sets
 ##############################################################################
 
-&mem_vec    b rw msz !extern
+&rm_rr      r b msz rsz !extern
+&rm_xr      r b msz !extern
 
-&rm_rr      r b rw msz rsz !extern
-&rm_xr      r b rw msz !extern
+&mr_rr      r b msz rsz !extern
 
-&mr_rr      r b rw msz rsz !extern
-
-&reg_vec    reg rw rsz !extern
+&m                b !extern
 
 &rm_xx            r b !extern
 &rm_mm            r b !extern
@@ -29,14 +27,14 @@
 # Formats
 ##############################################################################
 
-@xmm0             ........ ........ . .... ... ... ..... xmm=&reg_vec reg=0 rw=1 rsz=128
+@xmm0             ........ ........ . .... ... ... ..... xmm=0
 
-@m_x_ro           ........ ........ . .... ... ... ..... m_x=&mem_vec b=%base msz=1 rw=1
-@mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1 rw=2
-@rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=2
-@rm_rr_rw         ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=3
-@rm_rr_ro         ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1 rw=1
-@rm_xr_rw         ........ ........ . .... ... ... ..... &rm_xr r=%reg b=%base msz=1 rw=3
+@m_x_ro           ........ ........ . .... ... ... ..... m_x_ro=&m b=%base
+@mr_rr            ........ ........ . .... ... ... ..... &mr_rr b=%base r=%reg msz=1 rsz=1
+@rm_rr            ........ ........ . .... ... ... ..... &rm_rr b=%base r=%reg msz=1 rsz=1
+@rm_rr_rw         ........ ........ . .... ... ... ..... rm_rr_rw=&rm_rr b=%base r=%reg msz=1 rsz=1 
+@rm_rr_ro         ........ ........ . .... ... ... ..... rm_rr_ro=&rm_rr b=%base r=%reg msz=1 rsz=1 
+@rm_xr_rw         ........ ........ . .... ... ... ..... rm_xr_rw=&rm_xr r=%reg b=%base msz=1
 
 @rm_xx            ........ ........ . .... ... ... ..... rm_xx=&rm_xx r=%reg b=%base
 @rm_xx_rw         ........ ........ . .... ... ... ..... rm_xx_rw=&rm_xx r=%reg b=%base

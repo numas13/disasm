@@ -21,19 +21,13 @@
 # Argument sets
 ##############################################################################
 
-&mem              b rw msz !extern
-
-&rm_rr            r b rw msz rsz !extern
+&rm_rr            r b msz rsz !extern
 
 &rvm_rrr          r b v msz rsz
 &rmv_rrr          r b v msz rsz
 
-&evex_rm_rk       r b rw msz rsz
-&evex_rm_kr       r b rw msz
-&evex_rm_rv       r b rw msz rsz !extern
-&evex_rm_vr       r b rw msz !extern
-
-&evex_rvm_vvr     r b v rw msz !extern
+&evex_rm_kr       r b msz
+&evex_rm_rv       r b msz rsz
 
 &gather           b r v msz isz
 
@@ -43,6 +37,7 @@
 &rm_vx            r b
 &rm_xv            r b
 &rm_xx            r b !extern
+&rm_xr            r b msz !extern
 &rm_rk            r b
 &rm_kk            r b
 
@@ -65,9 +60,9 @@
 ##############################################################################
 
 @rm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 r=%gpr_reg b=%gpr_base msz=1 rsz=1 suffix=1
+                  &rm_rr r=%gpr_reg b=%gpr_base msz=1 rsz=1 suffix=1
 @vm_rr            ........ ........ ........ ........ \
-                  &rm_rr rw=2 r=%mm_v b=%gpr_base msz=1 rsz=1 suffix=1
+                  &rm_rr r=%mm_v b=%gpr_base msz=1 rsz=1 suffix=1
 
 @rvm_rrr          ........ ........ ........ ........ \
                   &rvm_rrr r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 msz=1
@@ -76,9 +71,9 @@
                   &rmv_rrr r=%gpr_reg v=%mm_v b=%gpr_base rsz=1 msz=1
 
 @rm_rx            ........ ........ ........ ........ \
-                  evex_rm_rx=&evex_rm_rv rw=2 r=%gpr_reg b=%mm_base msz=1 rsz=1
+                  evex_rm_rx=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
 @rm_ry            ........ ........ ........ ........ \
-                  evex_rm_ry=&evex_rm_rv rw=2 r=%gpr_reg b=%mm_base msz=1 rsz=1
+                  evex_rm_ry=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
 
 @fmaddss          ........ ........ ........ ........ \
                   fmaddss=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
@@ -110,10 +105,10 @@
                   fmaddpd_4b=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @rm_kr            ........ ........ ........ ........ \
-                  evex_rm_kr=&evex_rm_kr rw=2 r=%k_reg b=%gpr_base msz=1
+                  evex_rm_kr=&evex_rm_kr r=%k_reg b=%gpr_base msz=1
 
 @rm_xr            ........ ........ ........ ........ \
-                  evex_rm_xr=&evex_rm_vr rw=2 r=%mm_reg b=%gpr_base msz=1
+                  &rm_xr r=%mm_reg b=%gpr_base msz=1
 
 @m32              ........ ........ . .... ... ... ..... m32=&m b=%gpr_base
 @m32_ro           ........ ........ . .... ... ... ..... m32_ro=&m b=%gpr_base

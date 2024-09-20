@@ -1015,16 +1015,6 @@ impl<'a> Inner<'a> {
         }
     }
 
-    fn vec_size(&self, value: i32) -> Result<Size> {
-        Ok(match value {
-            64 => Size::Mm,
-            128 => Size::Xmm,
-            256 => Size::Ymm,
-            512 => Size::Zmm,
-            _ => return Err(Error::Failed(0)),
-        })
-    }
-
     fn set_fp_suffix(&mut self, out: &mut Insn, value: i32) -> Result {
         // TODO: remove early exit
         if !self.is_att() {
@@ -1268,16 +1258,8 @@ impl<'a> Inner<'a> {
     }
 
     fn set_evex_rm_rv(&mut self, out: &mut Insn, args: &args_evex_rm_rv, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_gpr_reg(out, args.r, rw, args.rsz)?;
+        self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
         self.set_vec_mem(out, args.b, size, Access::Read, args.msz)?;
-        Ok(())
-    }
-
-    fn set_evex_rm_vr(&mut self, out: &mut Insn, args: &args_evex_rm_vr, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, size, rw)?;
-        self.set_gpr_mem(out, args.b, 1, Access::Read, args.msz)?;
         Ok(())
     }
 
@@ -1328,8 +1310,7 @@ impl<'a> Inner<'a> {
     }
 
     fn set_evex_rvm_vvr(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr, size: Size) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, size, rw)?;
+        self.set_vec_reg(out, args.r, size, Access::Write)?;
         self.set_vec_reg(out, args.v, size, Access::Read)?;
         self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)?;
         Ok(())
@@ -1438,6 +1419,11 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
+    fn impl_args_b(&mut self, out: &mut Insn, args: &args_b, access: Access) -> Result {
+        self.mode = 3; // FIXME: addr32 xchg
+        self.set_gpr_reg(out, args.r, access, args.rsz)
+    }
+
     fn impl_args_m(&mut self, out: &mut Insn, args: &args_m, access: Access, msz: i32) -> Result {
         self.set_gpr_mem(out, args.b, 0, access, msz)
     }
@@ -1468,6 +1454,16 @@ impl<'a> Inner<'a> {
         self.set_gpr_reg(out, 1, Access::Read, 8)?;
         self.has_gpr = false; // ignore cl
         self.set_suffix(out, sz)
+    }
+
+    fn impl_args_rm_rr(&mut self, out: &mut Insn, args: &args_rm_rr, access: Access) -> Result {
+        self.set_gpr_reg(out, args.r, access, args.rsz)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)
+    }
+
+    fn impl_args_mr_rr(&mut self, out: &mut Insn, args: &args_mr_rr, access: Access) -> Result {
+        self.set_gpr_mem(out, args.b, 0, access, args.msz)?;
+        self.set_gpr_reg(out, args.r, Access::Read, args.rsz)
     }
 
     fn impl_args_rm(&mut self, out: &mut Insn, args: &args_rm, access: Access, sz: i32) -> Result {
@@ -1692,6 +1688,12 @@ impl<'a> Inner<'a> {
     fn impl_args_rm_xv(&mut self, out: &mut Insn, args: &args_rm_xv, msz: i32) -> Result {
         self.set_vec_reg(out, args.r, Size::Xmm, Access::Write)?;
         self.set_vec_mem(out, args.b, self.vec_size, Access::Read, msz)
+    }
+
+    fn impl_args_rm_xr(&mut self, out: &mut Insn, args: &args_rm_xr, access: Access) -> Result {
+        self.set_vec_reg(out, args.r, Size::Xmm, access)?;
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)?;
+        Ok(())
     }
 
     fn impl_args_rm_xx(
@@ -2291,11 +2293,6 @@ macro_rules! forward {
 impl SetValue for Inner<'_> {
     type Error = Error;
 
-    fn set_mode(&mut self, _: &mut Insn, mode: i32) -> Result {
-        self.mode = mode as u8;
-        Ok(())
-    }
-
     fn set_suffix_lazy(&mut self, out: &mut Insn, value: i32) -> Result {
         self.need_suffix = false;
         self.set_suffix(out, value)
@@ -2416,6 +2413,18 @@ impl SetValue for Inner<'_> {
         self.set_suffix(out, sz)
     }
 
+    fn set_a_rw(&mut self, out: &mut Insn, rsz: i32) -> Result {
+        self.set_gpr_reg(out, 0, Access::ReadWrite, rsz)
+    }
+
+    forward! {
+        args_b {
+            fn set_args_b = impl_args_b(Access::Write),
+            fn set_args_b_rw = impl_args_b(Access::ReadWrite),
+            fn set_args_b_ro = impl_args_b(Access::Read),
+        }
+    }
+
     forward! {
         args_r {
             fn set_args_ri_ro = impl_args_ri_bwlq(Access::Read),
@@ -2469,6 +2478,18 @@ impl SetValue for Inner<'_> {
         }
     }
 
+    forward! {
+        args_rm_rr {
+            fn set_args_rm_rr = impl_args_rm_rr(Access::Write),
+            fn set_args_rm_rr_rw = impl_args_rm_rr(Access::ReadWrite),
+            fn set_args_rm_rr_ro = impl_args_rm_rr(Access::Read),
+        }
+        args_mr_rr {
+            fn set_args_mr_rr = impl_args_mr_rr(Access::Write),
+            fn set_args_mr_rr_rw = impl_args_mr_rr(Access::ReadWrite),
+        }
+    }
+
     fn set_args_mr_xchg(&mut self, out: &mut Insn, args: &args_mr) -> Result {
         let sz = self.operand_size_bwlq().bits() as i32;
         self.impl_args_mr_base(out, args, Access::ReadWrite, Access::ReadWrite, sz)
@@ -2517,30 +2538,32 @@ impl SetValue for Inner<'_> {
         }
     }
 
-    fn set_args_reg(&mut self, out: &mut Insn, args: &args_reg) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_reg(out, args.reg, access, args.rsz)
-    }
-
-    fn set_args_xmm(&mut self, out: &mut Insn, args: &args_reg_vec) -> Result {
-        let size = self.vec_size(args.rsz)?;
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.reg, size, access)
+    fn set_xmm(&mut self, out: &mut Insn, value: i32) -> Result {
+        self.set_vec_reg(out, value, Size::Xmm, Access::Read)
     }
 
     fn set_args_mem(&mut self, out: &mut Insn, args: &args_mem) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, 0, access, args.msz)
+        self.set_gpr_mem(out, args.b, 0, Access::Write, args.msz)
     }
 
-    fn set_args_m_m(&mut self, out: &mut Insn, args: &args_mem_vec) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_mem(out, args.b, Size::Mm, access, args.msz)
+    fn set_args_mem_rw(&mut self, out: &mut Insn, args: &args_mem) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::ReadWrite, args.msz)
     }
 
-    fn set_args_m_x(&mut self, out: &mut Insn, args: &args_mem_vec) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_mem(out, args.b, Size::Xmm, access, args.msz)
+    fn set_args_mem_ro(&mut self, out: &mut Insn, args: &args_mem) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)
+    }
+
+    fn set_args_m_m_rw(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_vec_mem(out, args.b, Size::Mm, Access::ReadWrite, 1)
+    }
+
+    fn set_args_m_x_ro(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, 1)
+    }
+
+    fn set_args_m_x_rw(&mut self, out: &mut Insn, args: &args_m) -> Result {
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::ReadWrite, 1)
     }
 
     fn set_args_rvm_rrr(&mut self, out: &mut Insn, args: &args_rvm_rrr) -> Result {
@@ -2558,50 +2581,30 @@ impl SetValue for Inner<'_> {
     }
 
     fn set_args_rm_rm(&mut self, out: &mut Insn, args: &args_rm_rm) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_reg(out, args.r, access, args.rsz)?;
-        self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.msz)?;
-        Ok(())
+        self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
+        self.set_vec_mem(out, args.b, Size::Mm, Access::Read, args.msz)
     }
 
     fn set_args_rm_mr(&mut self, out: &mut Insn, args: &args_rm_mr) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, Size::Mm, access)?;
-        self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_mr_rm(&mut self, out: &mut Insn, args: &args_mr_rm) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, 0, access, args.msz)?;
-        self.set_vec_reg(out, args.r, Size::Mm, Access::Read)?;
-        Ok(())
-    }
-
-    fn set_args_rm_xr(&mut self, out: &mut Insn, args: &args_rm_xr) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_vec_reg(out, args.r, Size::Xmm, access)?;
-        self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_rm_rx(&mut self, out: &mut Insn, args: &args_rm_rx) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_reg(out, args.r, access, args.rsz)?;
-        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.msz)?;
-        Ok(())
-    }
-
-    fn set_args_rm_rr(&mut self, out: &mut Insn, args: &args_rm_rr) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_reg(out, args.r, access, args.rsz)?;
+        self.set_vec_reg(out, args.r, Size::Mm, Access::Write)?;
         self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)
     }
 
-    fn set_args_mr_rr(&mut self, out: &mut Insn, args: &args_mr_rr) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_gpr_mem(out, args.b, 0, access, args.msz)?;
-        self.set_gpr_reg(out, args.r, Access::Read, args.rsz)
+    fn set_args_mr_rm(&mut self, out: &mut Insn, args: &args_mr_rm) -> Result {
+        self.set_gpr_mem(out, args.b, 0, Access::Write, args.msz)?;
+        self.set_vec_reg(out, args.r, Size::Mm, Access::Read)
+    }
+
+    forward! {
+        args_rm_xr {
+            fn set_args_rm_xr = impl_args_rm_xr(Access::Write),
+            fn set_args_rm_xr_rw = impl_args_rm_xr(Access::ReadWrite),
+        }
+    }
+
+    fn set_args_rm_rx(&mut self, out: &mut Insn, args: &args_rm_rx) -> Result {
+        self.set_gpr_reg(out, args.r, Access::Write, args.rsz)?;
+        self.set_vec_mem(out, args.b, Size::Xmm, Access::Read, args.msz)
     }
 
     fn set_args_rm_sr(&mut self, out: &mut Insn, args: &args_mov_seg) -> Result {
@@ -2652,10 +2655,6 @@ impl SetValue for Inner<'_> {
 
     fn set_args_evex_rm_ry(&mut self, out: &mut Insn, args: &args_evex_rm_rv) -> Result {
         self.set_evex_rm_rv(out, args, Size::Ymm)
-    }
-
-    fn set_args_evex_rm_xr(&mut self, out: &mut Insn, args: &args_evex_rm_vr) -> Result {
-        self.set_evex_rm_vr(out, args, Size::Xmm)
     }
 
     fn set_args_evex_rvm_xxr(&mut self, out: &mut Insn, args: &args_evex_rvm_vvr) -> Result {
@@ -3102,8 +3101,7 @@ impl SetValue for Inner<'_> {
     }
 
     fn set_args_evex_rm_kr(&mut self, out: &mut Insn, args: &args_evex_rm_kr) -> Result {
-        let rw = access_from_mask(args.rw);
-        self.set_k_reg(out, args.r, rw)?;
+        self.set_k_reg(out, args.r, Access::Write)?;
         self.set_gpr_mem(out, args.b, 0, Access::Read, args.msz)?;
         Ok(())
     }
@@ -3189,9 +3187,12 @@ impl SetValue for Inner<'_> {
         Ok(())
     }
 
-    fn set_args_mem_bnd(&mut self, out: &mut Insn, args: &args_mem_bnd) -> Result {
-        let access = access_from_mask(args.rw);
-        self.set_bnd_reg(out, args.b, access)
+    fn set_args_bm(&mut self, out: &mut Insn, args: &args_r) -> Result {
+        self.set_bnd_reg(out, args.r, Access::Write)
+    }
+
+    fn set_args_bm_ro(&mut self, out: &mut Insn, args: &args_r) -> Result {
+        self.set_bnd_reg(out, args.r, Access::Read)
     }
 
     fn set_aimm(&mut self, out: &mut Insn, value: i32) -> Result {
@@ -3912,15 +3913,6 @@ impl ArchDecoder for Decoder {
             state: State::default(),
         }
         .decode(out)
-    }
-}
-
-fn access_from_mask(mask: i32) -> Access {
-    match mask {
-        1 => Access::Read,
-        2 => Access::Write,
-        3 => Access::ReadWrite,
-        _ => unreachable!("unexpected access mask {mask:#x}"),
     }
 }
 

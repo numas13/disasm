@@ -17,16 +17,15 @@
 # Argument sets
 ##############################################################################
 
-&evex_rm_rv       r b rw msz rsz
-&evex_mr_rv       r b rw msz
-&evex_rm_vr       r b rw msz
+&evex_rm_rv       r b msz rsz !extern
 
-&evex_rvm_vvr     r v b rw msz
+&evex_rvm_vvr     r v b msz
 
 &evex_gather      r b msz
 &evex_scatter     r b msz
 
 &rm_vr            r b
+&rm_xr            r b msz !extern
 
 &rm_vv            r b !extern
 &rm_hv            r b
@@ -86,22 +85,22 @@
 @fmaddpd_bcst_er  ........ ........ ........ ........ ........ fmaddpd_bcst_er=&rvm_vvv r=%mm_reg v=%mm_v b=%mm_base
 
 @rm_rx            ........ ........ ........ ........ ........ \
-                  evex_rm_rx=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
+                  evex_rm_rx=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
 
 @rm_rx_er         ........ ........ ........ ........ ........ \
-                  evex_rm_rx_er=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
+                  evex_rm_rx_er=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
 
 @rm_rx_sae        ........ ........ ........ ........ ........ \
-                  evex_rm_rx_sae=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1 rw=2
+                  evex_rm_rx_sae=&evex_rm_rv r=%gpr_reg b=%mm_base msz=1 rsz=1
 
 @rm_xr            ........ ........ ........ ........ ........ \
-                  evex_rm_xr=&evex_rm_vr r=%mm_reg b=%gpr_base msz=1 rw=2
+                  rm_xr=&rm_xr r=%mm_reg b=%gpr_base msz=1
 
 @rvm_xxr          ........ ........ ........ ........ ........ \
-                  evex_rvm_xxr=&evex_rvm_vvr r=%mm_reg v=%mm_v b=%mm_base msz=1 rw=2
+                  evex_rvm_xxr=&evex_rvm_vvr r=%mm_reg v=%mm_v b=%mm_base msz=1
 
 @rvm_xxr_er       ........ ........ ........ ........ ........ \
-                  tuple=1 evex_rvm_xxr_er=&evex_rvm_vvr r=%mm_reg v=%mm_v b=%mm_base msz=1 rw=2
+                  tuple=1 evex_rvm_xxr_er=&evex_rvm_vvr r=%mm_reg v=%mm_v b=%mm_base msz=1
 
 @gather_vv        ........ ........ ........ ........ ........ \
                   evex_gather_vv=&evex_gather r=%mm_reg b=%mm_base msz=1
