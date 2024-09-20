@@ -453,7 +453,6 @@ struct State {
     vext: u8,
     vl: u8,
     vec_size: Size,
-    mem_size_override: bool,
     mem_access: MemAccess,
 
     operand_mask: Option<Operand>,
@@ -665,11 +664,7 @@ impl<'a> Inner<'a> {
         Ok(())
     }
 
-    fn evex_disp8(&self, out: &Insn, mut offset: i32) -> i32 {
-        if !self.evex {
-            return offset;
-        }
-
+    fn evex_disp8(&self, out: &Insn, mut offset: i32, operand_size: Size) -> i32 {
         if self.broadcast && self.broadcast_size != 0 {
             match self.broadcast_size {
                 4 => offset *= 2,
@@ -708,115 +703,132 @@ impl<'a> Inner<'a> {
             },
             MemAccess::Mem128 => offset *= 16,
             MemAccess::Fixed => {}
-            MemAccess::Fixed1 => match self.operand_size {
+            MemAccess::Fixed1 => match operand_size {
                 Size::Long => offset *= 4,
                 Size::Quad => offset *= 8,
                 _ => unreachable!(),
             },
             MemAccess::Fixed2 => offset *= 2,
-            MemAccess::Tuple1 => match self.operand_size {
+            MemAccess::Tuple1 => match operand_size {
                 Size::Byte => {}
                 Size::Word => offset *= 2,
                 _ if self.w => offset *= 8,
                 _ => offset *= 4,
             },
-            MemAccess::Tuple2 => match self.operand_size {
+            MemAccess::Tuple2 => match operand_size {
                 Size::Long if !self.w => offset *= 8,
                 Size::Quad if self.w => offset *= 16,
                 Size::Xmm => offset *= 16,
-                _ => unreachable!("{:?}", self.operand_size),
+                _ => unreachable!("{:?}", operand_size),
             },
-            MemAccess::Tuple4 => match self.operand_size {
+            MemAccess::Tuple4 => match operand_size {
                 Size::Long if !self.w => offset *= 16,
                 Size::Quad if self.w => offset *= 32,
                 Size::Xmm => offset *= 16,
                 Size::Ymm => offset *= 32,
-                _ => unreachable!("{:?}", self.operand_size),
+                _ => unreachable!("{:?}", operand_size),
             },
-            MemAccess::Tuple8 => match self.operand_size {
+            MemAccess::Tuple8 => match operand_size {
                 Size::Long if !self.w => offset *= 32,
                 Size::Ymm => offset *= 32,
-                _ => unreachable!("{:?}", self.operand_size),
+                _ => unreachable!("{:?}", operand_size),
             },
         }
         offset
     }
 
+    fn decode_mem_kind(
+        &mut self,
+        out: &mut Insn,
+        base: u8,
+        operand_size: Size,
+        index_size: Size,
+    ) -> Result<OperandKind, Error> {
+        use OperandKind as K;
+
+        let sib = match base & 7 {
+            5 if self.mode == 0 => {
+                if self.is_amd64() {
+                    return Ok(K::Relative(RIP, self.bytes.read_i32()? as i64));
+                } else {
+                    return Ok(K::Absolute(self.bytes.read_u32()? as u64));
+                }
+            }
+            4 => Some(self.bytes.read_u8()?),
+            _ => None,
+        };
+
+        let mut offset = match self.mode {
+            1 => {
+                let mut offset = self.bytes.read_i8()? as i32;
+                if self.evex {
+                    offset = self.evex_disp8(out, offset, operand_size);
+                }
+                Some(offset)
+            }
+            2 => Some(self.bytes.read_i32()?),
+            _ => None,
+        };
+
+        if let Some(sib) = sib {
+            let index = ((base >> 1) & 8) | zextract(sib, 3, 3);
+            let (index, is_gpr) = match index_size {
+                Size::Long | Size::Quad => {
+                    let index = index_size.encode_gpr(index, false);
+                    let r = Reg::new(RegClass::INT, index);
+                    (r, true)
+                }
+                Size::Xmm | Size::Ymm | Size::Zmm => {
+                    let index = index_size.encode_vec((self.vext << 4) | index);
+                    let r = Reg::new(RegClass::VECTOR, index);
+                    (r, false)
+                }
+                _ => todo!(),
+            };
+            let base = (base & 8) | zextract(sib, 0, 3);
+            let base = self.address_size.encode_gpr(base, false);
+            let mut base = Reg::new(RegClass::INT, base);
+            if self.mode == 0 && (base.index() & GPR_MASK) == 5 {
+                offset = Some(self.bytes.read_i32()?);
+                base = NONE;
+            }
+            if is_gpr && (index.index() & GPR_MASK) == 4 {
+                if let Some(offset) = offset {
+                    if base == NONE {
+                        Ok(K::Absolute(offset as u64))
+                    } else {
+                        Ok(K::Relative(base, offset as i64))
+                    }
+                } else {
+                    Ok(K::Indirect(base))
+                }
+            } else {
+                let scale = 1 << zextract(sib, 6, 2);
+                if let Some(offset) = offset {
+                    Ok(K::ScaledIndexRelative(base, index, scale, offset))
+                } else {
+                    Ok(K::ScaledIndex(base, index, scale))
+                }
+            }
+        } else {
+            let base = self.address_size.encode_gpr(base & (GPR_MASK as u8), false);
+            let base = Reg::new(RegClass::INT, base);
+            if let Some(offset) = offset {
+                Ok(K::Relative(base, offset as i64))
+            } else {
+                Ok(K::Indirect(base))
+            }
+        }
+    }
     fn decode_mem(
         &mut self,
         out: &mut Insn,
         base: u8,
-        size: u8,
+        mem_size: u8,
+        operand_size: Size,
         index_size: Size,
     ) -> Result<Operand, Error> {
-        let rm = base & 7;
-        let kind = if self.mode == 0 && rm == 5 {
-            if self.is_amd64() {
-                OperandKind::Relative(RIP, self.bytes.read_i32()? as i64)
-            } else {
-                OperandKind::Absolute(self.bytes.read_u32()? as u64)
-            }
-        } else {
-            let sib = (rm == 4).then(|| self.bytes.read_u8()).transpose()?;
-            let mut offset = match self.mode {
-                1 if self.evex => {
-                    let offset = self.bytes.read_i8()? as i32;
-                    Some(self.evex_disp8(out, offset))
-                }
-                1 => Some(self.bytes.read_i8()? as i32),
-                2 => Some(self.bytes.read_i32()?),
-                _ => None,
-            };
-            if let Some(sib) = sib {
-                let index = ((base >> 1) & 8) | zextract(sib, 3, 3);
-                let index = match index_size {
-                    Size::Long | Size::Quad => {
-                        Reg::new(RegClass::INT, index_size.encode_gpr(index, self.rex))
-                    }
-                    Size::Xmm | Size::Ymm | Size::Zmm => {
-                        let index = (self.vext << 4) | index;
-                        Reg::new(RegClass::VECTOR, index_size.encode_vec(index))
-                    }
-                    _ => todo!(),
-                };
-                let base = (base & 8) | zextract(sib, 0, 3);
-                let mut base =
-                    Reg::new(RegClass::INT, self.address_size.encode_gpr(base, self.rex));
-                if self.mode == 0 && (base.index() & GPR_MASK) == 5 {
-                    offset = Some(self.bytes.read_i32()?);
-                    base = NONE;
-                }
-                let is_gpr = matches!(index_size, Size::Long | Size::Quad);
-                if is_gpr && (index.index() & GPR_MASK) == 4 {
-                    if let Some(offset) = offset {
-                        if base == NONE {
-                            OperandKind::Absolute(offset as u64)
-                        } else {
-                            OperandKind::Relative(base, offset as i64)
-                        }
-                    } else {
-                        OperandKind::Indirect(base)
-                    }
-                } else {
-                    let scale = 1 << zextract(sib, 6, 2);
-                    if let Some(offset) = offset {
-                        OperandKind::ScaledIndexRelative(base, index, scale, offset)
-                    } else {
-                        OperandKind::ScaledIndex(base, index, scale)
-                    }
-                }
-            } else {
-                let base = Reg::new(
-                    RegClass::INT,
-                    self.address_size.encode_gpr(base & 15, self.rex),
-                );
-                if let Some(offset) = offset {
-                    OperandKind::Relative(base, offset as i64)
-                } else {
-                    OperandKind::Indirect(base)
-                }
-            }
-        };
+        let kind = self.decode_mem_kind(out, base, operand_size, index_size)?;
         let mut op = Operand::new(kind);
         let flags = op.flags_mut();
         if self.segment != insn::SEGMENT_NONE && self.segment != insn::SEGMENT_CS {
@@ -825,7 +837,7 @@ impl<'a> Inner<'a> {
         }
         flags
             .set_if(operand::NO_PTR, self.no_ptr)
-            .field_set(operand::FIELD_MEM, size as u32);
+            .field_set(operand::FIELD_MEM, mem_size as u32);
         self.need_suffix = true;
         Ok(op)
     }
@@ -967,10 +979,7 @@ impl<'a> Inner<'a> {
 
             0 => Size::None,
 
-            1 if self.w => Size::Quad,
-            1 if self.prefix_66 > 0 => Size::Word,
-            1 => Size::Long,
-
+            1 => self.operand_size,
             2 => self.address_size,
 
             3 if self.w => Size::Quad,
@@ -1060,15 +1069,14 @@ impl<'a> Inner<'a> {
     }
 
     fn set_gpr_mem(&mut self, out: &mut Insn, index: i32, access: Access, msz: i32) -> Result {
-        self.set_mem_size(msz);
+        let size = self.gpr_size(msz);
         let index = index as u8;
         if self.mode != MODE_REGISTER_DIRECT {
-            let mut op =
-                self.decode_mem(out, index, self.operand_size.op_size(), self.address_size)?;
+            let mut op = self.decode_mem(out, index, size.op_size(), size, self.address_size)?;
             op.flags_mut().set_if(operand::INDIRECT, self.indirect);
             out.push_operand(op);
         } else {
-            let index = self.operand_size.encode_gpr(index & 15, self.rex);
+            let index = size.encode_gpr(index & 15, self.rex);
             let reg = Reg::new(RegClass::INT, index);
             self.has_gpr = true;
             out.push_reg(reg.access(access));
@@ -1093,7 +1101,7 @@ impl<'a> Inner<'a> {
     }
 
     fn set_moffset(&mut self, out: &mut Insn, msz: i32, _access: Access) -> Result {
-        self.set_mem_size(msz);
+        let operand_size = self.gpr_size(msz);
         let offset = match self.address_size {
             Size::Word => self.bytes.read_u16()? as u64,
             Size::Long => self.bytes.read_u32()? as u64,
@@ -1106,7 +1114,7 @@ impl<'a> Inner<'a> {
             flags.field_set(operand::FIELD_SEGMENT, self.segment);
             self.segment = 0;
         }
-        flags.field_set(operand::FIELD_MEM, self.operand_size.op_size() as u32);
+        flags.field_set(operand::FIELD_MEM, operand_size.op_size() as u32);
         out.push_operand(op);
         self.need_suffix = true;
         Ok(())
@@ -1137,21 +1145,14 @@ impl<'a> Inner<'a> {
         &mut self,
         out: &mut Insn,
         value: i32,
-        size: Size,
+        vec_size: Size,
         access: Access,
-        mem_size: i32,
+        msz: i32,
         index_size: Size,
     ) -> Result<Operand> {
         let mut index = value as u8;
         if self.mode != MODE_REGISTER_DIRECT {
-            match mem_size {
-                0 => {}
-                1 => self.operand_size = size,
-                _ => {
-                    self.operand_size = self.gpr_size(mem_size);
-                    self.mem_size_override = true;
-                }
-            }
+            let size = self.gpr_size(msz);
             let mem_size = if self.broadcast && self.broadcast_size != 0 {
                 match self.broadcast_size {
                     4 => operand::SIZE_WORD,
@@ -1159,14 +1160,14 @@ impl<'a> Inner<'a> {
                     6 => operand::SIZE_QWORD,
                     _ => unreachable!(),
                 }
-            } else if self.mem_size_override {
-                self.operand_size.op_size_vec(self.mem_access)
-            } else {
+            } else if msz != 1 {
                 size.op_size_vec(self.mem_access)
+            } else {
+                vec_size.op_size_vec(self.mem_access)
             };
-            let mut op = self.decode_mem(out, index, mem_size, index_size)?;
+            let mut op = self.decode_mem(out, index, mem_size, size, index_size)?;
             if self.broadcast && self.broadcast_size != 0 {
-                let bcst = match size.bits() >> self.broadcast_size as usize {
+                let bcst = match vec_size.bits() >> self.broadcast_size as usize {
                     2 => operand::BROADCAST_1TO2,
                     4 => operand::BROADCAST_1TO4,
                     8 => operand::BROADCAST_1TO8,
@@ -1185,7 +1186,7 @@ impl<'a> Inner<'a> {
                 // NOTE: index[5] is X (raw[0][6]), but it is used only in EVEX
                 index &= 15;
             }
-            let reg = Reg::new(RegClass::VECTOR, size.encode_vec(index));
+            let reg = Reg::new(RegClass::VECTOR, vec_size.encode_vec(index));
             Ok(Operand::reg(reg.access(access)))
         }
     }
@@ -1343,12 +1344,13 @@ impl<'a> Inner<'a> {
     }
 
     fn set_k_mem(&mut self, out: &mut Insn, value: i32, access: Access, msz: i32) -> Result {
-        self.set_mem_size(msz);
+        let size = self.gpr_size(msz);
         let index = value as u8;
         if self.mode != MODE_REGISTER_DIRECT {
-            let mut op = self.decode_mem(out, index, operand::SIZE_DWORD, self.address_size)?;
+            let mut op =
+                self.decode_mem(out, index, operand::SIZE_DWORD, size, self.address_size)?;
             op.flags_mut()
-                .field_set(operand::FIELD_MEM, self.operand_size.op_size() as u32);
+                .field_set(operand::FIELD_MEM, size.op_size() as u32);
             out.push_operand(op);
         } else {
             let op = Operand::reg(Reg::new(reg_class::K, value as u64).access(access));
@@ -1360,13 +1362,6 @@ impl<'a> Inner<'a> {
     fn set_bnd_reg(&mut self, out: &mut Insn, value: i32, access: Access) -> Result {
         out.push_reg(Reg::new(reg_class::BND, value as u64).access(access));
         Ok(())
-    }
-
-    fn set_mem_size(&mut self, msz: i32) {
-        self.operand_size = self.gpr_size(msz);
-        if msz != 1 {
-            self.mem_size_override = true;
-        }
     }
 
     fn vec_half(&self) -> (Size, i32) {
