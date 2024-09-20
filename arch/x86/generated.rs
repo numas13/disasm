@@ -2,10 +2,7 @@
 #![allow(unused_variables)]
 #![allow(non_camel_case_types)]
 
-use disasm_core::{
-    insn::{Insn, Opcode},
-    utils::zextract,
-};
+use disasm_core::{insn::Insn, utils::zextract};
 
 pub mod opcode {
     use disasm_core::{insn::Opcode, macros::define_opcodes};

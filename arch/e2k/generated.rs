@@ -1,10 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use disasm_core::{
-    insn::{Insn, Opcode},
-    utils::zextract,
-};
+use disasm_core::{insn::Insn, utils::zextract};
 
 pub mod opcode {
     use disasm_core::{insn::Opcode, macros::define_opcodes};

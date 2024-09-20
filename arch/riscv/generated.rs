@@ -2,7 +2,7 @@
 #![allow(unused_variables)]
 
 use disasm_core::{
-    insn::{Insn, Opcode},
+    insn::Insn,
     utils::{sextract, zextract},
 };
 

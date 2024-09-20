@@ -1,8 +1,5 @@
 use std::{
-    collections::{
-        hash_map::{Entry, HashMap},
-        HashSet,
-    },
+    collections::{hash_map::HashMap, HashSet},
     fmt::{self, Write as _},
     fs::{self, File},
     io::{self, BufWriter, Write},
@@ -66,8 +63,6 @@ struct UserGen<'a> {
     opts: &'a DecodeOptions,
     arch: &'a mut Arch,
 
-    formats: HashMap<String, Vec<(String, String)>>,
-
     cond_args_for_is: Vec<(&'static str, &'static str)>,
 }
 
@@ -76,7 +71,6 @@ impl<'a> UserGen<'a> {
         Self {
             opts,
             arch,
-            formats: Default::default(),
             cond_args_for_is: vec![("insn", opts.insn_type)],
         }
     }
@@ -112,49 +106,9 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         false
     }
 
-    fn trait_body<W: Write>(&mut self, out: &mut W, mut pad: Pad) -> io::Result<()> {
+    fn trait_body<W: Write>(&mut self, out: &mut W, pad: Pad) -> io::Result<()> {
         if self.opts.variable_size {
             writeln!(out, "{pad}fn advance(&mut self, size: usize);")?;
-        }
-
-        let shared = &self.arch.shared_args_def;
-        let ret = if self.arch.set_return_error {
-            " -> Result<(), Self::Error>"
-        } else {
-            ""
-        };
-        for (name, args) in &self.formats {
-            writeln!(out)?;
-            write!(out, "{pad}fn {name}({shared}, opcode: Opcode")?;
-            for (arg, ty) in args {
-                write!(out, ", {arg}: {ty}")?;
-            }
-            writeln!(out, "){ret} {{")?;
-            pad.right();
-
-            writeln!(out, "{pad}out.set_opcode(opcode);")?;
-
-            for (arg, ty) in args {
-                let prefix = if ty.starts_with("args_") || ty.starts_with("&args_") {
-                    "args_"
-                } else {
-                    ""
-                };
-                write!(
-                    out,
-                    "{pad}self.set_{prefix}{arg}({}, {arg})",
-                    self.arch.shared_args
-                )?;
-                if self.arch.set_return_error {
-                    write!(out, "?")?;
-                }
-                writeln!(out, ";")?;
-            }
-            if self.arch.set_return_error {
-                writeln!(out, "{pad}Ok(())")?;
-            }
-            pad.left();
-            writeln!(out, "{pad}}}")?;
         }
 
         Ok(())
@@ -176,59 +130,37 @@ impl<'src, T> Gen<T, &'src str> for UserGen<'src> {
         if self.opts.variable_size {
             writeln!(out, "{pad}self.advance({});", pattern.size())?;
         }
+        writeln!(
+            out,
+            "{pad}out.set_opcode(opcode::{});",
+            pattern.name().to_uppercase()
+        )?;
 
-        let mut format = String::from("format");
         for value in pattern.values() {
+            let shared = &self.arch.shared_args;
             let name = value.name();
             match value.kind() {
                 ValueKind::Set(ty, ..) => {
                     if !self.arch.sets.contains_key(*name) {
                         self.arch.sets.insert(name.to_string(), ty.to_string());
                     }
+                    write!(out, "{pad}self.set_args_{name}({shared}, ")?;
+                    if self.arch.args_by_ref {
+                        write!(out, "&")?;
+                    }
+                    write!(out, "{name})")?;
                 }
                 _ => {
                     if !self.arch.args.contains(*name) {
                         self.arch.args.insert(name.to_string());
                     }
+                    write!(out, "{pad}self.set_{name}({shared}, {name})")?;
                 }
+            };
+            if self.arch.set_return_error {
+                write!(out, "?")?;
             }
-            format.push('_');
-            format.push_str(name);
-        }
-
-        write!(out, "{pad}self.{format}({}", self.arch.shared_args)?;
-        write!(out, ", opcode::{}", pattern.name().to_uppercase())?;
-
-        for value in pattern.values() {
-            if self.arch.args_by_ref && value.is_set() {
-                write!(out, ", &{}", value.name())?;
-            } else {
-                write!(out, ", {}", value.name())?;
-            }
-        }
-        if self.arch.set_return_error {
-            writeln!(out, ")?;")?;
-        } else {
-            writeln!(out, ");")?;
-        }
-
-        if let Entry::Vacant(e) = self.formats.entry(format) {
-            let mut args = Vec::new();
-            for value in pattern.values() {
-                let name = String::from(*value.name());
-                let ty = match value.kind() {
-                    ValueKind::Set(ty, ..) => {
-                        if self.arch.args_by_ref {
-                            format!("&args_{ty}")
-                        } else {
-                            format!("args_{ty}")
-                        }
-                    }
-                    _ => self.arch.value_type.to_owned(),
-                };
-                args.push((name, ty));
-            }
-            e.insert(args);
+            writeln!(out, ";")?;
         }
 
         Ok(())
