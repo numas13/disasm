@@ -134,6 +134,14 @@ impl Arch {
             _ => false,
         }
     }
+
+    pub fn print_cycles(&self) -> bool {
+        match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct Decoder {

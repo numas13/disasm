@@ -142,23 +142,27 @@ impl<E: PrinterExt> Printer<E> {
         };
 
         let width = self.arch.addr_size() / 4;
-        let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<()> {
+        let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<bool> {
             if let Some((name, offset)) = first_symbol.take() {
                 out.write_symbol(address, width, name, offset)?;
+                return Ok(true);
             } else if let Some((addr, name)) = *next_symbol {
                 if addr == address {
                     out.write_symbol(address, width, name, 0)?;
                     *next_symbol = self.ext.get_symbol_after(address);
+                    return Ok(true);
                 }
             }
-            Ok(())
+            Ok(false)
         };
 
         let bytes_per_line = self.arch.bytes_per_line();
         let min_len = self.arch.insn_size_min();
         let skip_zeroes = self.arch.skip_zeroes();
         let only_first_chunk_address = self.arch.only_first_chunk_address();
+        let print_cycles = self.arch.print_cycles();
 
+        let mut cycle = 0;
         let mut cur = data;
         while has_more || cur.len() >= min_len {
             let address = self.address();
@@ -226,7 +230,9 @@ impl<E: PrinterExt> Printer<E> {
                 }
             };
 
-            print_symbol(out, address, &mut next_symbol)?;
+            if print_symbol(out, address, &mut next_symbol)? && print_cycles {
+                cycle = 0;
+            }
 
             // TODO: address width based on end address?
             let addr_width = if address >= 0x1000 { 8 } else { 4 };
@@ -243,9 +249,14 @@ impl<E: PrinterExt> Printer<E> {
                 let mut c = 0;
                 if l < len {
                     if !only_first_chunk_address || l == 0 {
+                        if print_cycles {
+                            // TODO: optimize printing
+                            write!(out, "<{cycle:04}>")?;
+                        }
                         out.write_address(address + l as u64, addr_width)?;
                     } else {
-                        out.write_spaces(addr_width + 1)?;
+                        let w = if print_cycles { 1 + 6 } else { 1 };
+                        out.write_spaces(addr_width + w)?;
                     }
                     out.write_all(b"\t")?;
 
@@ -279,6 +290,9 @@ impl<E: PrinterExt> Printer<E> {
                 out.write_all(b"\n")?;
             }
             cur = &cur[len..];
+            if print_cycles {
+                cycle += self.bundle.latency();
+            }
         }
 
         Ok((data.len() - cur.len(), 0))

@@ -1094,6 +1094,7 @@ impl Decoder {
             let insn = out.peek();
             insn.set_opcode(opcode::NOP);
             insn.push_uimm_short(nops + 1);
+            out.set_latency(nops + 1);
             out.next();
         }
     }

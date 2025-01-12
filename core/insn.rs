@@ -160,6 +160,7 @@ impl Insn {
 
 pub struct Bundle {
     len: usize,
+    latency: u8,
     insn: Box<[Insn]>,
 }
 
@@ -167,8 +168,19 @@ impl Bundle {
     pub fn empty() -> Self {
         Self {
             len: 0,
+            latency: 1,
             insn: Box::new([]),
         }
+    }
+
+    #[inline]
+    pub fn set_latency(&mut self, latency: u8) {
+        self.latency = latency;
+    }
+
+    #[inline]
+    pub fn latency(&self) -> usize {
+        self.latency as usize
     }
 
     pub fn as_slice(&self) -> &[Insn] {
@@ -177,6 +189,7 @@ impl Bundle {
 
     pub fn clear(&mut self) {
         self.len = 0;
+        self.latency = 1;
     }
 
     /// Take instruction to decode
