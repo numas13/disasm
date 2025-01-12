@@ -247,6 +247,7 @@ impl<E: PrinterExt> Printer<E> {
                 }
                 let mut p = 0;
                 let mut c = 0;
+                let w = if print_cycles { 6 + 1 } else { 1 };
                 if l < len {
                     if !only_first_chunk_address || l == 0 {
                         if print_cycles {
@@ -254,11 +255,11 @@ impl<E: PrinterExt> Printer<E> {
                             write!(out, "<{cycle:04}>")?;
                         }
                         out.write_address(address + l as u64, addr_width)?;
+                        out.write_all(b":\t")?;
                     } else {
-                        let w = if print_cycles { 1 + 6 } else { 1 };
                         out.write_spaces(addr_width + w)?;
+                        out.write_all(b"\t")?;
                     }
-                    out.write_all(b"\t")?;
 
                     for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
                         c += 1;
@@ -273,7 +274,7 @@ impl<E: PrinterExt> Printer<E> {
                         }
                     }
                 } else {
-                    out.write_spaces(addr_width + 1)?;
+                    out.write_spaces(addr_width + w)?;
                     out.write_all(b"\t")?;
                 }
 
