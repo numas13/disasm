@@ -126,6 +126,14 @@ impl Arch {
     pub fn insn_alignment(&self) -> usize {
         self.insn_size_min()
     }
+
+    pub fn only_first_chunk_address(&self) -> bool {
+        match self {
+            #[cfg(feature = "e2k")]
+            Arch::E2K(..) => true,
+            _ => false,
+        }
+    }
 }
 
 pub struct Decoder {

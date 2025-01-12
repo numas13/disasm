@@ -157,6 +157,7 @@ impl<E: PrinterExt> Printer<E> {
         let bytes_per_line = self.arch.bytes_per_line();
         let min_len = self.arch.insn_size_min();
         let skip_zeroes = self.arch.skip_zeroes();
+        let only_first_chunk_address = self.arch.only_first_chunk_address();
 
         let mut cur = data;
         while has_more || cur.len() >= min_len {
@@ -241,8 +242,12 @@ impl<E: PrinterExt> Printer<E> {
                 let mut p = 0;
                 let mut c = 0;
                 if l < len {
-                    out.write_address(address + l as u64, addr_width)?;
-                    out.write_all(b":\t")?;
+                    if !only_first_chunk_address || l == 0 {
+                        out.write_address(address + l as u64, addr_width)?;
+                    } else {
+                        out.write_spaces(addr_width + 1)?;
+                    }
+                    out.write_all(b"\t")?;
 
                     for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
                         c += 1;
