@@ -748,9 +748,11 @@ impl Decoder {
             return;
         }
 
-        out.push_with(opcode::IPD, |insn| {
-            insn.push_uimm_short(ss.ipd());
-        });
+        if ss.ipd() != 3 {
+            out.push_with(opcode::IPD, |insn| {
+                insn.push_uimm_short(ss.ipd());
+            });
+        }
 
         if self.ct_decoded {
             return;
