@@ -124,11 +124,15 @@ impl InsnExt for Insn {
 #[derive(Copy, Clone, Debug)]
 pub struct Options {
     pub isa: u8,
+    pub dst_first: bool,
 }
 
 impl Default for Options {
     fn default() -> Self {
-        Self { isa: 7 }
+        Self {
+            isa: 7,
+            dst_first: true,
+        }
     }
 }
 
@@ -670,6 +674,7 @@ impl UnpackedBundle {
 pub struct Decoder {
     isa: u8,
     alias: bool,
+    dst_first: bool,
     address: u64,
     unpacked: UnpackedBundle,
     aaincr: Option<i32>,
@@ -682,6 +687,7 @@ impl Decoder {
         Self {
             isa: arch_opts.isa,
             alias: opts.alias,
+            dst_first: arch_opts.dst_first,
             unpacked: UnpackedBundle::default(),
             aaincr: None,
             address: 0,
@@ -840,18 +846,36 @@ impl Decoder {
                 }
             }
             out.push_with(opcode, |insn| {
-                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
-                insn.push_pc_rel(self.address, cs0.disp() as i64);
+                let dst = Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write();
+                if self.dst_first {
+                    insn.push_reg(dst);
+                    insn.push_pc_rel(self.address, cs0.disp() as i64);
+                } else {
+                    insn.push_pc_rel(self.address, cs0.disp() as i64);
+                    insn.push_reg(dst);
+                }
             });
         } else if cs0.is_prep_apb() {
             out.push_with(opcode::PREP_APB, |insn| {
-                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
-                insn.push_pc_rel(self.address, cs0.disp() as i64);
+                let dst = Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write();
+                if self.dst_first {
+                    insn.push_reg(dst);
+                    insn.push_pc_rel(self.address, cs0.disp() as i64);
+                } else {
+                    insn.push_pc_rel(self.address, cs0.disp() as i64);
+                    insn.push_reg(dst);
+                }
             });
         } else if cs0.is_prep_sys() {
             out.push_with(opcode::PREP_SYS, |insn| {
-                insn.push_reg(Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write());
-                insn.push_uimm(cs0.disp() as u64);
+                let dst = Reg::new(reg_class::CTPR, cs0.ctpr() as u64).write();
+                if self.dst_first {
+                    insn.push_reg(dst);
+                    insn.push_uimm(cs0.disp() as u64);
+                } else {
+                    insn.push_uimm(cs0.disp() as u64);
+                    insn.push_reg(dst);
+                }
             });
         } else if cs0.is_prep_ret() {
             out.push_with(opcode::PREP_RET, |insn| {
@@ -1025,11 +1049,16 @@ impl Decoder {
             let insn = out.peek();
             insn.set_opcode(opcode);
             insn.set_slot(slot::apb_slot_for(i));
-            insn.push_dst(aas.dst() as i32);
+            if self.dst_first {
+                insn.push_dst(aas.dst() as i32);
+            }
             insn.flags_mut()
                 .set_if(insn::MOVA_BE, aas.be())
                 .set_if(insn::MOVA_AM, aas.am());
             insn.push_mova_area(aas.area(), aas.index());
+            if !self.dst_first {
+                insn.push_dst(aas.dst() as i32);
+            }
             out.next();
         }
     }
@@ -1061,10 +1090,12 @@ impl Decoder {
             };
             insn.set_opcode(opcode);
 
-            if pls.write() {
-                insn.push_reg(Reg::new(reg_class::PREG, pls.preg() as u64).write());
-            } else {
-                insn.push_empty();
+            if self.dst_first {
+                if pls.write() {
+                    insn.push_reg(Reg::new(reg_class::PREG, pls.preg() as u64).write());
+                } else {
+                    insn.push_empty();
+                }
             }
 
             for j in 0..2 {
@@ -1083,6 +1114,14 @@ impl Decoder {
                     insn.push_pred(pred);
                 } else {
                     insn.push_arch_spec3(E2KOperand::Plu, lp - 4, invert);
+                }
+            }
+
+            if !self.dst_first {
+                if pls.write() {
+                    insn.push_reg(Reg::new(reg_class::PREG, pls.preg() as u64).write());
+                } else {
+                    insn.push_empty();
                 }
             }
 
@@ -1215,16 +1254,24 @@ impl Decoder {
         out.push_mas(self.extract_mas(self.alop) as u8);
     }
 
-    fn set_dst(&mut self, out: &mut Insn) {
-        out.push_dst(self.extract_dst(self.alop));
+    #[inline]
+    fn set_dst(&mut self, out: &mut Insn, first: bool) {
+        if self.dst_first == first {
+            out.push_dst(self.extract_dst(self.alop));
+        }
     }
 
-    fn set_dst_movtd(&mut self, out: &mut Insn) {
-        out.push_dst_movtd(self.extract_dst(self.alop));
+    #[inline]
+    fn set_dst_movtd(&mut self, out: &mut Insn, first: bool) {
+        if self.dst_first == first {
+            out.push_dst_movtd(self.extract_dst(self.alop));
+        }
     }
 
-    fn set_dst_preg(&mut self, out: &mut Insn) {
-        out.push_dst_preg(self.extract_dst_preg(self.alop));
+    fn set_dst_preg(&mut self, out: &mut Insn, first: bool) {
+        if self.dst_first == first {
+            out.push_dst_preg(self.extract_dst_preg(self.alop));
+        }
     }
 
     fn set_src1(&mut self, out: &mut Insn) {
@@ -1271,9 +1318,12 @@ impl Decoder {
         }
     }
 
-    fn set_dst_sreg(&mut self, out: &mut Insn) {
-        let dst = self.extract_dst(self.alop);
-        out.push_reg(Reg::new(reg_class::SREG, dst as u64).write());
+    #[inline]
+    fn set_dst_sreg(&mut self, out: &mut Insn, first: bool) {
+        if self.dst_first == first {
+            let dst = self.extract_dst(self.alop);
+            out.push_reg(Reg::new(reg_class::SREG, dst as u64).write());
+        }
     }
 
     fn set_src1_sreg(&mut self, out: &mut Insn) {
@@ -1384,37 +1434,42 @@ impl SetValue for Decoder {
     type Error = Error;
 
     fn set_alf1(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf1_mas(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_mas(out);
         self.set_pred(out);
     }
 
     fn set_alf1_merge(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
         self.set_mrgc(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf2(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf2_movtd(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst_movtd(out);
+        self.set_dst_movtd(out, true);
         self.set_src2(out);
+        self.set_dst_movtd(out, false);
         self.set_pred(out);
     }
 
@@ -1427,21 +1482,24 @@ impl SetValue for Decoder {
     }
 
     fn set_alf4(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf7(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst_preg(out);
+        self.set_dst_preg(out, true);
         self.set_src1(out);
         self.set_src2(out);
+        self.set_dst_preg(out, false);
         self.set_pred(out);
     }
 
     fn set_alf8(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst_preg(out);
+        self.set_dst_preg(out, true);
         self.set_src2(out);
+        self.set_dst_preg(out, false);
         self.set_pred(out);
     }
 
@@ -1461,59 +1519,67 @@ impl SetValue for Decoder {
     }
 
     fn set_alf11(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf11_mas(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_mas(out);
         self.set_pred(out);
     }
 
     fn set_alf11_merge(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
         self.set_mrgc(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf11_lit8(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
         self.set_src3_uimm(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf12(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf12_pshufh(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src2(out);
         self.set_src3_uimm(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf12_ibranchd(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_ct_cond(out);
     }
 
     fn set_alf12_icalld(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_wbs(out);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_ct_cond(out);
     }
 
@@ -1526,82 +1592,97 @@ impl SetValue for Decoder {
     }
 
     fn set_alf15(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst_sreg(out);
+        self.set_dst_sreg(out, true);
         self.set_src2(out);
+        self.set_dst_sreg(out, false);
         self.set_pred(out);
     }
 
     fn set_alf16(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1_sreg(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf17(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst_preg(out);
+        self.set_dst_preg(out, true);
         self.set_src1(out);
         self.set_src2(out);
+        self.set_dst_preg(out, false);
         self.set_pred(out);
     }
 
     fn set_alf21(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
         self.set_src3(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf21_merge(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
         self.set_src3(out);
         self.set_mrgc(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf21_lt3(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src1(out);
         self.set_src2(out);
         self.set_lt3(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf21_log(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_log_table(out);
         self.set_src1(out);
         self.set_src2(out);
         self.set_src3(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf21_log_lt3(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_log_table(out);
         self.set_src1(out);
         self.set_src2(out);
         self.set_lt3(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_alf22(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_src2(out);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_aaurr(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out);
+        self.set_dst(out, true);
         self.set_aau(out, Access::Read);
+        self.set_dst(out, false);
         self.set_pred(out);
     }
 
     fn set_aaurw(&mut self, out: &mut Insn, _: i32) {
-        self.set_aau(out, Access::Write);
+        if self.dst_first {
+            self.set_aau(out, Access::Write);
+        }
         self.set_src4(out);
+        if !self.dst_first {
+            self.set_aau(out, Access::Write);
+        }
         self.set_pred(out);
     }
 }
