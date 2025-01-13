@@ -1,10 +1,8 @@
 # elbrus-v6 tests
 
             04101012 c0000020       alc0    icalld          _, 16, r0
-            540880df 01c00000               ipd             3
-                                            --
+            540880df 01c00000               --
             04101012 c0000020       alc0    ibranchd        _, r0
-            53c080df 01c00000               ipd             3
-                                            --
+            53c080df 01c00000               --
             04100011 540880df       alc0    icalld          _, 16, r0 ? <missing ss>
             01c00000 00000000               --

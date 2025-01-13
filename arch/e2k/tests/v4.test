@@ -37,6 +37,5 @@
                                     apb1    movaw.am        b11, 16(1)
                                     apb2    movaw.be        b12, 20(2)
                                     apb3    movaw.be.am     b13, 24(3)
-                                            ipd             3
                                             ct              ctpr1 ? ~loop_end
                                             --
