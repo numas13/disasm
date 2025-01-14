@@ -1518,30 +1518,16 @@ impl SetValue for Decoder {
         }
     }
 
-    fn set_alf11(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out, true);
-        self.set_src1(out);
-        self.set_src2(out);
-        self.set_dst(out, false);
-        self.set_pred(out);
+    fn set_alf11(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf1(out, x);
     }
 
-    fn set_alf11_mas(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out, true);
-        self.set_src1(out);
-        self.set_src2(out);
-        self.set_dst(out, false);
-        self.set_mas(out);
-        self.set_pred(out);
+    fn set_alf11_mas(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf1_mas(out, x);
     }
 
-    fn set_alf11_merge(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out, true);
-        self.set_src1(out);
-        self.set_src2(out);
-        self.set_mrgc(out);
-        self.set_dst(out, false);
-        self.set_pred(out);
+    fn set_alf11_merge(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf1_merge(out, x);
     }
 
     fn set_alf11_lit8(&mut self, out: &mut Insn, _: i32) {
@@ -1553,11 +1539,8 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_alf12(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out, true);
-        self.set_src2(out);
-        self.set_dst(out, false);
-        self.set_pred(out);
+    fn set_alf12(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf2(out, x);
     }
 
     fn set_alf12_pshufh(&mut self, out: &mut Insn, _: i32) {
@@ -1583,12 +1566,8 @@ impl SetValue for Decoder {
         self.set_ct_cond(out);
     }
 
-    fn set_alf13_mas(&mut self, out: &mut Insn, _: i32) {
-        self.set_src4(out);
-        self.set_src1(out);
-        self.set_src2(out);
-        self.set_mas(out);
-        self.set_pred(out);
+    fn set_alf13_mas(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf3_mas(out, x);
     }
 
     fn set_alf15(&mut self, out: &mut Insn, _: i32) {
@@ -1605,12 +1584,8 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_alf17(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst_preg(out, true);
-        self.set_src1(out);
-        self.set_src2(out);
-        self.set_dst_preg(out, false);
-        self.set_pred(out);
+    fn set_alf17(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf7(out, x);
     }
 
     fn set_alf21(&mut self, out: &mut Insn, _: i32) {
@@ -1661,11 +1636,8 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
-    fn set_alf22(&mut self, out: &mut Insn, _: i32) {
-        self.set_dst(out, true);
-        self.set_src2(out);
-        self.set_dst(out, false);
-        self.set_pred(out);
+    fn set_alf22(&mut self, out: &mut Insn, x: i32) {
+        self.set_alf2(out, x);
     }
 
     fn set_aaurr(&mut self, out: &mut Insn, _: i32) {
