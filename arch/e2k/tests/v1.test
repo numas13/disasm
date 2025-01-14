@@ -40,3 +40,21 @@
             0c000012 11c08000       alc0    movd            b0, r0
             1180c001 00000000       alc1    movd            b1, r0
                                             --
+
+# CS1 wait
+            00008001 30000001               wait        all_c
+                                            --
+            00008001 30000002               wait        all_e
+                                            --
+            00008001 30000004               wait        st_c
+                                            --
+            00008001 30000008               wait        ld_c
+                                            --
+            00008001 30000010               wait        fl_c
+                                            --
+            00008001 30000020               wait        ma_c
+                                            --
+            00008001 30000040               wait        trap
+                                            --
+            00008001 3000007f               wait        trap, ma_c, fl_c, ld_c, st_c, all_e, all_c
+                                            --

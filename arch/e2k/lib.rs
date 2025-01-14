@@ -331,7 +331,7 @@ impl Cs1 {
         0xf0000000, 0x10000000, is_setwd_vfrpsz;
         0xffffff00, 0x20000000, is_setei;
         0xffffffff, 0x28000000, is_setsft;
-        0xffffffe0, 0x30000000, is_wait;
+        0xfffffe00, 0x30000000, is_wait;
         0xf0000000, 0x40000000, is_setwd2;
         0xffffff80, 0x50000000, is_call;
         0xffffff80, 0x50000080, is_icall;
