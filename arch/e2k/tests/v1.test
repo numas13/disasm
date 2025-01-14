@@ -40,6 +40,12 @@
             0c000012 11c08000       alc0    movd            b0, r0
             1180c001 00000000       alc1    movd            b1, r0
                                             --
+            04100011 24c080d1       alc0    gettc       ctpr1, r0
+            01c00000 00000000               --
+            04100011 24c080d2       alc0    gettc       ctpr2, r0
+            01c00000 00000000               --
+            04100011 24c080d3       alc0    gettc       ctpr3, r0
+            01c00000 00000000               --
 
 # CS1 wait
             00008001 30000001               wait        all_c
