@@ -1539,6 +1539,17 @@ impl SetValue for Decoder {
         self.set_pred(out);
     }
 
+    fn set_alf11_puttc(&mut self, out: &mut Insn, _: i32) {
+        self.set_src1(out);
+        self.set_src2(out);
+        self.set_pred(out);
+    }
+
+    fn set_alf11_puttcd(&mut self, out: &mut Insn, _: i32) {
+        self.set_src1(out);
+        self.set_pred(out);
+    }
+
     fn set_alf12(&mut self, out: &mut Insn, x: i32) {
         self.set_alf2(out, x);
     }
