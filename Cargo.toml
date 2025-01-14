@@ -29,7 +29,7 @@ disasm-core         = { version = "0.5.1", path = "core" }
 disasm-gen          = { version = "0.5.1", path = "gen" }
 disasm-test         = { version = "0.5.1", path = "test" }
 
-disasm-e2k          = { version = "0.5.1", path = "arch/e2k" }
+disasm-e2k          = { version = "0.5.2", path = "arch/e2k" }
 disasm-riscv        = { version = "0.5.1", path = "arch/riscv" }
 disasm-x86          = { version = "0.5.1", path = "arch/x86" }
 
