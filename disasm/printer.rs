@@ -261,31 +261,37 @@ impl<E: PrinterExt> Printer<E> {
                         out.write_all(b"\t")?;
                     }
 
-                    for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
-                        c += 1;
-                        if let Some(chunk) = chunks.next() {
-                            for i in chunk.iter().rev() {
-                                out.write_u8_hex(*i)?;
+                    if self.opts.show_raw_insn {
+                        for _ in (0..bytes_per_line).step_by(bytes_per_chunk) {
+                            c += 1;
+                            if let Some(chunk) = chunks.next() {
+                                for i in chunk.iter().rev() {
+                                    out.write_u8_hex(*i)?;
+                                }
+                                out.write_all(b" ")?;
+                                p += chunk.len();
+                                l += chunk.len();
+                                c -= 1;
                             }
-                            out.write_all(b" ")?;
-                            p += chunk.len();
-                            l += chunk.len();
-                            c -= 1;
                         }
+                    } else {
+                        l += len;
                     }
                 } else {
                     out.write_spaces(addr_width + w)?;
                     out.write_all(b"\t")?;
                 }
 
-                let width = (bytes_per_line - p) * 2 + c;
+                if self.opts.show_raw_insn {
+                    out.write_spaces((bytes_per_line - p) * 2 + c)?;
+                    out.write_all(b"\t")?;
+                }
+
                 if let Some(insn) = insn {
-                    out.write_spaces(width)?;
                     let display = FormatterFn(|fmt| self.printer.print_insn(fmt, &self.ext, insn));
-                    write!(out, "\t{display}")?;
+                    write!(out, "{display}")?;
                 } else if let Some(err) = err_msg.take() {
-                    out.write_spaces(width)?;
-                    write!(out, "\t{err}")?;
+                    write!(out, "{err}")?;
                 }
 
                 out.write_all(b"\n")?;

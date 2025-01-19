@@ -32,6 +32,7 @@ pub struct Options {
     pub alias: bool,
     pub abi_regs: bool,
     pub decode_zeroes: bool,
+    pub show_raw_insn: bool,
 }
 
 impl Default for Options {
@@ -40,6 +41,7 @@ impl Default for Options {
             alias: true,
             abi_regs: true,
             decode_zeroes: false,
+            show_raw_insn: true,
         }
     }
 }
