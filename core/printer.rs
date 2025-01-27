@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    cmp,
     fmt::{self, Write},
 };
 
@@ -34,8 +35,14 @@ impl Separator {
             Separator::Tab => fmt.write_char('\t'),
             Separator::Char(c) => fmt.write_char(*c),
             Separator::Width(w) => {
-                let w = w - std::cmp::min(*w, mnemonic_len);
-                write!(fmt, "{:w$}", ' ')
+                const SPACES: &str = "                                ";
+                let mut width = cmp::min(*w, mnemonic_len);
+                while width > 0 {
+                    let len = cmp::min(width, SPACES.len());
+                    fmt.write_str(&SPACES[..len])?;
+                    width -= len;
+                }
+                Ok(())
             }
         }
     }
