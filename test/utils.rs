@@ -105,14 +105,22 @@ impl fmt::Display for Diff<'_> {
             writeln!(out, "{:7}{:-<24}", ' ', ' ')?;
         }
         let mut ln = std::cmp::max(self.line, 1);
+        let mut ln2 = ln;
         for diff in diff::lines(self.expect, self.result) {
             match diff {
-                E::Left(l) => writeln!(out, "{ln:w$} - {}↴", Escape(l))?,
-                E::Both(l, _) => writeln!(out, "{ln:w$} | {}↴", Escape(l))?,
-                E::Right(r) => writeln!(out, "{:w$} + {}↴", ln - 1, Escape(r))?,
-            }
-            if matches!(diff, E::Both(..) | E::Left(_)) {
-                ln += 1;
+                E::Left(l) => {
+                    writeln!(out, "{ln:w$} - {}↴", Escape(l))?;
+                    ln += 1;
+                }
+                E::Both(l, _) => {
+                    writeln!(out, "{ln:w$} | {}↴", Escape(l))?;
+                    ln += 1;
+                    ln2 = ln;
+                }
+                E::Right(r) => {
+                    writeln!(out, "{ln2:w$} + {}↴", Escape(r))?;
+                    ln2 += 1;
+                }
             }
         }
         Ok(())
