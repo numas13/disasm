@@ -129,6 +129,10 @@ pub trait PrinterExt {
     ) -> fmt::Result {
         self.print_styled(fmt, Style::AssemblerDirective, display)
     }
+
+    fn demangle(&self, _symbol: &str) -> Option<impl fmt::Display> {
+        None::<&str>
+    }
 }
 
 impl PrinterExt for () {
@@ -193,7 +197,10 @@ pub trait ArchPrinter<E: PrinterExt> {
     fn print_symbol(&self, fmt: &mut fmt::Formatter, ext: &E, addr: u64) -> fmt::Result {
         if let Some((sym_addr, sym_name)) = ext.get_symbol(addr) {
             fmt.write_str(" <")?;
-            ext.print_symbol(fmt, sym_name)?;
+            match ext.demangle(sym_name) {
+                Some(s) => ext.print_symbol(fmt, s)?,
+                None => ext.print_symbol(fmt, sym_name)?,
+            }
             let diff = addr - sym_addr;
             if diff != 0 {
                 fmt.write_char('+')?;

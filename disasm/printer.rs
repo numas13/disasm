@@ -67,8 +67,9 @@ pub trait WriteExt: Write {
         self.write_u64_hex(address, c)
     }
 
-    fn write_symbol(
+    fn write_symbol<E: PrinterExt>(
         &mut self,
+        ext: &E,
         address: u64,
         width: usize,
         name: &str,
@@ -77,7 +78,10 @@ pub trait WriteExt: Write {
         self.write_all(b"\n")?;
         self.write_symbol_address(address, width)?;
         self.write_all(b" <")?;
-        self.write_all(name.as_bytes())?;
+        match ext.demangle(name) {
+            Some(s) => write!(self, "{s}")?,
+            None => self.write_all(name.as_bytes())?,
+        }
         if offset != 0 {
             self.write_all(b"-")?;
             self.write_address(offset, 0)?;
@@ -144,11 +148,11 @@ impl<E: PrinterExt> Printer<E> {
         let width = self.arch.addr_size() / 4;
         let mut print_symbol = |out: &mut W, address, next_symbol: &mut _| -> io::Result<bool> {
             if let Some((name, offset)) = first_symbol.take() {
-                out.write_symbol(address, width, name, offset)?;
+                out.write_symbol(&self.ext, address, width, name, offset)?;
                 return Ok(true);
             } else if let Some((addr, name)) = *next_symbol {
                 if addr == address {
-                    out.write_symbol(address, width, name, 0)?;
+                    out.write_symbol(&self.ext, address, width, name, 0)?;
                     *next_symbol = self.ext.get_symbol_after(address);
                     return Ok(true);
                 }
