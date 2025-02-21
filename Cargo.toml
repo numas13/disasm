@@ -14,6 +14,8 @@ default-target = "x86_64-unknown-linux-gnu"
 [workspace]
 resolver = "2"
 members = [
+    "disas",
+
     "disasm",
     "core",
     "gen",
@@ -32,6 +34,12 @@ disasm-test         = { version = "0.5.1", path = "test" }
 disasm-e2k          = { version = "0.5.2", path = "arch/e2k" }
 disasm-riscv        = { version = "0.5.1", path = "arch/riscv" }
 disasm-x86          = { version = "0.5.1", path = "arch/x86" }
+
+[workspace.dependencies.disasm]
+version = "0.5.1"
+path = "disasm"
+default-features = false
+features = ["print"]
 
 [workspace.dependencies.criterion]
 version = "0.5"
