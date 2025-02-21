@@ -601,7 +601,7 @@ impl<E: PrinterExt> ArchPrinter<E> for Printer {
                     let size = y;
                     let lit = FormatterFn(|fmt| match size {
                         16 | 32 => {
-                            if lit >> (size - 1) & 1 != 0 {
+                            if (lit >> (size - 1)) & 1 != 0 {
                                 write!(fmt, "{lit:#x}_i{size}")
                             } else {
                                 write!(fmt, "{lit:#x}")

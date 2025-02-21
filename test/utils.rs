@@ -17,7 +17,7 @@ impl fmt::Display for Bytes<'_> {
 #[derive(PartialEq, Eq, Debug)]
 struct Escape<'a>(pub &'a str);
 
-impl<'a> std::ops::Deref for Escape<'a> {
+impl std::ops::Deref for Escape<'_> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {

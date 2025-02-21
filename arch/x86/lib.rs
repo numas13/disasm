@@ -469,7 +469,7 @@ struct Inner<'a> {
     state: State,
 }
 
-impl<'a> Deref for Inner<'a> {
+impl Deref for Inner<'_> {
     type Target = State;
 
     fn deref(&self) -> &Self::Target {
@@ -477,13 +477,13 @@ impl<'a> Deref for Inner<'a> {
     }
 }
 
-impl<'a> DerefMut for Inner<'a> {
+impl DerefMut for Inner<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.state
     }
 }
 
-impl<'a> Inner<'a> {
+impl Inner<'_> {
     #[inline(always)]
     fn is_att(&self) -> bool {
         self.opts_arch.att
